@@ -17,7 +17,7 @@ export async function GET() {
         return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const { password, ...user } = await prisma.user.findUnique({
+    const dbUser = await prisma.user.findUnique({
         where: { id: session.user.id },
         include: {
             entradas: {
@@ -26,6 +26,22 @@ export async function GET() {
             }
         }
     });
+
+    if (!dbUser) {
+        return NextResponse.json({ 
+            ok: true, 
+            user: {
+                nombre: session.user.name || "Espectador",
+                rol: "spectator",
+                nivel: "Principiante",
+                tinta: 0,
+                obras: [],
+                archivoEvolucion: []
+            } 
+        });
+    }
+
+    const { password, ...user } = dbUser;
 
     const userWithObras = {
         ...user,
