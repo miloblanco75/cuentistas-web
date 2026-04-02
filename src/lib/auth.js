@@ -71,16 +71,17 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user, account, profile }) {
-      if (user && account?.provider === 'credentials') {
+      // 1. Manejo inicial de login
+      if (user) {
         token.id = user.id
-        token.username = user.username
-        token.rol = user.rol
-        token.casa = user.casa
+        token.username = user.username || "Usuario"
+        token.rol = user.rol || "spectator"
+        token.casa = user.casa || "quimera"
       }
       
+      // 2. Si es Google, intentamos registrarlo en DB solo si no hay error previo
       if (account?.provider === 'google' && profile) {
         try {
-          // Temporariamente simplificamos para ver si es falla de DB
           let dbUser = await prisma.user.findUnique({ where: { email: profile.email } })
           if (!dbUser) {
             dbUser = await prisma.user.create({
@@ -99,12 +100,8 @@ export const authOptions = {
           token.rol = dbUser.rol
           token.casa = dbUser.casa
         } catch (e) {
-          console.error("Google Auth DB fail:", e);
-          // FALLBACK SIEMPRE: Permitir entrada si falla DB para no dejar en negro
-          token.id = profile.sub
-          token.username = profile.name?.split(" ")[0] || "Espectador"
-          token.rol = "spectator"
-          token.casa = "quimera"
+          console.error("Non-blocking Google DB error:", e);
+          // IMPORTANTE: NO lanzamos error aquí para permitir el login aunque la DB falle
         }
       }
       return token
@@ -123,6 +120,18 @@ export const authOptions = {
     signIn: '/login',
     error: '/login',
   },
+  // MEJORAS DE PRODUCCIÓN VERCEL
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true
+      }
+    }
+  },
   secret: process.env.NEXTAUTH_SECRET || "cuentistas-production-master-secret-2026",
-  debug: true, // Ver qué está pasando en los logs
+  trustHost: true,
 }
