@@ -32,7 +32,15 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[#fbfbfb] text-[#1d1d1f] flex items-center justify-center p-6 font-sans relative overflow-hidden bg-apple-gradient">
+        <main className="min-h-screen bg-[#fbfbfb] text-[#1d1d1f] flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden bg-apple-gradient">
+            {/* Botón de Regresar */}
+            <div className="fixed top-8 left-8 z-50">
+                <a href="/" data-id="back-home-button" className="flex items-center gap-2 text-sm font-bold text-[#86868b] hover:text-[#1d1d1f] transition-colors group">
+                    <span className="transform group-hover:-translate-x-1 transition-transform">←</span>
+                    Volver al Inicio
+                </a>
+            </div>
+
             <div className="max-w-md w-full space-y-16 animate-elegant relative z-10">
                 <header className="text-center space-y-4">
                     <p className="text-sm tracking-widest uppercase text-[#5856d6] font-bold">Acceso Autorizado</p>

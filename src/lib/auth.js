@@ -71,38 +71,37 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user, account, profile }) {
-      // 1. Manejo inicial de login
-      if (user) {
+      if (user && account?.provider === 'credentials') {
         token.id = user.id
-        token.username = user.username || "Usuario"
-        token.rol = user.rol || "spectator"
-        token.casa = user.casa || "quimera"
+        token.username = user.username
+        token.rol = user.rol
+        token.casa = user.casa
       }
       
-      // 2. Si es Google, intentamos registrarlo en DB solo si no hay error previo
       if (account?.provider === 'google' && profile) {
-        try {
-          let dbUser = await prisma.user.findUnique({ where: { email: profile.email } })
-          if (!dbUser) {
-            dbUser = await prisma.user.create({
-              data: {
-                nombre: profile.name,
-                username: profile.name?.split(" ")[0] || "Espectador",
-                email: profile.email,
-                rol: "spectator",
-                casa: "quimera",
-                tinta: 0,
-              }
-            })
-          }
-          token.id = dbUser.id
-          token.username = dbUser.username
-          token.rol = dbUser.rol
-          token.casa = dbUser.casa
-        } catch (e) {
-          console.error("Non-blocking Google DB error:", e);
-          // IMPORTANTE: NO lanzamos error aquí para permitir el login aunque la DB falle
-        }
+        // PERMITIMOS EL LOGIN DE GOOGLE SIEMPRE (No bloqueante por DB)
+        token.id = profile.sub
+        token.username = profile.name?.split(" ")[0] || "Espectador"
+        token.rol = "spectator"
+        token.casa = "quimera"
+
+        // Intentamos registrarlo en la DB de forma asíncrona pero sin bloquear la sesión
+        prisma.user.findUnique({ where: { email: profile.email } })
+          .then(dbUser => {
+            if (!dbUser) {
+              return prisma.user.create({
+                data: {
+                  nombre: profile.name,
+                  username: profile.name?.split(" ")[0] || "Espectador",
+                  email: profile.email,
+                  rol: "spectator",
+                  casa: "quimera",
+                  tinta: 0,
+                }
+              })
+            }
+          })
+          .catch(e => console.error("Optional Google DB background sync failed:", e));
       }
       return token
     },
@@ -120,7 +119,6 @@ export const authOptions = {
     signIn: '/login',
     error: '/login',
   },
-  // MEJORAS DE PRODUCCIÓN VERCEL
   cookies: {
     sessionToken: {
       name: `__Secure-next-auth.session-token`,
@@ -134,4 +132,5 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET || "cuentistas-production-master-secret-2026",
   trustHost: true,
+  debug: true,
 }
