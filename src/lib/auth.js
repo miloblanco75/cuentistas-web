@@ -31,31 +31,36 @@ export const authOptions = {
           }
         }
         
-        const user = await prisma.user.findFirst({
-          where: {
-            OR: [
-              { username: credentials.username },
-              { email: credentials.username }
-            ]
+        try {
+          const user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { username: credentials.username },
+                { email: credentials.username }
+              ]
+            }
+          })
+
+          if (!user || !user.password) {
+            throw new Error('Usuario no encontrado')
           }
-        })
 
-        if (!user || !user.password) {
-          throw new Error('Usuario no encontrado')
-        }
+          const isValid = await bcrypt.compare(credentials.password, user.password)
+          if (!isValid) {
+            throw new Error('Contraseña incorrecta')
+          }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password)
-        if (!isValid) {
-          throw new Error('Contraseña incorrecta')
-        }
-
-        return {
-          id: user.id,
-          name: user.nombre,
-          username: user.username,
-          email: user.email,
-          rol: user.rol,
-          casa: user.casa
+          return {
+            id: user.id,
+            name: user.nombre,
+            username: user.username,
+            email: user.email,
+            rol: user.rol,
+            casa: user.casa
+          }
+        } catch (dbErr) {
+          console.error("Critical DB error in authorize:", dbErr);
+          throw new Error("No hay conexión con la base de datos");
         }
       }
     })
@@ -66,14 +71,16 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user, account, profile }) {
-      if (user && !account?.provider?.includes('google')) {
+      if (user && account?.provider === 'credentials') {
         token.id = user.id
         token.username = user.username
         token.rol = user.rol
         token.casa = user.casa
       }
+      
       if (account?.provider === 'google' && profile) {
         try {
+          // Temporariamente simplificamos para ver si es falla de DB
           let dbUser = await prisma.user.findUnique({ where: { email: profile.email } })
           if (!dbUser) {
             dbUser = await prisma.user.create({
@@ -92,6 +99,8 @@ export const authOptions = {
           token.rol = dbUser.rol
           token.casa = dbUser.casa
         } catch (e) {
+          console.error("Google Auth DB fail:", e);
+          // FALLBACK SIEMPRE: Permitir entrada si falla DB para no dejar en negro
           token.id = profile.sub
           token.username = profile.name?.split(" ")[0] || "Espectador"
           token.rol = "spectator"
@@ -114,5 +123,6 @@ export const authOptions = {
     signIn: '/login',
     error: '/login',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "cuentistas-production-master-secret-2026",
+  debug: true, // Ver qué está pasando en los logs
 }
