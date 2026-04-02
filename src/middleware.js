@@ -14,7 +14,6 @@ export default withAuth({
 export const config = {
   matcher: [
     "/hub", 
-    "/comunidad", 
     "/perfil", 
     "/tienda", 
     "/examenes", 
