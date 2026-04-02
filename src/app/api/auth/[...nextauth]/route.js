@@ -2,20 +2,12 @@ import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 
-// CONFIGURACIÓN AUTÓNOMA PARA EVITAR ERRORES DE LIBRERÍA EN VERCEL
 export const authOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      checks: ['none'], // Fuerza bruta contra error de state
-      authorization: {
-        params: {
-          prompt: "select_account",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
+      checks: ['none'],
     }),
     CredentialsProvider({
       name: "Cuentistas",
@@ -27,7 +19,6 @@ export const authOptions = {
         if (credentials?.username === 'espectador') {
           return { id: "guest", name: "Espectador", rol: "spectator", casa: "lechuza" }
         }
-        // Solo importamos DB si es necesario (credentials login)
         const { default: prisma } = await import("@/lib/db");
         const bcrypt = await import("bcryptjs");
         const user = await prisma.user.findFirst({
@@ -42,7 +33,7 @@ export const authOptions = {
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, user, profile }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id
         token.rol = user.rol || "spectator"
@@ -58,14 +49,23 @@ export const authOptions = {
       }
       return session
     },
-    async redirect({ baseUrl }) {
-      return `${baseUrl}/hub`
-    }
   },
   pages: { signIn: '/login', error: '/login' },
-  secret: process.env.NEXTAUTH_SECRET || "cuentistas-emergency-secret-2026",
+  secret: process.env.NEXT_AUTH_SECRET || process.env.NEXTAUTH_SECRET || "cuentistas-super-secret-2026",
   trustHost: true,
   debug: true,
+  // SISTEMA DE REGISTRO DETALLADO PARA DIAGNÓSTICO
+  logger: {
+    error(code, metadata) {
+      console.error('--- AUTH ERROR ---', code, JSON.stringify(metadata, null, 2));
+    },
+    warn(code) {
+      console.warn('--- AUTH WARN ---', code);
+    },
+    debug(code, metadata) {
+      console.log('--- AUTH DEBUG ---', code, JSON.stringify(metadata, null, 2));
+    }
+  }
 }
 
 const handler = NextAuth(authOptions)
