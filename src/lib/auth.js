@@ -6,6 +6,13 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     CredentialsProvider({
       name: "Cuentistas",
@@ -14,7 +21,6 @@ export const authOptions = {
         password: { label: "Contraseña", type: "password" }
       },
       async authorize(credentials) {
-        // MANTENEMOS LAS CREDENCIALES PARA EL AUTOR JKwon
         if (credentials.username === 'espectador' || credentials.username === 'invitado') {
           return {
             id: `guest-${Date.now()}`,
@@ -26,7 +32,6 @@ export const authOptions = {
           }
         }
         
-        // En authorize si necesitamos Prisma, pero vamos a usar un import dinamico para evitar bloqueos
         const { default: prisma } = await import("@/lib/db");
         const bcrypt = await import("bcryptjs");
         
@@ -59,7 +64,6 @@ export const authOptions = {
           }
         } catch (dbErr) {
           console.error("Auth DB error:", dbErr);
-          // Fallback para permitir entrada si la DB falla pero solo en modo espectador
           return null;
         }
       }
@@ -71,7 +75,6 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user, account, profile }) {
-      // SI ES LOGIN INICIAL (Aquí está el truco: CERO BASE DE DATOS AQUÍ)
       if (user) {
         token.id = user.id
         token.username = user.username || (profile?.name?.split(" ")[0]) || "Escritor"
@@ -90,13 +93,22 @@ export const authOptions = {
         session.user.email = token.google_email || session.user.email
       }
       return session
-    }
+    },
+    async redirect({ url, baseUrl }) {
+      // Forzar que siempre redirija a una URL segura dentro del dominio
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
+    },
   },
   pages: {
     signIn: '/login',
     error: '/login',
   },
-  secret: process.env.NEXTAUTH_SECRET || "cuentistas-production-master-secret-2026-v2",
+  // MEJORAS DE PROTOCOLO VERCEL
+  secret: process.env.NEXTAUTH_SECRET || "cuentistas-production-master-secret-2026-v3",
   trustHost: true,
   debug: true,
+  // Forzar HTTPS en Vercel para las cookies de Google
+  useSecureCookies: true,
 }
