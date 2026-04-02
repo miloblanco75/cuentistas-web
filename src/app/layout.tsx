@@ -1,6 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
-import { Cinzel, Crimson_Pro } from "next-font/google";
+import { Cinzel, Crimson_Pro } from "next/font/google";
 import "./globals.css";
 import NotificationHost from "@/components/new/NotificationHost";
 

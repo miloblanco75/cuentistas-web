@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next-auth/react";
 import { signIn } from "next-auth/react";
-import { useRouter as useNextRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function LoginContent() {
     const searchParams = useSearchParams();
@@ -13,7 +12,7 @@ function LoginContent() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState(authError ? "El sello de acceso ha fallado. Revisa tus pergaminos." : null);
     const [loading, setLoading] = useState(false);
-    const router = useNextRouter();
+    const router = useRouter();
 
     const handleLogin = async (e) => {
         e.preventDefault();
