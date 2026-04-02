@@ -71,21 +71,21 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user, account, profile }) {
-      if (user && account?.provider === 'credentials') {
+      if (user) {
         token.id = user.id
-        token.username = user.username
-        token.rol = user.rol
-        token.casa = user.casa
+        token.username = user.username || "Usuario"
+        token.rol = user.rol || "spectator"
+        token.casa = user.casa || "quimera"
       }
       
       if (account?.provider === 'google' && profile) {
-        // PERMITIMOS EL LOGIN DE GOOGLE SIEMPRE (No bloqueante por DB)
+        // PERMITIMOS EL LOGIN DE GOOGLE SIEMPRE (No bloqueante)
         token.id = profile.sub
         token.username = profile.name?.split(" ")[0] || "Espectador"
         token.rol = "spectator"
         token.casa = "quimera"
 
-        // Intentamos registrarlo en la DB de forma asíncrona pero sin bloquear la sesión
+        // Registro asíncrono
         prisma.user.findUnique({ where: { email: profile.email } })
           .then(dbUser => {
             if (!dbUser) {
@@ -101,7 +101,7 @@ export const authOptions = {
               })
             }
           })
-          .catch(e => console.error("Optional Google DB background sync failed:", e));
+          .catch(e => console.error("Google sync error:", e));
       }
       return token
     },
@@ -119,18 +119,7 @@ export const authOptions = {
     signIn: '/login',
     error: '/login',
   },
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true
-      }
-    }
-  },
-  secret: process.env.NEXTAUTH_SECRET || "cuentistas-production-master-secret-2026",
+  secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
   debug: true,
 }
