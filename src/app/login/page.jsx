@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next-auth/react"; // Usamos next-auth/react para router si es necesario
 import { signIn } from "next-auth/react";
+import { useRouter as useNextRouter } from "next/navigation";
 
 function LoginContent() {
     const searchParams = useSearchParams();
@@ -10,9 +11,9 @@ function LoginContent() {
     
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState(authError ? `Error: ${authError}` : null);
+    const [error, setError] = useState(authError ? "Ocurrió un problema con el acceso. Por favor, intenta de nuevo." : null);
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
+    const router = useNextRouter();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -26,7 +27,7 @@ function LoginContent() {
         });
 
         if (res.error) {
-            setError(res.error === "CredentialsSignin" ? "Credenciales incorrectas" : res.error);
+            setError(res.error === "CredentialsSignin" ? "Credenciales incorrectas" : "Error al conectar con el servidor.");
             setLoading(false);
         } else {
             router.push("/hub");
@@ -52,9 +53,8 @@ function LoginContent() {
 
                 <form onSubmit={handleLogin} className="royal-card p-12 space-y-8 shadow-xl bg-white border-[#e5e5ea]">
                     {error && (
-                        <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium border border-red-100 animate-pulse">
+                        <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium border border-red-100 italic">
                            ⚠️ {error}
-                           {error.includes("OAuthCallback") && <p className="text-[10px] mt-1">Sugerencia: Prueba en una ventana de incógnito.</p>}
                         </div>
                     )}
                     
