@@ -108,7 +108,7 @@ export default function PlatformHub() {
                 <div className="w-16 h-16 border-t-2 border-amber-500 rounded-full animate-spin"></div>
                 <div className="space-y-4 text-center font-cinzel">
                     <p className="text-2xl tracking-[0.3em] uppercase opacity-80">Convocando el Cónclave...</p>
-                    <p className="text-[10px] tracking-[0.5em] uppercase opacity-40">Consultando Pergaminos Arcanos</p>
+                    <p className="text-[11px] tracking-[0.5em] uppercase opacity-40">Consultando Pergaminos Arcanos</p>
                 </div>
             </div>
         );
@@ -117,26 +117,26 @@ export default function PlatformHub() {
     if (!userData) return null;
 
     return (
-        <main className="min-h-screen bg-[#050508] text-[#e0d7c6] p-12 md:p-32 animate-elegant">
+        <main className="min-h-screen bg-[#050508] text-[#e0d7c6] p-12 md:p-24 lg:p-32 animate-elegant">
             <div className="max-w-7xl mx-auto space-y-48">
-                <header className="flex flex-col md:flex-row justify-between items-end gap-12 border-b border-amber-500/10 pb-12">
+                <header className="flex flex-col md:flex-row justify-between items-end gap-12 border-b border-amber-500/10 pb-16">
                     <div className="space-y-4">
-                        <p className="text-[10px] tracking-[0.6em] uppercase text-[#d4af37] font-cinzel mb-2">
+                        <p className="text-[11px] tracking-[0.6em] uppercase text-[#d4af37] font-cinzel mb-2">
                              La Gran Arena Literaria
                         </p>
                         <h1 className="text-7xl md:text-8xl font-black italic title-gradient pr-8">Cuentistas</h1>
                     </div>
-                    <div className="font-cinzel text-[9px] tracking-[0.4em] uppercase text-right flex items-center gap-8">
+                    <div className="font-cinzel text-[11px] tracking-[0.3em] uppercase text-right flex items-center gap-12">
                         <div className="flex flex-col items-end gap-2">
-                            <span className="text-[#ffffff] font-bold text-xs">{userData.nombre}</span>
-                            <span className="text-[#d4af37] opacity-80">{userData.rol === 'Escritor' ? 'Autor' : 'Espectador'} — {userData.nivel}</span>
+                            <span className="text-[#ffffff] font-bold text-sm tracking-widest">{userData.nombre}</span>
+                            <span className="text-[#d4af37] font-bold opacity-80">{userData.rol === 'Escritor' ? 'Autor' : 'Espectador'} — {userData.nivel}</span>
                         </div>
                         <div className="w-px h-12 bg-amber-500/20 hidden md:block"></div>
                         <button
                             onClick={() => signOut({ callbackUrl: '/login' })}
-                            className="bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/20 px-8 py-4 rounded-sm transition-all text-[#d4af37] font-bold hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                            className="bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/20 px-8 py-5 rounded-sm transition-all text-[#d4af37] font-bold hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] tracking-[0.4em]"
                         >
-                            Abandonar Cónclave
+                            Abandonar
                         </button>
                     </div>
                 </header>
@@ -162,13 +162,13 @@ export default function PlatformHub() {
                     ))}
                 </nav>
 
-                <footer className="pt-24 flex flex-col md:flex-row justify-between items-center gap-12 text-[9px] tracking-[0.5em] uppercase font-cinzel text-gray-500">
-                    <div className="flex flex-wrap justify-center gap-12 items-center">
-                        <span className="opacity-40 italic">Fundado en el año MMXXVI</span>
+                <footer className="pt-24 flex flex-col md:flex-row justify-between items-center gap-12 text-[11px] tracking-[0.5em] uppercase font-cinzel text-gray-500">
+                    <div className="flex flex-wrap justify-center gap-16 items-center">
+                        <span className="opacity-60 italic text-gray-400">Fundado en el año MMXXVI</span>
                         <div className="w-8 h-[1px] bg-amber-500/10"></div>
-                        <a href="/manual" className="text-amber-500/60 hover:text-amber-500 transition-colors font-bold">Manual Arcano</a>
+                        <a href="/manual" className="text-amber-500/80 hover:text-amber-500 transition-colors font-bold">Manual Arcano</a>
                         <div className="w-8 h-[1px] bg-amber-500/10"></div>
-                        <a href="/panel" className="hover:text-amber-500 transition-colors">Juicio de Autores</a>
+                        <a href="/panel" className="text-amber-500/60 hover:text-amber-500 transition-colors">Juicio de Autores</a>
                     </div>
                 </footer>
             </div>

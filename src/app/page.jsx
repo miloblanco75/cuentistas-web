@@ -36,22 +36,22 @@ export default function Home() {
             {t("btn_enter")}
           </a>
           
-          <div className="flex flex-col items-center md:items-start gap-6 border-l border-amber-500/10 pl-12">
+          <div className="flex flex-col items-center md:items-start gap-8 border-l border-amber-500/10 pl-16">
             <a
               href='/manual'
-              className='text-[9px] tracking-[0.4em] uppercase font-cinzel text-amber-500/60 hover:text-amber-500 transition-all border-b border-amber-500/10 pb-2'
+              className='text-[11px] tracking-[0.4em] uppercase font-cinzel text-amber-500/80 hover:text-white transition-all border-b border-amber-500/20 pb-2'
             >
               {t("btn_manual")}
             </a>
             <a
               href='/registro'
-              className='text-[9px] tracking-[0.4em] uppercase font-cinzel text-gray-500 hover:text-[#d4af37] transition-all'
+              className='text-[11px] tracking-[0.4em] uppercase font-cinzel text-gray-300 hover:text-[#d4af37] transition-all'
             >
               {t("btn_start_legacy")}
             </a>
             <a
               href='/login'
-              className='text-[9px] tracking-[0.4em] uppercase font-cinzel text-gray-600 hover:text-gray-400 transition-all italic'
+              className='text-[11px] tracking-[0.4em] uppercase font-cinzel text-gray-400 hover:text-gray-100 transition-all italic'
             >
               {t("btn_change_author")}
             </a>
@@ -60,7 +60,7 @@ export default function Home() {
 
         <footer className="pt-32">
           <div className="w-16 h-px bg-amber-500/10 mx-auto mb-12"></div>
-          <p className="text-[8px] tracking-[0.6em] uppercase font-cinzel text-gray-600">
+          <p className="text-[10px] tracking-[0.6em] uppercase font-cinzel text-gray-400">
             {t("footer_excellence")}
           </p>
         </footer>
