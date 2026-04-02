@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-export default function LoginPage() {
+function LoginContent() {
+    const searchParams = useSearchParams();
+    const authError = searchParams.get("error");
+    
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState(null);
+    const [error, setError] = useState(authError ? `Error: ${authError}` : null);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -23,10 +26,10 @@ export default function LoginPage() {
         });
 
         if (res.error) {
-            setError(res.error);
+            setError(res.error === "CredentialsSignin" ? "Credenciales incorrectas" : res.error);
             setLoading(false);
         } else {
-            router.push("/comunidad");
+            router.push("/hub");
             router.refresh();
         }
     };
@@ -49,8 +52,9 @@ export default function LoginPage() {
 
                 <form onSubmit={handleLogin} className="royal-card p-12 space-y-8 shadow-xl bg-white border-[#e5e5ea]">
                     {error && (
-                        <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium border border-red-100">
-                            {error === "CredentialsSignin" ? "Credenciales incorrectas" : error}
+                        <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium border border-red-100 animate-pulse">
+                           ⚠️ {error}
+                           {error.includes("OAuthCallback") && <p className="text-[10px] mt-1">Sugerencia: Prueba en una ventana de incógnito.</p>}
                         </div>
                     )}
                     
@@ -78,7 +82,6 @@ export default function LoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
-                        <p className="text-xs text-gray-400 mt-2">*Para cuentas antiguas migradas, la contraseña por defecto es: password123</p>
                     </div>
 
                     <button 
@@ -104,12 +107,16 @@ export default function LoginPage() {
                             Ver como Espectador (Con Google)
                         </button>
                     </div>
-
-                    <p className="text-center text-sm text-[#86868b] font-medium pt-2">
-                        ¿Nuevo en el cónclave? <a href="/registro" className="text-[#5856d6] font-bold hover:underline">Empezar Legado</a>
-                    </p>
                 </form>
             </div>
         </main>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div>Cargando...</div>}>
+            <LoginContent />
+        </Suspense>
     );
 }
