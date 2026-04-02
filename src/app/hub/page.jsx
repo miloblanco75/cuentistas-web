@@ -5,6 +5,56 @@ import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+// Iconos dorados de trazo fino
+const Icons = {
+  Escritura: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-16 h-16">
+      <path d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-1.5M15.5 10.5l-1.5-1.5M13 8l-1.5-1.5M11 6l-1.5-1.5M9 4L7.5 2.5" />
+      <path d="M3 21l3-3M3 21v-3M3 21h3" />
+      <path d="M12 19L5 12" />
+    </svg>
+  ),
+  Examenes: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-16 h-16">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
+      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+    </svg>
+  ),
+  Comunidad: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-16 h-16">
+      <path d="M12 22a10 10 0 100-20 10 10 0 000 20z" />
+      <path d="M12 6v6l4 2" />
+      <path d="M8 12h8" />
+    </svg>
+  ),
+  Biblioteca: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-16 h-16">
+      <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5a2.5 2.5 0 01-2.5-2.5V4.5z" />
+      <path d="M10 6h6M10 10h6M10 14h6" />
+    </svg>
+  ),
+  Mercado: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-16 h-16">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 8v8M8 12h8" />
+      <path d="M12 11l-2-2m2 2l2-2m-2 6l-2 2m2-2l2 2" />
+    </svg>
+  ),
+  Perfil: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-16 h-16">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  Tribunal: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-16 h-16">
+      <path d="M4 10h16M12 4v16M8 21h8M7 10l-3 4m16-4l3 4" />
+      <circle cx="4" cy="14" r="2" />
+      <circle cx="20" cy="14" r="2" />
+    </svg>
+  )
+};
+
 export default function PlatformHub() {
     const [userData, setUserData] = useState(null);
     const { t } = useLanguage();
@@ -24,18 +74,18 @@ export default function PlatformHub() {
                         setUserData(data.user);
                     } else {
                         setUserData({
-                            nombre: session.user.name || "Espectador",
+                            nombre: session.user.name || "Mago de las Letras",
                             rol: "spectator",
-                            nivel: "Principiante",
+                            nivel: "Iniciado",
                             tinta: 0,
                         });
                     }
                 })
                 .catch(() => {
                     setUserData({
-                        nombre: session.user.name || "Espectador",
+                        nombre: session.user.name || "Visitante Arcano",
                         rol: "spectator",
-                        nivel: "Principiante",
+                        nivel: "Iniciado",
                         tinta: 0,
                     });
                 });
@@ -43,23 +93,22 @@ export default function PlatformHub() {
     }, [status, session, router]);
 
     const SECTIONS = [
-        { title: t("mod_escritura"), href: "/concursos", icon: "🖋️" },
-        { title: t("mod_examenes"), href: "/examenes", icon: "📜" },
-        { title: t("mod_comunidad"), href: "/comunidad", icon: "🤝" },
-        { title: "Biblioteca Pública", href: "/biblioteca", icon: "📚" },
-        { title: t("mod_mercado"), href: "/mercado", icon: "🏛️" },
-        { title: t("mod_perfil"), href: "/perfil", icon: "💠" },
-        { title: t("mod_tribunal"), href: "/panel", icon: "⚖️" },
+        { title: t("mod_escritura"), href: "/concursos", icon: <Icons.Escritura /> },
+        { title: t("mod_examenes"), href: "/examenes", icon: <Icons.Examenes /> },
+        { title: t("mod_comunidad"), href: "/comunidad", icon: <Icons.Comunidad /> },
+        { title: "Santuario de Libros", href: "/biblioteca", icon: <Icons.Biblioteca /> },
+        { title: t("mod_mercado"), href: "/mercado", icon: <Icons.Mercado /> },
+        { title: t("mod_perfil"), href: "/perfil", icon: <Icons.Perfil /> },
+        { title: t("mod_tribunal"), href: "/panel", icon: <Icons.Tribunal /> },
     ];
 
-    // Estado de carga mejorado
     if (status === "loading" || (status === "authenticated" && !userData)) {
         return (
-            <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center font-serif gap-8">
-                <div className="text-6xl animate-pulse">✒️</div>
-                <div className="space-y-2 text-center">
-                    <p className="text-xl italic tracking-tighter opacity-80">Abriendo la Arena...</p>
-                    <p className="text-[10px] tracking-[0.4em] uppercase opacity-40">Verificando credenciales</p>
+            <div className="min-h-screen bg-[#050508] text-[#d4af37] flex flex-col items-center justify-center gap-8">
+                <div className="w-16 h-16 border-t-2 border-amber-500 rounded-full animate-spin"></div>
+                <div className="space-y-4 text-center font-cinzel">
+                    <p className="text-2xl tracking-[0.3em] uppercase opacity-80">Convocando el Cónclave...</p>
+                    <p className="text-[10px] tracking-[0.5em] uppercase opacity-40">Consultando Pergaminos Arcanos</p>
                 </div>
             </div>
         );
@@ -68,26 +117,26 @@ export default function PlatformHub() {
     if (!userData) return null;
 
     return (
-        <main className="min-h-screen bg-[#050505] text-[#ffffff] p-12 md:p-32 animate-elegant">
+        <main className="min-h-screen bg-[#050508] text-[#e0d7c6] p-12 md:p-32 animate-elegant">
             <div className="max-w-7xl mx-auto space-y-48">
-                <header className="flex flex-col md:flex-row justify-between items-end gap-12 border-b border-white/5 pb-12">
-                    <div>
-                        <p className="text-[10px] tracking-[0.5em] uppercase text-gold font-sans font-light mb-4 text-amber-500">
-                            — {t("hero_title")} —
+                <header className="flex flex-col md:flex-row justify-between items-end gap-12 border-b border-amber-500/10 pb-12">
+                    <div className="space-y-4">
+                        <p className="text-[10px] tracking-[0.6em] uppercase text-[#d4af37] font-cinzel mb-2">
+                             La Gran Arena Literaria
                         </p>
-                        <h1 className="text-8xl font-light tracking-tighter italic">{t("hero_title")}</h1>
+                        <h1 className="text-8xl font-black tracking-tighter italic title-gradient">Cuentistas</h1>
                     </div>
-                    <div className="font-sans text-[10px] tracking-[0.3em] uppercase text-right opacity-60 flex items-center gap-6">
-                        <div className="flex flex-col items-end">
-                            <span className="text-white font-bold">{userData.nombre}</span>
-                            <span className="text-amber-500/80">{userData.rol === 'Escritor' ? 'Sello' : userData.rol === 'spectator' ? 'Espectador' : 'Tribunal'} {userData.nivel}</span>
+                    <div className="font-cinzel text-[9px] tracking-[0.4em] uppercase text-right flex items-center gap-8">
+                        <div className="flex flex-col items-end gap-2">
+                            <span className="text-[#ffffff] font-bold text-xs">{userData.nombre}</span>
+                            <span className="text-[#d4af37] opacity-80">{userData.rol === 'Escritor' ? 'Autor' : 'Espectador'} — {userData.nivel}</span>
                         </div>
-                        <div className="w-px h-10 bg-white/10 hidden md:block"></div>
+                        <div className="w-px h-12 bg-amber-500/20 hidden md:block"></div>
                         <button
                             onClick={() => signOut({ callbackUrl: '/login' })}
-                            className="bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-full transition-all text-white font-bold hover:text-amber-500"
+                            className="bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/20 px-8 py-4 rounded-sm transition-all text-[#d4af37] font-bold hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
                         >
-                            Salir de la Arena
+                            Abandonar Cónclave
                         </button>
                     </div>
                 </header>
@@ -97,36 +146,30 @@ export default function PlatformHub() {
                         <a
                             key={idx}
                             href={s.href}
-                            className="royal-card p-20 h-96 flex flex-col items-center justify-center group transition-all duration-1000 relative overflow-hidden text-center bg-white/[0.02] border border-white/5 hover:border-amber-500/30"
+                            className="royal-card p-20 h-96 flex flex-col items-center justify-center group text-center"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-b from-amber-500/0 via-amber-500/0 to-amber-500/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
                             <div className="relative z-10 space-y-12">
-                                <div className="text-7xl mb-6 transform group-hover:scale-110 group-hover:-rotate-6 transition-all duration-700 drop-shadow-[0_0_15px_rgba(255,191,0,0.1)]">
+                                <div className="text-[#d4af37] opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 filter drop-shadow-[0_0_10px_rgba(212,175,55,0.2)] flex justify-center">
                                     {s.icon}
                                 </div>
-                                <h3 className="text-4xl font-serif italic text-white/80 group-hover:text-amber-500 transition-all duration-700 tracking-tight">
+                                <h3 className="text-3xl font-cinzel text-white/90 group-hover:text-[#d4af37] transition-all duration-700 tracking-widest uppercase">
                                     {s.title}
                                 </h3>
-                                <div className="w-12 h-[1px] bg-white/10 mx-auto group-hover:w-24 group-hover:bg-amber-500/50 transition-all duration-1000"></div>
+                                <div className="w-12 h-[1px] bg-amber-500/10 mx-auto group-hover:w-32 group-hover:bg-amber-500/40 transition-all duration-1000"></div>
                             </div>
                         </a>
                     ))}
                 </nav>
 
-                <footer className="pt-24 flex justify-between items-center text-[10px] tracking-[0.4em] uppercase font-sans font-extralight text-gray-500">
-                    <div className="flex gap-12 items-center">
-                        <span>© MMXXVI</span>
-                        <div className="w-12 h-[1px] bg-white/10"></div>
-                        <a href="/manual" className="text-amber-500 hover:text-white transition-colors font-bold">{t("footer_manual")}</a>
-                        <div className="w-12 h-[1px] bg-white/10"></div>
-                        <a href="/panel" className="hover:text-amber-500 transition-colors">{t("footer_tribunal")}</a>
+                <footer className="pt-24 flex flex-col md:flex-row justify-between items-center gap-12 text-[9px] tracking-[0.5em] uppercase font-cinzel text-gray-500">
+                    <div className="flex flex-wrap justify-center gap-12 items-center">
+                        <span className="opacity-40 italic">Fundado en el año MMXXVI</span>
+                        <div className="w-8 h-[1px] bg-amber-500/10"></div>
+                        <a href="/manual" className="text-amber-500/60 hover:text-amber-500 transition-colors font-bold">Manual Arcano</a>
+                        <div className="w-8 h-[1px] bg-amber-500/10"></div>
+                        <a href="/panel" className="hover:text-amber-500 transition-colors">Juicio de Autores</a>
                     </div>
-                    <button 
-                        onClick={() => signOut({ callbackUrl: '/login' })} 
-                        className="hover:text-amber-500 transition-colors italic border-b border-transparent hover:border-amber-500 pb-1"
-                    >
-                        {t("footer_disconnect")}
-                    </button>
                 </footer>
             </div>
         </main>

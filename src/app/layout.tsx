@@ -1,17 +1,19 @@
 import React from "react";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cinzel, Crimson_Pro } from "next-font/google";
 import "./globals.css";
 import NotificationHost from "@/components/new/NotificationHost";
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
+const cinzel = Cinzel({
+    variable: "--font-cinzel",
     subsets: ["latin"],
+    weight: ["400", "700", "900"],
 });
 
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
+const crimsonPro = Crimson_Pro({
+    variable: "--font-crimson-pro",
     subsets: ["latin"],
+    weight: ["400", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -31,7 +33,7 @@ export default function RootLayout({
     return (
         <html lang="es">
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+                className={`${cinzel.variable} ${crimsonPro.variable} antialiased`}
             >
                 <Providers>
                     <LanguageProvider>

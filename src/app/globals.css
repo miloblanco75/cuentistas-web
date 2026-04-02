@@ -1,135 +1,136 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbfbfb; /* Studio White */
-  --foreground: #1d1d1f; /* Deep Onyx */
-  --accent: #5856d6;     /* Vibrant Indigo */
-  --accent-secondary: #007aff; /* Electric Blue */
-  --glass: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  --border-color: #e5e5ea;
+  --background: #050508; /* Obsidian deep night */
+  --foreground: #e0d7c6; /* Ancient parchment */
+  --gold: #b8860b;        /* Old gold */
+  --gold-vibrant: #d4af37; /* Royal gold */
+  --accent: #8b5cf6;      /* Magic violet */
+  --glass: rgba(13, 13, 18, 0.8);
+  --glass-border: rgba(184, 134, 11, 0.2);
+  --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-crimson-pro), serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(184, 134, 11, 0.03) 0%, transparent 40%);
 }
 
-/* Studio Typography */
-.font-serif {
-  font-family: var(--font-geist-sans), sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+h1, h2, h3, .font-cinzel {
+  font-family: var(--font-cinzel), serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-/* Studio Components (Keeping names for compatibility) */
+/* Grimoire Cards */
 .royal-card {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px; /* Slightly more rigid, book-like */
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
   box-shadow: var(--card-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.royal-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-vibrant), transparent);
+  opacity: 0.3;
 }
 
 .royal-card:hover {
-  border-color: var(--accent);
-  box-shadow: 0 8px 30px rgba(88, 86, 214, 0.1);
-  transform: translateY(-2px);
+  border-color: var(--gold-vibrant);
+  box-shadow: 0 0 30px rgba(184, 134, 11, 0.15);
+  transform: translateY(-8px) scale(1.02);
 }
 
+/* Mystic Buttons */
 .royal-button {
-  background: var(--accent);
-  border: none;
-  color: white;
-  padding: 0.8rem 2.5rem;
-  border-radius: 8px; /* Slightly squared for "Studio" feel */
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+  border: 1px solid var(--gold);
+  color: var(--gold-vibrant);
+  padding: 1rem 3rem;
+  border-radius: 2px;
+  font-family: var(--font-cinzel), serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: all 0.4s ease;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(88, 86, 214, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .royal-button:hover {
-  background: #4a48c7;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(88, 86, 214, 0.3);
+  background: var(--gold-vibrant);
+  color: var(--background);
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
 }
 
+/* Golden Label Text */
 .text-gold {
-  /* High contrast text with subtle gradient */
-  background: linear-gradient(180deg, var(--foreground) 0%, #48484a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: var(--foreground);
+  color: var(--gold-vibrant);
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
-/* Form Elements */
+/* Magical Input */
 .royal-input {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.8rem 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--glass-border);
+  border-radius: 2px;
+  padding: 1rem 1.2rem;
   width: 100%;
   outline: none;
-  font-family: inherit;
-  font-size: 1rem;
+  font-family: var(--font-crimson-pro), serif;
+  font-size: 1.1rem;
   color: var(--foreground);
-  transition: all 0.2s ease;
+  transition: all 0.4s ease;
 }
 
 .royal-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(88, 86, 214, 0.1);
+  border-color: var(--gold-vibrant);
+  background: rgba(184, 134, 11, 0.05);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
 }
 
-/* Specific Classes */
-.mode-pressure {
-  background-color: #f2f2f7 !important;
-  transition: background-color 1s ease;
-}
-
-.sello-overlay {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-}
-
-.sello-content {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 3rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-}
-
-@keyframes fadeIn {
+@keyframes magicReveal {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(20px) scale(0.98);
+    filter: blur(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
 .animate-elegant {
-  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: magicReveal 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 
-/* Utility for Studio-like background accents */
-.bg-apple-gradient {
-  background: radial-gradient(circle at 70% 20%, rgba(88, 86, 214, 0.03), transparent 60%);
-}
+/* Hero Title Gradient */
+.title-gradient {
+  background: linear-gradient(180deg, #fff 0%, var(--gold-vibrant) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
