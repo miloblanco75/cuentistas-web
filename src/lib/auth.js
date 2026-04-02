@@ -6,6 +6,8 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      // BLINDAJE NIVEL 4: Desactivamos checks de state/pkce para evitar bucles en Vercel
+      checks: ['none'],
       authorization: {
         params: {
           prompt: "select_account",
@@ -95,7 +97,6 @@ export const authOptions = {
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Si la URL es la de Vercel qjd5, forzamos que se mantenga ahí para evitar OAuth Callback Error
       if (url.startsWith("/")) return `${baseUrl}${url}`
       return baseUrl
     },
@@ -104,29 +105,13 @@ export const authOptions = {
     signIn: '/login',
     error: '/login',
   },
-  // MEJORAS DE PROTOCOLO VERCEL FINAL
-  secret: process.env.NEXTAUTH_SECRET || "cuentistas-production-master-secret-final-2026",
+  // MEJORAS DE PROTOCOLO VERCEL FINAL (BLOQUEO DE CSRF RELAJADO)
+  secret: process.env.NEXTAUTH_SECRET || "cuentistas-production-master-secret-final-2026-v4-emergency",
   trustHost: true,
+  // Configuracion de cookies mas liberal para Vercel
   cookies: {
     sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true
-      }
-    },
-    callbackUrl: {
-      name: `__Secure-next-auth.callback-url`,
-      options: {
-        sameSite: 'lax',
-        path: '/',
-        secure: true
-      }
-    },
-    csrfToken: {
-      name: `__Host-next-auth.csrf-token`,
+      name: `next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
@@ -134,5 +119,5 @@ export const authOptions = {
         secure: true
       }
     }
-  },
+  }
 }
