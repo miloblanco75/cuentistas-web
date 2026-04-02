@@ -2,16 +2,47 @@
 
 import { useLanguage } from "@/components/LanguageContext";
 import { useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function PlatformHub() {
-    const [user, setUser] = useState(null);
+    const [userData, setUserData] = useState(null);
     const { t } = useLanguage();
+    const { data: session, status } = useSession();
+    const router = useRouter();
 
     useEffect(() => {
-        fetch("/api/user")
-            .then(res => res.json())
-            .then(data => setUser(data.user));
-    }, []);
+        if (status === "unauthenticated") {
+            router.push("/login");
+            return;
+        }
+        if (status === "authenticated") {
+            fetch("/api/user")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ok) {
+                        setUserData(data.user);
+                    } else {
+                        // Si la API falla, usamos los datos de la sesión de Google directamente
+                        setUserData({
+                            nombre: session.user.name || "Espectador",
+                            rol: "spectator",
+                            nivel: "Principiante",
+                            tinta: 0,
+                        });
+                    }
+                })
+                .catch(() => {
+                    // Fallback: usar datos de la sesión
+                    setUserData({
+                        nombre: session.user.name || "Espectador",
+                        rol: "spectator",
+                        nivel: "Principiante",
+                        tinta: 0,
+                    });
+                });
+        }
+    }, [status, session, router]);
 
     const SECTIONS = [
         { title: t("mod_escritura"), href: "/concursos", icon: "🖋️" },
@@ -23,7 +54,17 @@ export default function PlatformHub() {
         { title: t("mod_tribunal"), href: "/panel", icon: "⚖️" },
     ];
 
-    if (!user) return <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center font-serif text-sm">{t("loading")}</div>;
+    // Estado de carga
+    if (status === "loading" || (status === "authenticated" && !userData)) {
+        return (
+            <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center font-serif gap-4">
+                <div className="text-3xl animate-pulse">✒️</div>
+                <p className="text-sm tracking-widest uppercase text-white/40">Abriendo las puertas...</p>
+            </div>
+        );
+    }
+
+    if (!userData) return null;
 
     return (
         <main className="min-h-screen bg-[#050505] text-[#ffffff] p-12 md:p-32 animate-elegant">
@@ -36,9 +77,15 @@ export default function PlatformHub() {
                         <h1 className="text-8xl font-light tracking-tighter italic">{t("hero_title")}</h1>
                     </div>
                     <div className="font-sans text-[10px] tracking-[0.3em] uppercase text-right opacity-60 flex items-center gap-6">
-                        <span>{user.nombre}</span>
+                        <span>{userData.nombre}</span>
                         <div className="w-1 h-1 bg-gold rounded-full"></div>
-                        <span>{user.rol === 'Escritor' ? 'Sello' : 'Tribunal'} {user.nivel}</span>
+                        <span>{userData.rol === 'Escritor' ? 'Sello' : userData.rol === 'spectator' ? 'Espectador' : 'Tribunal'} {userData.nivel}</span>
+                        <button
+                            onClick={() => signOut({ callbackUrl: '/login' })}
+                            className="text-white/30 hover:text-white/70 transition-colors ml-4"
+                        >
+                            Salir
+                        </button>
                     </div>
                 </header>
 
@@ -49,9 +96,7 @@ export default function PlatformHub() {
                             href={s.href}
                             className="royal-card p-20 h-96 flex flex-col items-center justify-center group transition-all duration-1000 relative overflow-hidden text-center bg-white/[0.02] border border-white/5 hover:border-gold/30"
                         >
-                            {/* Decorative background glow */}
                             <div className="absolute inset-0 bg-gradient-to-b from-gold/0 via-gold/0 to-gold/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                            
                             <div className="relative z-10 space-y-12">
                                 <div className="text-7xl mb-6 transform group-hover:scale-110 group-hover:-rotate-6 transition-all duration-700 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                                     {s.icon}
@@ -73,7 +118,7 @@ export default function PlatformHub() {
                         <div className="w-12 h-[1px] bg-white/10"></div>
                         <a href="/panel" className="hover:text-gold transition-colors">{t("footer_tribunal")}</a>
                     </div>
-                    <a href="/" className="hover:text-gold transition-colors italic border-b border-transparent hover:border-gold pb-1">{t("footer_disconnect")}</a>
+                    <button onClick={() => signOut({ callbackUrl: '/login' })} className="hover:text-gold transition-colors italic border-b border-transparent hover:border-gold pb-1">{t("footer_disconnect")}</button>
                 </footer>
             </div>
         </main>
