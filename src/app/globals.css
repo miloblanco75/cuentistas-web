@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fbfbfb; /* Studio White */
+  --foreground: #1d1d1f; /* Deep Onyx */
+  --accent: #5856d6;     /* Vibrant Indigo */
+  --accent-secondary: #007aff; /* Electric Blue */
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --border-color: #e5e5ea;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Studio Typography */
+.font-serif {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Studio Components (Keeping names for compatibility) */
+.royal-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--card-shadow);
+}
+
+.royal-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 30px rgba(88, 86, 214, 0.1);
+  transform: translateY(-2px);
+}
+
+.royal-button {
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 0.8rem 2.5rem;
+  border-radius: 8px; /* Slightly squared for "Studio" feel */
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(88, 86, 214, 0.2);
+}
+
+.royal-button:hover {
+  background: #4a48c7;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(88, 86, 214, 0.3);
+}
+
+.text-gold {
+  /* High contrast text with subtle gradient */
+  background: linear-gradient(180deg, var(--foreground) 0%, #48484a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--foreground);
+}
+
+/* Form Elements */
+.royal-input {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+.royal-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(88, 86, 214, 0.1);
+}
+
+/* Specific Classes */
+.mode-pressure {
+  background-color: #f2f2f7 !important;
+  transition: background-color 1s ease;
+}
+
+.sello-overlay {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+}
+
+.sello-content {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 3rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-elegant {
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Utility for Studio-like background accents */
+.bg-apple-gradient {
+  background: radial-gradient(circle at 70% 20%, rgba(88, 86, 214, 0.03), transparent 60%);
+}
