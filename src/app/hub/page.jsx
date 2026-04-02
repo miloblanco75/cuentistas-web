@@ -124,7 +124,7 @@ export default function PlatformHub() {
                         <p className="text-[10px] tracking-[0.6em] uppercase text-[#d4af37] font-cinzel mb-2">
                              La Gran Arena Literaria
                         </p>
-                        <h1 className="text-8xl font-black tracking-tighter italic title-gradient">Cuentistas</h1>
+                        <h1 className="text-7xl md:text-8xl font-black italic title-gradient pr-8">Cuentistas</h1>
                     </div>
                     <div className="font-cinzel text-[9px] tracking-[0.4em] uppercase text-right flex items-center gap-8">
                         <div className="flex flex-col items-end gap-2">

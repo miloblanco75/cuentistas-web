@@ -19,7 +19,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-6">
-            <h1 className='text-8xl md:text-[12rem] font-cinzel leading-none tracking-widest title-gradient'>
+            <h1 className='text-7xl md:text-9xl font-cinzel leading-none tracking-widest title-gradient px-4'>
                 {t("hero_title")}
             </h1>
             <p className="text-xs md:text-sm tracking-[0.8em] text-amber-500 font-cinzel uppercase opacity-80">
