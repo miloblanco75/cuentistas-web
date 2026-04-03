@@ -43,6 +43,12 @@ export async function GET() {
 
     const { password, ...user } = dbUser;
 
+    // Poderes de Soberano: Si es Maestro, tiene tinta infinita visualmente
+    if (user.rol === "Maestro") {
+        user.tinta = 999999;
+        user.nivel = "Gran Maestro del Conclave";
+    }
+
     const userWithObras = {
         ...user,
         obras: user.entradas.filter(e => e.concurso?.status === 'finished').map(e => ({
@@ -70,6 +76,16 @@ export async function POST(request) {
     const { action, cantidad, concursoId } = await request.json();
     const userId = session.user.id;
     const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+
+    // Bypass Maestro: El Soberano no paga ni tiene restricciones de nivel
+    if (dbUser.rol === "Maestro") {
+        if (action === "check") {
+            return NextResponse.json({ ok: true, access: true, isMaster: true });
+        }
+        if (action === "pay") {
+            return NextResponse.json({ ok: true, tinta: 999999 }); // Gratis
+        }
+    }
 
     if (action === "buy") {
         const updated = await prisma.user.update({

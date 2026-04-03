@@ -92,6 +92,8 @@ export default function PlatformHub() {
         }
     }, [status, session, router]);
 
+    const isMaster = userData?.rol === "Maestro";
+
     const SECTIONS = [
         { title: t("mod_escritura"), href: "/concursos", icon: <Icons.Escritura /> },
         { title: t("mod_examenes"), href: "/examenes", icon: <Icons.Examenes /> },
@@ -99,7 +101,12 @@ export default function PlatformHub() {
         { title: "Santuario de Libros", href: "/biblioteca", icon: <Icons.Biblioteca /> },
         { title: t("mod_mercado"), href: "/mercado", icon: <Icons.Mercado /> },
         { title: t("mod_perfil"), href: "/perfil", icon: <Icons.Perfil /> },
-        { title: t("mod_tribunal"), href: "/panel", icon: <Icons.Tribunal /> },
+        { 
+            title: isMaster ? "Trono de Mando" : t("mod_tribunal"), 
+            href: "/panel", 
+            icon: <Icons.Tribunal />,
+            special: isMaster
+        },
     ];
 
     if (status === "loading" || (status === "authenticated" && !userData)) {
@@ -117,19 +124,31 @@ export default function PlatformHub() {
     if (!userData) return null;
 
     return (
-        <main className="min-h-screen bg-[#050508] text-[#e0d7c6] p-6 md:p-24 lg:p-32 animate-elegant">
+        <main className="min-h-screen bg-[#050508] text-[#e0d7c6] p-6 md:p-24 lg:p-32 animate-elegant relative">
+            {/* Aura de Poder para el Maestro */}
+            {isMaster && (
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent shadow-[0_0_20px_rgba(212,175,55,0.5)]"></div>
+            )}
+
             <div className="max-w-7xl mx-auto space-y-24 md:space-y-48">
                 <header className="flex flex-col md:flex-row justify-between items-center md:items-end gap-12 border-b border-amber-500/10 pb-12 md:pb-16 text-center md:text-left">
                     <div className="space-y-4">
                         <p className="text-[10px] md:text-[11px] tracking-[0.4em] md:tracking-[0.6em] uppercase text-[#d4af37] font-cinzel mb-2">
-                             La Gran Arena Literaria
+                             {isMaster ? "Santuario del Soberano" : "La Gran Arena Literaria"}
                         </p>
                         <h1 className="text-5xl md:text-8xl font-black italic title-gradient pr-0 md:pr-8">Cuentistas</h1>
                     </div>
                     <div className="font-cinzel text-[10px] md:text-[11px] tracking-[0.2em] md:tracking-[0.3em] uppercase text-center md:text-right flex flex-col md:flex-row items-center gap-8 md:gap-12">
-                        <div className="flex flex-col items-center md:items-end gap-2">
+                        <div className="flex flex-col items-center md:items-end gap-2 px-6 border-l-0 md:border-l border-amber-500/20">
                             <span className="text-[#ffffff] font-bold text-xs md:text-sm tracking-widest">{userData.nombre}</span>
-                            <span className="text-[#d4af37] font-bold opacity-80">{userData.rol === 'Escritor' ? 'Autor' : 'Espectador'} — {userData.nivel}</span>
+                            <span className="text-[#d4af37] font-bold opacity-80">
+                                {isMaster ? "Gran Maestro del Conclave" : (userData.rol === 'Escritor' ? 'Autor' : 'Espectador')} — {isMaster ? "Soberano" : userData.nivel}
+                            </span>
+                            {isMaster && (
+                                <span className="text-[9px] text-[#ffffff] bg-amber-500/20 px-3 py-1 rounded-full animate-pulse border border-amber-500/20">
+                                    Tinta Infinita
+                                </span>
+                            )}
                         </div>
                         <div className="w-16 md:w-px h-px md:h-12 bg-amber-500/20"></div>
                         <button
@@ -146,17 +165,17 @@ export default function PlatformHub() {
                         <a
                             key={idx}
                             href={s.href}
-                            className="royal-card p-12 md:p-20 h-72 md:h-96 flex flex-col items-center justify-center group text-center"
+                            className={`royal-card p-12 md:p-20 h-72 md:h-96 flex flex-col items-center justify-center group text-center ${s.special ? 'border-amber-500/40 shadow-[0_0_30px_rgba(212,175,55,0.05)]' : ''}`}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-t from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                            <div className={`absolute inset-0 bg-gradient-to-t ${s.special ? 'from-amber-500/15' : 'from-amber-500/5'} via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000`}></div>
                             <div className="relative z-10 space-y-8 md:space-y-12">
-                                <div className="text-[#d4af37] opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 filter drop-shadow-[0_0_10px_rgba(212,175,55,0.2)] flex justify-center">
+                                <div className={`text-[#d4af37] ${s.special ? 'opacity-100 scale-110' : 'opacity-60'} group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 filter drop-shadow-[0_0_10px_rgba(212,175,55,0.2)] flex justify-center`}>
                                     {s.icon}
                                 </div>
-                                <h3 className="text-2xl md:text-3xl font-cinzel text-white/90 group-hover:text-[#d4af37] transition-all duration-700 tracking-widest uppercase">
+                                <h3 className={`text-2xl md:text-3xl font-cinzel text-white/90 group-hover:text-[#d4af37] transition-all duration-700 tracking-widest uppercase ${s.special ? 'text-amber-500' : ''}`}>
                                     {s.title}
                                 </h3>
-                                <div className="w-8 md:w-12 h-[1px] bg-amber-500/10 mx-auto group-hover:w-32 group-hover:bg-amber-500/40 transition-all duration-1000"></div>
+                                <div className={`w-8 md:w-12 h-[1px] ${s.special ? 'bg-amber-500/50' : 'bg-amber-500/10'} mx-auto group-hover:w-32 group-hover:bg-amber-500/40 transition-all duration-1000`}></div>
                             </div>
                         </a>
                     ))}
@@ -168,7 +187,9 @@ export default function PlatformHub() {
                         <div className="w-8 h-[1px] bg-amber-500/10 hidden md:block"></div>
                         <a href="/manual" className="text-amber-500/80 hover:text-amber-500 transition-colors font-bold">Manual Arcano</a>
                         <div className="w-8 h-[1px] bg-amber-500/10 hidden md:block"></div>
-                        <a href="/panel" className="text-amber-500/60 hover:text-amber-500 transition-colors">Juicio de Autores</a>
+                        <a href="/panel" className="text-amber-500/60 hover:text-amber-500 transition-colors">
+                            {isMaster ? "Consur de Maestros" : "Juicio de Autores"}
+                        </a>
                     </div>
                 </footer>
             </div>
