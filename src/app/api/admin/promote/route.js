@@ -16,7 +16,7 @@ export async function GET(request) {
         if (promote) {
             const user = await prisma.user.update({
                 where: { email: promote },
-                data: { rol: "Maestro", tinka: 9999, nivel: "Gran Maestro del Conclave" },
+                data: { rol: "Maestro", tinta: 9999, nivel: "Gran Maestro del Conclave" },
             });
             return NextResponse.json({
                 ok: true,
