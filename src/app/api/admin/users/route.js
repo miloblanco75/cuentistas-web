@@ -19,6 +19,7 @@ export async function GET() {
                 rol: true,
                 nivel: true,
                 tinta: true,
+                puntosCasa: true,
                 createdAt: true,
             },
             orderBy: { createdAt: 'desc' }

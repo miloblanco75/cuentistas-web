@@ -60,7 +60,8 @@ model User {
   // Custom Fields
   rol              String    @default("Escritor")
   tinta            Int       @default(60)
-  puntos           Int       @default(0)
+  puntos           Int       @default(0) // XP
+  puntosCasa       Int       @default(0) // Para el ranking mensual de casas
   nivel            String    @default("Principiante")
   casa             String?
   generoFavorito   String?
@@ -75,6 +76,7 @@ model User {
   sessions         Session[]
   entradas         Entrada[] // Su participacion en concursos
   mensajes         Mensaje[] // Comunidad
+  juezDe           Concurso[] @relation("JuezConcurso")
 }
 
 model Concurso {
@@ -90,6 +92,10 @@ model Concurso {
   categoria     String    @default("Principiante")
   costoTinta    Int       @default(0)
   isExamen      Boolean   @default(false)
+  processed     Boolean   @default(false) // Para la Cosecha de premios
+  tipo          String    @default("normal") // normal, casa
+  juezId        String?
+  juez          User?     @relation("JuezConcurso", fields: [juezId], references: [id])
   createdAt     DateTime  @default(now())
 
   entradas      Entrada[]

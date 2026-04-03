@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(request) {
     try {
@@ -16,35 +16,39 @@ export async function POST(request) {
             return NextResponse.json({ ok: false, error: "Faltan campos obligatorios" }, { status: 400 });
         }
 
+        const scheduledTime = data.scheduledTime ? new Date(data.scheduledTime) : null;
+
         const nuevoConcurso = await prisma.concurso.create({
             data: {
                 titulo: data.titulo,
                 descripcion: data.descripcion || "",
                 temaGeneral: data.temaGeneral,
                 temaExacto: data.temaExacto,
-                costoTinta: data.costoTinta || 0,
+                costoTinta: parseInt(data.costoTinta) || 0,
                 categoria: data.categoria || "Principiante",
-                status: "waiting"
+                status: "waiting",
+                scheduledTime: scheduledTime,
+                duration: parseInt(data.duration) || 5400,
+                juezId: data.juezId || null,
+                tipo: data.tipo || "normal"
             }
         });
 
-        // Simulación de envío de correos
+        // Invitación masiva (Simulación)
         const recipients = await prisma.user.findMany({
             select: { email: true, username: true }
         });
         
-        console.log(`[EMAIL SYSTEM] Enviando invitaciones para: ${nuevoConcurso.titulo}`);
-        recipients.forEach(r => {
-            console.log(`[EMAIL] Invitación enviada a ${r.email} (${r.username})`);
-        });
+        console.log(`[ATS SYSTEM] Invocación de Cuentistas para: ${nuevoConcurso.titulo}`);
+        console.log(`[ATS SYSTEM] Tipo: ${nuevoConcurso.tipo} | Juez ID: ${nuevoConcurso.juezId}`);
 
         return NextResponse.json({ 
             ok: true, 
-            message: "Concurso creado con éxito e invitaciones enviadas", 
+            message: "Concurso forjado con éxito", 
             concurso: nuevoConcurso 
         });
     } catch (error) {
         console.error("Error al crear concurso:", error);
-        return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
+        return NextResponse.json({ ok: false, error: "Error interno al forjar el concurso" }, { status: 500 });
     }
 }
