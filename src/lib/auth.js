@@ -1,7 +1,10 @@
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import prisma from "./db"
 
 export const authOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -21,7 +24,6 @@ export const authOptions = {
         }
         
         try {
-          const { default: prisma } = await import("@/lib/db");
           const bcrypt = await import("bcryptjs");
           
           const user = await prisma.user.findFirst({
@@ -40,7 +42,7 @@ export const authOptions = {
 
           return {
             id: user.id,
-            name: user.nombre,
+            name: user.nombre || user.name,
             username: user.username,
             email: user.email,
             rol: user.rol,
@@ -61,7 +63,7 @@ export const authOptions = {
     async jwt({ token, user, profile }) {
       if (user) {
         token.id = user.id
-        token.username = user.username || (profile?.name?.split(" ")[0]) || "Escritor"
+        token.username = user.username || (profile?.name?.split(" ")[0]) || (user?.name?.split(" ")[0]) || "Escritor"
         token.rol = user.rol || "spectator"
         token.casa = user.casa || "quimera"
       }
