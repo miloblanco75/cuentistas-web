@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 
@@ -33,13 +33,13 @@ export default function PanelJuez() {
   return (
     <main className="min-h-screen p-10 bg-[#050509] text-white">
       <a href="/panel" className="text-sm text-purple-300 underline">
-        â† Volver al panel
+        &larr; Volver al panel
       </a>
 
       <h1 className="text-4xl font-bold mt-4 mb-6">Panel del juez</h1>
 
       {entradas.length === 0 && (
-        <p className="text-gray-400">TodavÃ­a no hay cuentos enviados.</p>
+        <p className="text-gray-400">Todavía no hay cuentos enviados.</p>
       )}
 
       {entradas.map((e) => (

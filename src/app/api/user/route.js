@@ -46,11 +46,13 @@ export async function GET() {
     // Poderes de Soberano: Si es Maestro, tiene tinta infinita visualmente
     if (user.rol === "Maestro") {
         user.tinta = 999999;
-        user.nivel = "Gran Maestro del Conclave";
+        user.nivel = "Gran Maestro del Cónclave";
     }
 
     const userWithObras = {
         ...user,
+        streak: user.streak || 0,
+        lastParticipation: user.lastParticipation,
         obras: user.entradas.filter(e => e.concurso?.status === 'finished').map(e => ({
             titulo: e.concurso?.titulo || 'Desconocido',
             fecha: new Date(e.timestamp).toLocaleDateString(),

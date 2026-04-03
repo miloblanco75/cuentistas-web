@@ -9,7 +9,7 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      // Mantenemos checks: ['none'] para evitar bloqueos por cookies en Vercel
+      allowDangerousEmailAccountLinking: true,
       checks: ['none'],
     }),
     CredentialsProvider({
@@ -25,7 +25,6 @@ export const authOptions = {
         
         try {
           const bcrypt = await import("bcryptjs");
-          
           const user = await prisma.user.findFirst({
             where: {
               OR: [
@@ -36,7 +35,6 @@ export const authOptions = {
           })
 
           if (!user || !user.password) return null;
-
           const isValid = await bcrypt.compare(credentials.password, user.password)
           if (!isValid) return null;
 
@@ -49,7 +47,7 @@ export const authOptions = {
             casa: user.casa
           }
         } catch (dbErr) {
-          console.error("Auth DB error:", dbErr);
+          console.error("❌ Auth DB error:", dbErr);
           return null;
         }
       }
@@ -64,7 +62,14 @@ export const authOptions = {
       if (user) {
         token.id = user.id
         token.username = user.username || (profile?.name?.split(" ")[0]) || (user?.name?.split(" ")[0]) || "Escritor"
-        token.rol = user.rol || "spectator"
+        
+        // REGLA SUPREMA: El correo del Maestro siempre recibe el rango Maestro
+        if (user.email === "ermiloblanco75@gmail.com") {
+          token.rol = "Maestro"
+        } else {
+          token.rol = user.rol || "Escritor"
+        }
+        
         token.casa = user.casa || "quimera"
       }
       return token
@@ -77,12 +82,43 @@ export const authOptions = {
         session.user.casa = token.casa
       }
       return session
+    },
+    async signIn({ user, account, profile }) {
+      console.log("🕯️ Veredicto de Entrada:", { email: user.email, provider: account.provider });
+      return true;
     }
   },
-  pages: {
-    signIn: '/login',
-    error: '/login',
+  events: {
+    async createUser({ user }) {
+      console.log("🐣 Nuevo Ser Forjado en el Cónclave:", user.email);
+      if (user.email === "ermiloblanco75@gmail.com") {
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { rol: "Maestro" }
+          });
+          console.log("🔱 Ascensión completa en DB.");
+        } catch (e) {
+          console.error("❌ Error en Ascensión:", e);
+        }
+      }
+    },
+    async linkAccount({ user, account }) {
+      console.log("🔗 Vínculo de Almas Detectado:", user.email);
+      if (user.email === "ermiloblanco75@gmail.com") {
+        try {
+          await prisma.user.update({
+            where: { email: user.email },
+            data: { rol: "Maestro" }
+          });
+          console.log("🔱 Rango de Maestro Protegido tras vínculo.");
+        } catch (e) {
+          console.error("❌ Error al proteger rango:", e);
+        }
+      }
+    }
   },
+  debug: true, // Siempre encendido para el diagnóstico del Maestro
   secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
 }

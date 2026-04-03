@@ -15,6 +15,13 @@ export default function LiveContestPage() {
     const [showAlarm, setShowAlarm] = useState(false);
     const [tabSwitches, setTabSwitches] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
+    
+    // Creator Mode & Recording
+    const [isCreatorMode, setIsCreatorMode] = useState(false);
+    const [recordingStatus, setRecordingStatus] = useState("idle"); // idle, recording
+    const mediaRecorderRef = useRef(null);
+    const chunksRef = useRef([]);
+    const streamRef = useRef(null);
 
     const lastTextLen = useRef(0);
 
@@ -118,6 +125,54 @@ export default function LiveContestPage() {
         if (res.ok) router.push("/hub");
     };
 
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    displaySurface: "browser",
+                    logicalSurface: true,
+                },
+                audio: false
+            });
+            
+            streamRef.current = stream;
+            const recorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm;codecs=vp9'
+            });
+
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunksRef.current.push(e.data);
+            };
+
+            recorder.onstop = () => {
+                const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Cuentistas_${user.nombre}_${new Date().getTime()}.webm`;
+                a.click();
+                chunksRef.current = [];
+            };
+
+            mediaRecorderRef.current = recorder;
+            recorder.start();
+            setRecordingStatus("recording");
+
+            stream.getVideoTracks()[0].onended = () => stopRecording();
+        } catch (err) {
+            console.error("Error al iniciar grabación:", err);
+            alert("No se pudo iniciar la captura. Asegúrate de dar los permisos necesarios.");
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current) {
+            mediaRecorderRef.current.stop();
+            streamRef.current.getTracks().forEach(track => track.stop());
+            setRecordingStatus("idle");
+        }
+    };
+
     const handlePaste = (e) => {
         e.preventDefault();
         alert("Integridad Real: El pegado de texto está sellado.");
@@ -125,10 +180,8 @@ export default function LiveContestPage() {
 
     if (!concurso || !user) return <div className="min-h-screen bg-[#050505] flex items-center justify-center font-serif text-sm">...</div>;
 
-    const isPressureMode = timeLeft > 0 && timeLeft <= 600;
-
-    return (
-        <main className={`min-h-screen animate-elegant font-serif relative overflow-hidden transition-colors duration-1000 ${isPressureMode ? 'mode-pressure' : 'bg-[#050505]'} text-[#ffffff]`}>
+    const isPressureMode = timeLeft > 0 && timeLeft <= 600;    return (
+        <main className={`min-h-screen animate-elegant font-serif relative overflow-hidden transition-colors duration-1000 ${isPressureMode ? 'mode-pressure' : 'bg-[#050508]'} text-[#ffffff]`}>
             {/* Security Seal Overlay */}
             {isFinished && (
                 <div className="sello-overlay">
@@ -160,7 +213,7 @@ export default function LiveContestPage() {
                     <div className="flex items-center gap-4">
                         <div className="w-4 h-[1px] bg-gold/50"></div>
                         <p className={`text-[11px] tracking-[0.5em] uppercase font-sans ${isPressureMode ? 'text-red-500 animate-pulse' : 'text-gold'}`}>
-                            {isPressureMode ? 'PRESIÓN REAL' : concurso.titulo}
+                            {isPressureMode ? 'PRESIÓN REAL' : (concurso?.titulo || "Concurso")}
                         </p>
                     </div>
                     {tabSwitches > 0 && <p className="text-[9px] tracking-[0.3em] text-red-500/60 uppercase font-sans pl-8">Integridad Comprometida: {tabSwitches}</p>}
@@ -170,13 +223,28 @@ export default function LiveContestPage() {
                 </div>
             </header>
 
-            <div className="max-w-4xl mx-auto min-h-screen flex flex-col justify-center p-12 py-48 space-y-32">
+            <div className="max-w-4xl mx-auto min-h-screen flex flex-col justify-center p-12 py-48 relative">
                 {status === "active" ? (
-                    <div className="space-y-32">
+                    <div className={`${isCreatorMode ? 'creator-viewport p-16' : 'space-y-32 w-full'}`}>
+                        {isCreatorMode && (
+                            <div className="flex justify-between items-center mb-12 border-b border-gold/10 pb-6">
+                                <div className="space-y-1">
+                                    <p className="creator-header-label">Autor en Vivo</p>
+                                    <h2 className="text-xl font-serif text-white">{user.nombre}</h2>
+                                </div>
+                                <div className="text-right flex flex-col items-end gap-2">
+                                    <p className="creator-header-label">Tiempo</p>
+                                    <p className={`text-2xl font-mono font-light tracking-tighter ${timeLeft < 60 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+                                        {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-8 animate-elegant">
-                            <p className="text-[10px] tracking-[0.5em] uppercase text-gold/60 font-sans">Mandato Supremo</p>
-                            <div className="p-16 border-l border-gold/30 royal-card bg-white/[0.01]">
-                                <p className="text-4xl font-light leading-relaxed italic text-white/90">
+                            {!isCreatorMode && <p className="text-[10px] tracking-[0.5em] uppercase text-gold/60 font-sans">Mandato Supremo</p>}
+                            <div className={`${isCreatorMode ? 'p-8 text-center' : 'p-16 border-l border-gold/30'} royal-card bg-white/[0.01]`}>
+                                <p className={`${isCreatorMode ? 'text-xl' : 'text-4xl'} font-light leading-relaxed italic text-white/90`}>
                                     "{concurso.temaExacto}"
                                 </p>
                             </div>
@@ -184,7 +252,7 @@ export default function LiveContestPage() {
 
                         <div className="relative">
                             <textarea
-                                className={`w-full h-[60vh] bg-transparent border-none text-3xl leading-relaxed text-[#ffffff] outline-none resize-none placeholder:text-white/5 selection:bg-gold/20 scrollbar-hide font-serif italic`}
+                                className={`w-full ${isCreatorMode ? 'h-[40vh] text-2xl' : 'h-[60vh] text-3xl'} bg-transparent border-none leading-relaxed text-[#ffffff] outline-none resize-none placeholder:text-white/5 selection:bg-gold/20 scrollbar-hide font-serif italic`}
                                 placeholder="Escriba la verdad..."
                                 value={text}
                                 onChange={(e) => setText(e.target.value)}
@@ -193,19 +261,32 @@ export default function LiveContestPage() {
                                 autoFocus
                             ></textarea>
 
-                            <div className="mt-16 pt-8 border-t border-white/5 flex justify-between items-center opacity-40 hover:opacity-100 transition-opacity font-sans">
-                                <div className="flex gap-12 items-center">
-                                    <span className="text-[11px] tracking-[0.4em] uppercase font-light">{text.split(/\s+/).filter(Boolean).length} RUNAS</span>
-                                    {isSuspicious && (
-                                        <span className="text-[9px] text-red-500 font-bold tracking-[0.3em] border border-red-500/30 px-3 py-1 rounded-full uppercase">Alerta IA</span>
-                                    )}
+                            {!isCreatorMode && (
+                                <div className="mt-16 pt-8 border-t border-white/5 flex justify-between items-center opacity-40 hover:opacity-100 transition-opacity font-sans">
+                                    <div className="flex gap-12 items-center">
+                                        <span className="text-[11px] tracking-[0.4em] uppercase font-light">{text.split(/\s+/).filter(Boolean).length} RUNAS</span>
+                                        {isSuspicious && (
+                                            <span className="text-[9px] text-red-500 font-bold tracking-[0.3em] border border-red-500/30 px-3 py-1 rounded-full uppercase">Alerta IA</span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-6">
+                                        <div className="w-2 h-2 rounded-full bg-gold/40 animate-pulse"></div>
+                                        <span className="text-[10px] tracking-[0.4em] uppercase text-gray-700 font-thin">Caja de Cristal Activa</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-6">
-                                    <div className="w-2 h-2 rounded-full bg-gold/40 animate-pulse"></div>
-                                    <span className="text-[10px] tracking-[0.4em] uppercase text-gray-700 font-thin">Caja de Cristal Activa</span>
-                                </div>
-                            </div>
+                            )}
                         </div>
+
+                        {isCreatorMode && (
+                            <div className="mt-auto pt-12 flex flex-col items-center gap-6 border-t border-gold/5">
+                                <div className="flex items-center gap-4 opacity-40">
+                                    <div className="w-12 h-[1px] bg-gold/50"></div>
+                                    <span className="text-[10px] tracking-[0.5em] text-gold uppercase font-cinzel">Cuentistas Web</span>
+                                    <div className="w-12 h-[1px] bg-gold/50"></div>
+                                </div>
+                                <p className="text-[8px] tracking-[0.4em] uppercase text-gray-700 font-sans">Forjando el Legado en Vivo</p>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="text-center space-y-12 opacity-30">
@@ -215,6 +296,38 @@ export default function LiveContestPage() {
                         <p className="text-xl tracking-[0.6em] uppercase text-gold font-light animate-pulse">Aguardando la sesión</p>
                         <p className="italic text-4xl font-serif">El tribunal revelará el tema al comenzar.</p>
                     </div>
+                )}
+            </div>
+
+            {/* Recorder Toolbar - Floating at bottom of screen */}
+            <div className="recorder-toolbar">
+                <button 
+                    onClick={() => setIsCreatorMode(!isCreatorMode)}
+                    className={`text-[9px] tracking-widest uppercase font-bold px-6 py-2 rounded-full transition-all border ${isCreatorMode ? 'bg-gold text-black border-gold' : 'text-gold border-gold/30 hover:bg-gold/10'}`}
+                >
+                    {isCreatorMode ? 'Cerrar Modo TikTok' : 'Modo TikTok 📱'}
+                </button>
+                
+                <div className="w-[1px] h-4 bg-white/10 mx-2"></div>
+                
+                {recordingStatus === "idle" ? (
+                    <button 
+                        onClick={startRecording}
+                        className="flex items-center gap-3 text-[9px] tracking-widest uppercase font-bold text-white hover:text-red-500 transition-all group"
+                    >
+                        <div className="w-3 h-3 rounded-full border-2 border-red-500 flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full group-hover:scale-125 transition-transform"></div>
+                        </div>
+                        Grabar Clip
+                    </button>
+                ) : (
+                    <button 
+                        onClick={stopRecording}
+                        className="flex items-center gap-3 text-[9px] tracking-widest uppercase font-bold text-red-500 animate-pulse"
+                    >
+                        <div className="on-air-lamp"></div>
+                        Detener Grabación
+                    </button>
                 )}
             </div>
         </main>

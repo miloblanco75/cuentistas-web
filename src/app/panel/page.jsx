@@ -79,7 +79,13 @@ export default function PanelPage() {
                 >
                     + Forjar Nuevo Concurso
                 </a>
-                <button className="bg-purple-900/10 hover:bg-purple-900/20 border border-purple-500/20 px-8 py-4 rounded-sm text-purple-400 font-bold tracking-widest text-sm transition-all">
+                <a 
+                    href="/panel/tienda"
+                    className="bg-amber-900/10 hover:bg-amber-900/20 border border-amber-500/20 px-8 py-4 rounded-sm text-amber-500 font-bold tracking-widest text-sm transition-all flex items-center gap-3"
+                >
+                    💎 Gestionar Bóveda de Tesoros
+                </a>
+                <button className="bg-purple-900/10 hover:bg-purple-900/20 border border-purple-500/20 px-8 py-4 rounded-sm text-purple-400 font-bold tracking-widest text-sm transition-all flex items-center gap-3">
                     ⚖️ Revisar Calificaciones
                 </button>
               </div>
@@ -97,7 +103,7 @@ export default function PanelPage() {
                             </div>
                             <span className="text-amber-500/80 font-bold font-serif">{h.score} <span className="text-[10px] opacity-40">pts</span></span>
                         </div>
-                    )) || <p className="text-center text-xs opacity-40 py-8 italic">Consultando pergaminos famliares...</p>}
+                    )) || <p className="text-center text-xs opacity-40 py-8 italic">Consultando pergaminos familiares...</p>}
                 </div>
             </aside>
           </div>

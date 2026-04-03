@@ -98,7 +98,7 @@ export default function PlatformHub() {
         { title: t("mod_escritura"), href: "/concursos", icon: <Icons.Escritura /> },
         { title: t("mod_examenes"), href: "/examenes", icon: <Icons.Examenes /> },
         { title: t("mod_comunidad"), href: "/comunidad", icon: <Icons.Comunidad /> },
-        { title: "Santuario de Libros", href: "/biblioteca", icon: <Icons.Biblioteca /> },
+        { title: t("mod_ranking"), href: "/biblioteca", icon: <Icons.Biblioteca /> },
         { title: t("mod_mercado"), href: "/mercado", icon: <Icons.Mercado /> },
         { title: t("mod_perfil"), href: "/perfil", icon: <Icons.Perfil /> },
         { 
@@ -107,6 +107,13 @@ export default function PlatformHub() {
             icon: <Icons.Tribunal />,
             special: isMaster
         },
+        ...(isMaster ? [{
+            title: "Bóveda de Tesoros",
+            href: "/panel/tienda",
+            icon: <Icons.Mercado />,
+            special: true,
+            admin: true
+        }] : [])
     ];
 
     if (status === "loading" || (status === "authenticated" && !userData)) {
@@ -114,8 +121,7 @@ export default function PlatformHub() {
             <div className="min-h-screen bg-[#050508] text-[#d4af37] flex flex-col items-center justify-center gap-8">
                 <div className="w-16 h-16 border-t-2 border-amber-500 rounded-full animate-spin"></div>
                 <div className="space-y-4 text-center font-cinzel">
-                    <p className="text-xl md:text-2xl tracking-[0.3em] uppercase opacity-80">Convocando el Cónclave...</p>
-                    <p className="text-[10px] tracking-[0.5em] uppercase opacity-40">Consultando Pergaminos Arcanos</p>
+                    <p className="text-xl md:text-2xl tracking-[0.3em] uppercase opacity-80">{t('loading')}</p>
                 </div>
             </div>
         );
@@ -134,20 +140,40 @@ export default function PlatformHub() {
                 <header className="flex flex-col md:flex-row justify-between items-center md:items-end gap-12 border-b border-amber-500/10 pb-12 md:pb-16 text-center md:text-left">
                     <div className="space-y-4">
                         <p className="text-[10px] md:text-[11px] tracking-[0.4em] md:tracking-[0.6em] uppercase text-[#d4af37] font-cinzel mb-2">
-                             {isMaster ? "Santuario del Soberano" : "La Gran Arena Literaria"}
+                             {isMaster ? t("hub_sovereign") : t("hub_subtitle")}
                         </p>
-                        <h1 className="text-5xl md:text-8xl font-black italic title-gradient pr-0 md:pr-8">Cuentistas</h1>
+                        <h1 className="text-5xl md:text-8xl font-black italic title-gradient pr-0 md:pr-8">{t("hero_title")}</h1>
                     </div>
                     <div className="font-cinzel text-[10px] md:text-[11px] tracking-[0.2em] md:tracking-[0.3em] uppercase text-center md:text-right flex flex-col md:flex-row items-center gap-8 md:gap-12">
                         <div className="flex flex-col items-center md:items-end gap-2 px-6 border-l-0 md:border-l border-amber-500/20">
                             <span className="text-[#ffffff] font-bold text-xs md:text-sm tracking-widest">{userData.nombre}</span>
                             <span className="text-[#d4af37] font-bold opacity-80">
-                                {isMaster ? "Gran Maestro del Conclave" : (userData.rol === 'Escritor' ? 'Autor' : 'Espectador')} — {isMaster ? "Soberano" : userData.nivel}
+                                {isMaster ? "Gran Maestro del Cónclave" : (userData.rol === 'Escritor' ? 'Autor' : 'Espectador')} — {isMaster ? "Soberano" : userData.nivel}
                             </span>
                             {isMaster && (
-                                <span className="text-[9px] text-[#ffffff] bg-amber-500/20 px-3 py-1 rounded-full animate-pulse border border-amber-500/20">
-                                    Tinta Infinita
+                                <div className="flex gap-2">
+                                    <span className="text-[9px] text-[#ffffff] bg-amber-500/20 px-3 py-1 rounded-full animate-pulse border border-amber-500/20">
+                                        {t("hub_infinite_ink")}
+                                    </span>
+                                    {userData.streak > 0 && (
+                                        <span className="text-[9px] text-[#d4af37] bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30 flex items-center gap-1">
+                                            <span className="animate-fire">🔥</span> {userData.streak} {t("streak_days")}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                             {!isMaster && userData.streak > 0 && (
+                                <span className="text-[9px] text-[#d4af37] bg-white/5 px-3 py-1 rounded-full border border-white/10 flex items-center gap-1">
+                                    <span className="animate-fire">🔥</span> {userData.streak} {t("streak_days")}
                                 </span>
+                            )}
+                            {isMaster && (
+                                <a 
+                                    href="/panel/tienda" 
+                                    className="mt-2 bg-amber-600 hover:bg-amber-500 text-black text-[9px] font-black px-4 py-1.5 rounded-full tracking-widest transition-all shadow-[0_0_15px_rgba(217,119,6,0.3)]"
+                                >
+                                    🛠️ ADMINISTRAR TIENDA
+                                </a>
                             )}
                         </div>
                         <div className="w-16 md:w-px h-px md:h-12 bg-amber-500/20"></div>
@@ -155,7 +181,7 @@ export default function PlatformHub() {
                             onClick={() => signOut({ callbackUrl: '/login' })}
                             className="bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/20 px-8 py-4 md:py-5 rounded-sm transition-all text-[#d4af37] font-bold hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] tracking-[0.3em] md:tracking-[0.4em]"
                         >
-                            Abandonar
+                            {t("footer_disconnect")}
                         </button>
                     </div>
                 </header>
@@ -185,12 +211,17 @@ export default function PlatformHub() {
                     <div className="flex flex-wrap justify-center gap-8 md:gap-16 items-center">
                         <span className="opacity-60 italic text-gray-400">Fundado en el año MMXXVI</span>
                         <div className="w-8 h-[1px] bg-amber-500/10 hidden md:block"></div>
-                        <a href="/manual" className="text-amber-500/80 hover:text-amber-500 transition-colors font-bold">Manual Arcano</a>
+                        <a href="/manual" className="text-amber-500/80 hover:text-amber-500 transition-colors font-bold">{t("footer_manual")}</a>
                         <div className="w-8 h-[1px] bg-amber-500/10 hidden md:block"></div>
                         <a href="/panel" className="text-amber-500/60 hover:text-amber-500 transition-colors">
-                            {isMaster ? "Consur de Maestros" : "Juicio de Autores"}
+                            {isMaster ? t("footer_tribunal") : t("footer_tribunal")}
                         </a>
                     </div>
+                    {isMaster && (
+                        <div className="text-[8px] text-amber-500/20 animate-pulse font-mono mt-4">
+                            [ SELLO DE MAESTRO ACTIVO - VERSIÓN 2.0.1 ]
+                        </div>
+                    )}
                 </footer>
             </div>
         </main>

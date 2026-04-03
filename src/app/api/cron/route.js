@@ -145,12 +145,16 @@ export async function GET(req) {
             // Noticia en la comunidad (Simulación via Mensaje)
             if (c.entradas.length > 0) {
               const ganador = c.entradas[0].participante;
-              await prisma.mensaje.create({
-                  data: {
-                      userId: "system", // ID del sistema
-                      texto: `🏛️ ¡LA COSECHA HA TERMINADO! El Gran Maestro proclama a ${ganador} como vencedor del certamen: ${c.titulo}.`
-                  }
-              });
+              const maestro = await prisma.user.findFirst({ where: { rol: "Maestro" } }) || await prisma.user.findFirst();
+              
+              if (maestro) {
+                await prisma.mensaje.create({
+                    data: {
+                        userId: maestro.id,
+                        texto: `🏛️ ¡LA COSECHA HA TERMINADO! El Cónclave proclama a ${ganador} como vencedor del certamen: ${c.titulo}. ✨`
+                    }
+                });
+              }
             }
 
             resultados.payouts++;

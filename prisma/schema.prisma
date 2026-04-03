@@ -58,6 +58,8 @@ model User {
   password         String?   // For Credentials provider (hashed)
   
   // Custom Fields
+  nombre           String?   // Alias para compatibilidad
+  bio              String?   // Biografía del autor
   rol              String    @default("Escritor")
   tinta            Int       @default(60)
   puntos           Int       @default(0) // XP
@@ -67,7 +69,10 @@ model User {
   generoFavorito   String?
   escritorFavorito String?
   victorias        Int       @default(0)
-  bio              String?
+  // Streak System
+  lastParticipation DateTime?
+  streak           Int       @default(0)
+
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -77,6 +82,7 @@ model User {
   entradas         Entrada[] // Su participacion en concursos
   mensajes         Mensaje[] // Comunidad
   juezDe           Concurso[] @relation("JuezConcurso")
+  itemsAdquiridos  UserItem[] // Libros y objetos comprados
 }
 
 model Concurso {
@@ -127,4 +133,35 @@ model Mensaje {
   timestamp     DateTime  @default(now())
 
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// El Gran Mercado
+model TiendaItem {
+  id          String   @id @default(cuid())
+  nombre      String
+  descripcion String
+  precio      Float
+  precioTinta Int?     // Opción de compra con Tinta/XP si aplica
+  tipo        String   @default("tinta") // tinta, libro, objeto
+  cantidad    Int?     // Para packs de tinta (ej: +50)
+  imagenUrl   String?
+  enlacePdf   String?  // Para libros
+  enlaceEpub  String?  // Para libros
+  disponible  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  propietarios UserItem[]
+}
+
+model UserItem {
+  id          String   @id @default(cuid())
+  userId      String
+  itemId      String
+  adquiridoEl DateTime @default(now())
+  
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item        TiendaItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId]) // Evitar duplicados de compra del mismo item
 }

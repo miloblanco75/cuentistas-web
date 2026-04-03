@@ -1,12 +1,12 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { CASAS } from "@/lib/constants";
+import { useLanguage } from "@/components/LanguageContext";
+import { useSession, signOut } from "next-auth/react";
 
 export default function PerfilPage() {
     const [user, setUser] = useState(null);
     const [activeTab, setActiveTab] = useState("archive"); // 'obras' or 'archive'
+    const { t } = useLanguage();
+    const { data: session } = useSession();
     const router = useRouter();
 
     useEffect(() => {
@@ -38,40 +38,57 @@ export default function PerfilPage() {
                         <div>
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="w-8 h-[1px] bg-gold/50"></div>
-                                <p className="text-[10px] tracking-[0.4em] uppercase text-gold font-sans font-medium">Legado Real</p>
+                                <div className="w-8 h-[1px] bg-gold/50"></div>
+                                <p className="text-[10px] tracking-[0.4em] uppercase text-gold font-sans font-medium">{t("profile_legacy")}</p>
                             </div>
-                            <h1 className="text-8xl font-light tracking-tighter text-white font-serif italic">{user.nombre}</h1>
+                            <h1 className="text-8xl font-light tracking-tighter text-white font-serif italic">{user.nombre || session?.user?.name}</h1>
                         </div>
                         <div className="flex flex-col items-end gap-6">
                             <div className="text-right royal-card p-6 px-10 border-gold/20">
-                                <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-2 font-sans">Sello de la Casa</p>
-                                <p className="text-xl font-serif italic text-gold">{casaData.nombre}</p>
+                                <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-2 font-sans">{t("profile_seal")}</p>
+                                <p className="text-xl font-serif italic text-gold">{t(`casa_${casaData.id}`)}</p>
                             </div>
                             <button
-                                onClick={handleLogout}
+                                onClick={() => signOut({ callbackUrl: '/' })}
                                 className="text-[9px] tracking-[0.5em] uppercase text-red-500/50 hover:text-red-500 transition-all font-sans border-b border-transparent hover:border-red-500/20 pb-1"
                             >
-                                Cerrar Sesión
+                                {t("footer_disconnect")}
                             </button>
                         </div>
                     </div>
 
                     <div className="h-[1px] w-full bg-gradient-to-r from-white/5 via-white/10 to-white/5"></div>
+                    
+                    <div className="flex justify-center">
+                        <a 
+                            href="/perfil/compartir"
+                            className="royal-button px-12 py-5 text-xs tracking-[0.5em] uppercase animate-pulse shadow-[0_0_30px_rgba(212,175,55,0.1)]"
+                        >
+                            {t("profile_btn_forge")}
+                        </a>
+                    </div>
                 </header>
 
                 <section className="grid grid-cols-2 md:grid-cols-3 gap-8">
                     <div className="royal-card p-10 text-center space-y-4 border-gold/10">
-                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">Rango</p>
-                        <p className="text-3xl font-serif italic text-white/90">{user.nivel}</p>
+                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">{t("stat_rank")}</p>
+                        <p className="text-3xl font-serif italic text-white/90">{t(`rango_${user.nivel.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`)}</p>
                     </div>
                     <div className="royal-card p-10 text-center space-y-4 border-gold/10">
-                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">Prestigio</p>
+                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">{t("stat_prestige")}</p>
                         <p className="text-3xl font-serif italic text-gold">{user.puntos} Pts</p>
                     </div>
-                    <div className="royal-card p-10 text-center space-y-4 border-gold/10 col-span-2 md:col-span-1">
-                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">Tinta Pura</p>
+                    <div className="royal-card p-10 text-center space-y-4 border-gold/10">
+                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">{t("stat_ink")}</p>
                         <p className="text-3xl font-serif italic text-white/90">{user.tinta}✒️</p>
                     </div>
+                    {user.streak > 0 && (
+                        <div className="royal-card p-10 text-center space-y-4 border-gold/20 bg-gold/5 col-span-2 md:col-span-3">
+                            <p className="text-[10px] tracking-[0.3em] uppercase text-gold font-sans font-bold">{t("streak_title")}</p>
+                            <p className="text-5xl font-serif italic text-white animate-pulse">🔥 {user.streak} {t("streak_days")} 🔥</p>
+                            <p className="text-[9px] text-gray-500 uppercase tracking-widest italic">{t("streak_motto")}</p>
+                        </div>
+                    )}
                 </section>
 
                 <section className="space-y-20">
@@ -82,7 +99,7 @@ export default function PerfilPage() {
                                 onClick={() => setActiveTab(tab)}
                                 className={`text-[11px] tracking-[0.5em] uppercase font-sans transition-all duration-700 relative pb-4 ${activeTab === tab ? 'text-gold' : 'text-gray-600 hover:text-white'}`}
                             >
-                                {tab === 'archive' ? 'Evolución Digital' : 'Biblioteca Real'}
+                                {tab === 'archive' ? t("mod_examenes") : t("public_archive")}
                                 {activeTab === tab && <div className="absolute bottom-[-1px] left-0 w-full h-[1px] bg-gold"></div>}
                             </button>
                         ))}
