@@ -142,7 +142,9 @@ export default function PlatformHub() {
                         <p className="text-[10px] md:text-[11px] tracking-[0.4em] md:tracking-[0.6em] uppercase text-[#d4af37] font-cinzel mb-2">
                              {isMaster ? t("hub_sovereign") : t("hub_subtitle")}
                         </p>
-                        <h1 className="text-5xl md:text-8xl font-black italic title-gradient pr-0 md:pr-8">{t("hero_title")}</h1>
+                        <h1 className="text-5xl md:text-8xl font-black italic title-gradient pr-0 md:pr-8">
+                            {isMaster ? "TRONO DEL SOBERANO" : t("hero_title")}
+                        </h1>
                     </div>
                     <div className="font-cinzel text-[10px] md:text-[11px] tracking-[0.2em] md:tracking-[0.3em] uppercase text-center md:text-right flex flex-col md:flex-row items-center gap-8 md:gap-12">
                         <div className="flex flex-col items-center md:items-end gap-2 px-6 border-l-0 md:border-l border-amber-500/20">
@@ -185,6 +187,17 @@ export default function PlatformHub() {
                         </button>
                     </div>
                 </header>
+                
+                {isMaster && (
+                    <div className="flex justify-center -mb-8">
+                        <a 
+                            href="/panel/tienda" 
+                            className="bg-red-600 hover:bg-red-500 text-white font-black px-12 py-6 rounded-full tracking-[0.5em] transition-all shadow-[0_0_50px_rgba(220,38,38,0.5)] animate-bounce z-50 border-4 border-white/20"
+                        >
+                            💎 ENTRAR A LA BÓVEDA (MAESTRO)
+                        </a>
+                    </div>
+                )}
 
                 <nav className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-16">
                     {SECTIONS.map((s, idx) => (
