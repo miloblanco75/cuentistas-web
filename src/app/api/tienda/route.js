@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import prisma from "@/lib/db";
 
 export async function GET() {
     try {
-        const items = await db.tiendaItem.findMany({
+        const items = await prisma.tiendaItem.findMany({
             where: { disponible: true },
             orderBy: { createdAt: "desc" }
         });
