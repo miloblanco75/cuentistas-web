@@ -94,6 +94,50 @@ export default function ManualPage() {
                             </div>
                         </div>
                     </div>
+
+                    <div className="space-y-8">
+                        <h2 className="text-3xl font-serif italic text-gold">{t("manual_sec_v")}</h2>
+                        <div className="grid gap-8 md:grid-cols-3">
+                            <div className="royal-card p-10 space-y-4 border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all">
+                                <div className="text-2xl text-gold">📚</div>
+                                <h3 className="text-xl font-serif italic">{t("manual_pilar_escritura_t")}</h3>
+                                <p className="text-xs text-gray-400 leading-relaxed">{t("manual_pilar_escritura_d")}</p>
+                            </div>
+                            <div className="royal-card p-10 space-y-4 border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all">
+                                <div className="text-2xl text-gold">⚖️</div>
+                                <h3 className="text-xl font-serif italic">{t("manual_pilar_tribunal_t")}</h3>
+                                <p className="text-xs text-gray-400 leading-relaxed">{t("manual_pilar_tribunal_d")}</p>
+                            </div>
+                            <div className="royal-card p-10 space-y-4 border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all">
+                                <div className="text-2xl text-gold">🏆</div>
+                                <h3 className="text-xl font-serif italic">{t("manual_pilar_galeria_t")}</h3>
+                                <p className="text-xs text-gray-400 leading-relaxed">{t("manual_pilar_galeria_d")}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        <h2 className="text-3xl font-serif italic text-gold">{t("manual_sec_vi")}</h2>
+                        <div className="royal-card p-12 space-y-10 border-gold/5 bg-gradient-to-t from-gold/[0.02] to-transparent">
+                            <p className="text-lg text-gray-300 italic">{t("manual_sec_vi_p1")}</p>
+                            <div className="grid gap-12 md:grid-cols-2">
+                                <div className="flex gap-6 items-start">
+                                    <div className="p-4 bg-gold/10 rounded-full text-2xl">🖋️</div>
+                                    <div className="space-y-2">
+                                        <h4 className="font-bold text-gold uppercase tracking-tighter">{t("manual_comercio_tinta_t")}</h4>
+                                        <p className="text-sm text-gray-400">{t("manual_comercio_tinta_d")}</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-6 items-start">
+                                    <div className="p-4 bg-gold/10 rounded-full text-2xl">💎</div>
+                                    <div className="space-y-2">
+                                        <h4 className="font-bold text-gold uppercase tracking-tighter">{t("manual_comercio_artefactos_t")}</h4>
+                                        <p className="text-sm text-gray-400">{t("manual_comercio_artefactos_d")}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <footer className="pt-24 border-t border-white/5 flex flex-col items-center gap-8">
