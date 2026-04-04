@@ -148,25 +148,25 @@ export default function PlatformHub() {
                     </div>
                     <div className="font-cinzel text-[10px] md:text-[11px] tracking-[0.2em] md:tracking-[0.3em] uppercase text-center md:text-right flex flex-col md:flex-row items-center gap-8 md:gap-12">
                         <div className="flex flex-col items-center md:items-end gap-2 px-6 border-l-0 md:border-l border-amber-500/20">
-                            <span className="text-[#ffffff] font-bold text-xs md:text-sm tracking-widest">{userData.nombre || userData.name}</span>
+                            <span className="text-[#ffffff] font-bold text-xs md:text-sm tracking-widest">{userData?.nombre || userData?.name}</span>
                             <span className="text-[#d4af37] font-bold opacity-80">
-                                {isMaster ? "Gran Maestro del Cónclave" : (userData.rol === 'Escritor' ? 'Autor' : 'Espectador')} — {isMaster ? "Soberano" : userData.nivel}
+                                {isMaster ? "Gran Maestro del Cónclave" : (userData?.rol === 'Escritor' ? 'Autor' : 'Espectador')} — {isMaster ? "Soberano" : userData?.nivel}
                             </span>
                             {isMaster && (
                                 <div className="flex gap-2">
                                     <span className="text-[9px] text-[#ffffff] bg-amber-500/20 px-3 py-1 rounded-full animate-pulse border border-amber-500/20">
                                         {t("hub_infinite_ink")}
                                     </span>
-                                    {userData.streak > 0 && (
+                                    {userData?.streak > 0 && (
                                         <span className="text-[9px] text-[#d4af37] bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30 flex items-center gap-1">
-                                            <span className="animate-fire">🔥</span> {userData.streak} {t("streak_days")}
+                                            <span className="animate-fire">🔥</span> {userData?.streak} {t("streak_days")}
                                         </span>
                                     )}
                                 </div>
                             )}
-                             {!isMaster && userData.streak > 0 && (
+                             {!isMaster && userData?.streak > 0 && (
                                 <span className="text-[9px] text-[#d4af37] bg-white/5 px-3 py-1 rounded-full border border-white/10 flex items-center gap-1">
-                                    <span className="animate-fire">🔥</span> {userData.streak} {t("streak_days")}
+                                    <span className="animate-fire">🔥</span> {userData?.streak} {t("streak_days")}
                                 </span>
                             )}
                             {isMaster && (

@@ -118,7 +118,6 @@ export const authOptions = {
       }
     }
   },
-  debug: true, // Siempre encendido para el diagnóstico del Maestro
   secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
 }
