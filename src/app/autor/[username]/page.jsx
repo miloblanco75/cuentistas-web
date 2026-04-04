@@ -1,3 +1,7 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { CASAS } from "@/lib/constants";
 import { useLanguage } from "@/components/LanguageContext";
 

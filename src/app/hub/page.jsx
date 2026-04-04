@@ -172,9 +172,9 @@ export default function PlatformHub() {
                             {isMaster && (
                                 <a 
                                     href="/panel/tienda" 
-                                    className="mt-2 bg-amber-600 hover:bg-amber-500 text-black text-[9px] font-black px-4 py-1.5 rounded-full tracking-widest transition-all shadow-[0_0_15px_rgba(217,119,6,0.3)]"
+                                    className="mt-2 bg-gold hover:bg-amber-400 text-black text-[9px] font-black px-4 py-1.5 rounded-full tracking-widest transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] animate-pulse"
                                 >
-                                    🛠️ ADMINISTRAR TIENDA
+                                    🛠️ GESTIONAR TIENDA REAL
                                 </a>
                             )}
                         </div>
@@ -192,9 +192,11 @@ export default function PlatformHub() {
                     <div className="flex justify-center -mb-8">
                         <a 
                             href="/panel/tienda" 
-                            className="bg-red-600 hover:bg-red-500 text-white font-black px-12 py-6 rounded-full tracking-[0.5em] transition-all shadow-[0_0_50px_rgba(220,38,38,0.5)] animate-bounce z-50 border-4 border-white/20"
+                            className="bg-red-600 hover:bg-red-500 text-white font-black px-12 py-6 rounded-full tracking-[0.5em] transition-all shadow-[0_0_60px_rgba(220,38,38,0.7)] animate-bounce z-50 border-4 border-white/20 active:scale-95 group"
                         >
-                            💎 ENTRAR A LA BÓVEDA (MAESTRO)
+                            <span className="flex items-center gap-4">
+                                💎 <span className="group-hover:tracking-[0.6em] transition-all">ENTRAR A LA BÓVEDA (MAESTRO)</span>
+                            </span>
                         </a>
                     </div>
                 )}

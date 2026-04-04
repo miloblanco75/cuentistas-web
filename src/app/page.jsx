@@ -38,6 +38,12 @@ export default function Home() {
           
           <div className="flex flex-col items-center md:items-start gap-4 md:gap-6 border-l-0 md:border-l border-amber-500/10 pl-0 md:pl-16">
             <a
+              href='/mercado'
+              className='text-[10px] md:text-[11px] tracking-[0.4em] uppercase font-cinzel text-gold hover:text-white transition-all font-bold animate-pulse'
+            >
+              {t("mod_mercado")}
+            </a>
+            <a
               href='/manual'
               className='text-[10px] md:text-[11px] tracking-[0.4em] uppercase font-cinzel text-amber-500/80 hover:text-white transition-all border-b border-amber-500/20 pb-2'
             >

@@ -3,6 +3,8 @@ import prisma from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // Temporal para drafts
 global.drafts = global.drafts || {};
 
@@ -37,22 +39,15 @@ export async function GET(request) {
     }
 
     if (type === "mercado") {
-        const libros = [
-            { id: 1, titulo: "Antología del Cónclave", autor: "El Tribunal Supremo", precio: 300, imagen: "📘" },
-            { id: 2, titulo: "Tinta y Sangre", autor: "Maestro Errante", precio: 450, imagen: "📕" },
-            { id: 3, titulo: "Cantos de la Quimera", autor: "Anónimo", precio: 600, imagen: "📜" }
-        ];
-        const merch = [
-            { id: 1, nombre: "Pluma Real", precio: 25, imagen: "🖋️" },
-            { id: 2, nombre: "Relicario", precio: 40, imagen: "🏺" },
-            { id: 3, nombre: "Sello de Lacre", precio: 15, imagen: "🕯️" },
-            { id: 4, nombre: "Mapa Estelar", precio: 50, imagen: "🗺️" }
-        ];
-        const tintaItems = [
-            { id: 1, nombre: "Frasco Pequeño", cantidad: 100, precio: 5, bg: "from-blue-900/40" },
-            { id: 2, nombre: "Tintero Real", cantidad: 500, precio: 20, bg: "from-purple-900/40" },
-            { id: 3, nombre: "Manantial de Tinta", cantidad: 1500, precio: 50, bg: "from-gold/20" }
-        ];
+        const dbItems = await prisma.tiendaItem.findMany({
+            where: { disponible: true },
+            orderBy: { createdAt: "desc" }
+        });
+
+        const libros = dbItems.filter(i => i.tipo === 'libro');
+        const merch = dbItems.filter(i => i.tipo === 'objeto');
+        const tintaItems = dbItems.filter(i => i.tipo === 'tinta');
+
         return NextResponse.json({ ok: true, mercado: { libros, merch, tintaItems } });
     }
 
