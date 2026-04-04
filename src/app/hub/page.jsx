@@ -146,7 +146,7 @@ export default function PlatformHub() {
                     </div>
                     <div className="font-cinzel text-[10px] md:text-[11px] tracking-[0.2em] md:tracking-[0.3em] uppercase text-center md:text-right flex flex-col md:flex-row items-center gap-8 md:gap-12">
                         <div className="flex flex-col items-center md:items-end gap-2 px-6 border-l-0 md:border-l border-amber-500/20">
-                            <span className="text-[#ffffff] font-bold text-xs md:text-sm tracking-widest">{userData.nombre}</span>
+                            <span className="text-[#ffffff] font-bold text-xs md:text-sm tracking-widest">{userData.nombre || userData.name}</span>
                             <span className="text-[#d4af37] font-bold opacity-80">
                                 {isMaster ? "Gran Maestro del Cónclave" : (userData.rol === 'Escritor' ? 'Autor' : 'Espectador')} — {isMaster ? "Soberano" : userData.nivel}
                             </span>
@@ -218,8 +218,8 @@ export default function PlatformHub() {
                         </a>
                     </div>
                     {isMaster && (
-                        <div className="text-[8px] text-amber-500/20 animate-pulse font-mono mt-4">
-                            [ SELLO DE MAESTRO ACTIVO - VERSIÓN 2.0.1 ]
+                        <div className="text-[10px] text-amber-500/40 animate-pulse font-mono mt-4 border border-amber-500/20 px-4 py-2 rounded-sm bg-amber-500/5">
+                            [ DESPLIEGUE FINAL 2.0 - IDENTIDAD MAESTRO CONFIRMADA ]
                         </div>
                     )}
                 </footer>
