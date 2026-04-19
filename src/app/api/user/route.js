@@ -3,131 +3,109 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 
-export const dynamic = 'force-dynamic';
-
-const niveles = [
-  { nombre: "Principiante", min: 0 },
-  { nombre: "Intermedio", min: 100 },
-  { nombre: "Avanzado", min: 300 },
-  { nombre: "Maestro", min: 600 },
-  { nombre: "Legendario", min: 1000 }
-];
-
 export async function GET() {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-        return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
-    }
-
-    const dbUser = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        include: {
-            entradas: {
-                include: { concurso: true },
-                orderBy: { timestamp: 'desc' }
-            }
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.email) {
+            return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
         }
-    });
 
-    if (!dbUser) {
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            include: { misiones: { include: { mision: true } } }
+        });
+
+        if (!user) {
+            return NextResponse.json({ ok: false, error: "Usuario no encontrado" }, { status: 404 });
+        }
+
+        // --- ASIGNACIÓN DE MANDATOS DIARIOS ---
+        try {
+            const { asignarMandatos } = await import("@/lib/mandatos");
+            await asignarMandatos(user.id);
+        } catch (e) {
+            console.error("Error al asignar mandatos:", e);
+        }
+
+        // REGLA SUPREMA: El Maestro siempre es ARQUITECTO
+        const isMaster = user.email && user.email.toLowerCase().trim() === "ermiloblanco75@gmail.com";
+
         return NextResponse.json({ 
             ok: true, 
             user: {
-                nombre: session.user.name || "Espectador",
-                rol: "spectator",
-                nivel: "Principiante",
-                tinta: 0,
-                obras: [],
-                archivoEvolucion: []
+                id: user.id,
+                email: user.email,
+                nombre: user.nombre || user.name,
+                username: user.username,
+                image: user.image,
+                rol: isMaster ? "ARCHITECT" : (user.rol || "CUENTISTA"),
+                tinta: user.tinta || 0,
+                nivel: isMaster ? "Soberano Creador" : (!user.hasPerformedFirstAction ? "Visitante" : (user.nivel || "Iniciado")),
+                casa: isMaster ? (user.casa || "Cónclave") : (user.casa || null),
+                streak: user.streak || 0,
+                puntos: user.puntos || 0,
+                puntosCasa: user.puntosCasa || 0,
+                hasPerformedFirstAction: isMaster ? true : (user.hasPerformedFirstAction || false),
+                lastParticipation: user.lastParticipation || null,
+                misiones: user.misiones || []
             } 
         });
+    } catch (error) {
+        console.error("Error en API User:", error);
+        return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
     }
-
-    const { password, ...user } = dbUser;
-
-    // Poderes de Soberano: Si es Maestro, tiene tinta infinita visualmente
-    if (user.rol === "Maestro") {
-        user.tinta = 999999;
-        user.nivel = "Gran Maestro del Cónclave";
-    }
-
-    const userWithObras = {
-        ...user,
-        streak: user.streak || 0,
-        lastParticipation: user.lastParticipation,
-        obras: user.entradas.filter(e => e.concurso?.status === 'finished').map(e => ({
-            titulo: e.concurso?.titulo || 'Desconocido',
-            fecha: new Date(e.timestamp).toLocaleDateString(),
-            texto: e.texto
-        })),
-        archivoEvolucion: user.entradas.map(e => ({
-            titulo: e.concurso?.titulo || 'Desconocido',
-            fecha: new Date(e.timestamp).toLocaleDateString(),
-            texto: e.texto,
-            pressure: e.concurso?.status !== 'finished'
-        }))
-    };
-
-    return NextResponse.json({ ok: true, user: userWithObras });
 }
 
-export async function POST(request) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-        return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
-    }
-
-    const { action, cantidad, concursoId } = await request.json();
-    const userId = session.user.id;
-    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-
-    // Bypass Maestro: El Soberano no paga ni tiene restricciones de nivel
-    if (dbUser.rol === "Maestro") {
-        if (action === "check") {
-            return NextResponse.json({ ok: true, access: true, isMaster: true });
+export async function POST(req) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.email) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const reSession = await getServerSession(authOptions);
+            if (!reSession?.user?.email) return NextResponse.json({ ok: false, error: "Sesión no sincronizada" }, { status: 401 });
+            return handleUpdate(reSession, req);
         }
-        if (action === "pay") {
-            return NextResponse.json({ ok: true, tinta: 999999 }); // Gratis
-        }
+        return handleUpdate(session, req);
+    } catch (error) {
+        return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
     }
+}
 
-    if (action === "buy") {
-        const updated = await prisma.user.update({
-            where: { id: userId },
-            data: { tinta: { increment: cantidad } }
+async function handleUpdate(session, req) {
+    const body = await req.json();
+    const { casa, action } = body;
+    let updateData = {};
+    if (casa) updateData.casa = casa;
+    if (action === "joinHouse" || action === "completeOnboarding") updateData.hasPerformedFirstAction = true;
+
+    try {
+        const user = await prisma.user.update({
+            where: { email: session.user.email },
+            data: updateData,
+            include: { misiones: { include: { mision: true } } }
         });
-        return NextResponse.json({ ok: true, tinta: updated.tinta });
+        const isMaster = user.email && user.email.toLowerCase().trim() === "ermiloblanco75@gmail.com";
+        return NextResponse.json({ 
+            ok: true, 
+            user: {
+                id: user.id,
+                email: user.email,
+                nombre: user.nombre || user.name,
+                username: user.username,
+                image: user.image,
+                rol: isMaster ? "ARCHITECT" : (user.rol || "CUENTISTA"),
+                tinta: user.tinta || 0,
+                nivel: isMaster ? "Soberano Creador" : (!user.hasPerformedFirstAction ? "Visitante" : (user.nivel || "Iniciado")),
+                casa: isMaster ? (user.casa || "Cónclave") : (user.casa || null),
+                streak: user.streak || 0,
+                puntos: user.puntos || 0,
+                puntosCasa: user.puntosCasa || 0,
+                hasPerformedFirstAction: isMaster ? true : (user.hasPerformedFirstAction || false),
+                lastParticipation: user.lastParticipation || null,
+                misiones: user.misiones || []
+            } 
+        });
+    } catch (dbError) {
+        return NextResponse.json({ ok: false, error: "Error de sincronización" }, { status: 500 });
     }
-
-    if (action === "pay") {
-        if (dbUser.tinta >= cantidad) {
-            const updated = await prisma.user.update({
-                where: { id: userId },
-                data: { tinta: { decrement: cantidad } }
-            });
-            return NextResponse.json({ ok: true, tinta: updated.tinta });
-        }
-        return NextResponse.json({ ok: false, error: "Tinta insuficiente" }, { status: 400 });
-    }
-
-    if (action === "check") {
-        const concurso = await prisma.concurso.findUnique({ where: { id: concursoId } });
-        if (!concurso) return NextResponse.json({ ok: true, access: false });
-
-        if (concurso.categoria) {
-            const userNivelIdx = niveles.findIndex(n => n.nombre === dbUser.nivel);
-            const contestNivelIdx = niveles.findIndex(n => n.nombre === concurso.categoria);
-            
-            if (userNivelIdx >= contestNivelIdx) {
-                return NextResponse.json({ ok: true, access: true });
-            }
-            if (dbUser.tinta >= concurso.costoTinta) {
-                return NextResponse.json({ ok: true, access: "pay" });
-            }
-            return NextResponse.json({ ok: true, access: false });
-        }
-        return NextResponse.json({ ok: true, access: true });
-    }
-
-    return NextResponse.json({ ok: false, error: "Acción no válida" }, { status: 400 });
 }
