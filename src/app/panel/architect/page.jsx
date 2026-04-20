@@ -6,7 +6,9 @@ import {
   Pause, Play, UserMinus, Star, AlertTriangle, Hammer,
   ArrowUpRight, Gavel, BarChart3, Clock
 } from "lucide-react";
-import { HouseDistributionChart, ActivityChart } from "@/components/admin/ArchitectCharts";
+import dynamic from "next/dynamic";
+const HouseDistributionChart = dynamic(() => import("@/components/admin/ArchitectCharts").then(m => m.HouseDistributionChart), { ssr: false });
+const ActivityChart = dynamic(() => import("@/components/admin/ArchitectCharts").then(m => m.ActivityChart), { ssr: false });
 import MarketConsole from "@/components/admin/MarketConsole";
 import { pusherClient } from "@/lib/pusherClient";
 

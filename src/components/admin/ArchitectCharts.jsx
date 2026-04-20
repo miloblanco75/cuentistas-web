@@ -9,6 +9,7 @@ import {
 const COLORS = ['#d4af37', '#8b5cf6', '#ff4444', '#1098ad'];
 
 export function HouseDistributionChart({ data }) {
+  if (typeof window === "undefined") return null;
   const chartData = data?.map(item => ({
     name: item.casa || "Sin Casa",
     value: item._count.id
@@ -42,6 +43,7 @@ export function HouseDistributionChart({ data }) {
 }
 
 export function ActivityChart({ data }) {
+  if (typeof window === "undefined") return null;
   // Mocking activity if real data is missing for now
   const chartData = [
     { name: '00:00', users: 12 },
