@@ -1,0 +1,45 @@
+server {
+    listen 80;
+    server_name cuentistasonline.com www.cuentistasonline.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name cuentistasonline.com www.cuentistasonline.com;
+
+    ssl_certificate /etc/letsencrypt/live/cuentistasonline.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/cuentistasonline.com/privkey.pem;
+
+    # SEGURIDAD Y RENDIMIENTO (NUCLEAR BUFFERS)
+    proxy_buffer_size 512k;
+    proxy_buffers 4 512k;
+    proxy_busy_buffers_size 512k;
+    proxy_headers_hash_max_size 1024;
+    proxy_headers_hash_bucket_size 256;
+
+    # ERROR HANDLING FALLBACK
+    error_page 502 503 504 /502.html;
+    location = /502.html {
+        root /var/www/html;
+        internal;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_cache_bypass $http_upgrade;
+        
+        # TIMEOUTS (Avoid 504 while fixing 502)
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+}
