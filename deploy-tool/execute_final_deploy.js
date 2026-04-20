@@ -11,7 +11,7 @@ const config = {
 conn.on('ready', () => {
   console.log('🔗 Conectado para DESPLIEGUE FINAL (PROD)...');
   
-  const remoteCommand = 'cd /root/cuentistas-web && git checkout main && git pull origin main && npm install && npm run build && pm2 restart cuentistas';
+  const remoteCommand = 'cd /root/cuentistas-web && git fetch origin && git reset --hard && git checkout -f main && git reset --hard origin/main && npm install && npm run build && pm2 restart cuentistas';
 
   conn.exec(remoteCommand, (err, stream) => {
     if (err) throw err;
