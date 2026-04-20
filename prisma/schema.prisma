@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,22 +8,20 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// NextAuth Models Core
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -47,121 +42,260 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Cuentistas Web Data Models
 model User {
-  id               String    @id @default(cuid())
-  name             String?
-  username         String?   @unique
-  email            String?   @unique
-  emailVerified    DateTime?
-  image            String?
-  password         String?   // For Credentials provider (hashed)
-  
-  // Custom Fields
-  nombre           String?   // Alias para compatibilidad
-  bio              String?   // Biografía del autor
-  rol              String    @default("Escritor")
-  tinta            Int       @default(60)
-  puntos           Int       @default(0) // XP
-  puntosCasa       Int       @default(0) // Para el ranking mensual de casas
-  nivel            String    @default("Principiante")
-  casa             String?
-  generoFavorito   String?
-  escritorFavorito String?
-  victorias        Int       @default(0)
-  // Streak System
-  lastParticipation DateTime?
-  streak           Int       @default(0)
-
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  // Relations
-  accounts         Account[]
-  sessions         Session[]
-  entradas         Entrada[] // Su participacion en concursos
-  mensajes         Mensaje[] // Comunidad
-  juezDe           Concurso[] @relation("JuezConcurso")
-  itemsAdquiridos  UserItem[] // Libros y objetos comprados
+  id                      String           @id @default(cuid())
+  name                    String?
+  username                String?          @unique
+  email                   String?          @unique
+  emailVerified           DateTime?
+  image                   String?
+  password                String?
+  rol                     String           @default("CUENTISTA")
+  tinta                   Int              @default(10)
+  puntos                  Int              @default(0)
+  nivel                   String           @default("Principiante")
+  casa                    String?
+  generoFavorito          String?
+  escritorFavorito        String?
+  victorias               Int              @default(0)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  puntosCasa              Int              @default(0)
+  lastParticipation       DateTime?
+  streak                  Int              @default(0)
+  bio                     String?
+  nombre                  String?
+  juramentoFirmado        Boolean          @default(false)
+  isBanned                Boolean          @default(false)
+  muteUntil               DateTime?
+  especialidad            String?
+  ultimoVotoReset         DateTime?
+  votosHoy                Int              @default(0)
+  founderNumber           Int?
+  isFounder               Boolean          @default(false)
+  stripeCustomerId        String?          @unique
+  stripeSubscriptionId    String?          @unique
+  subscriptionStatus      String           @default("INACTIVE")
+  hasCompletedOnboarding  Boolean          @default(false)
+  hasPerformedFirstAction Boolean          @default(false)
+  lastDailyGift           DateTime?
+  lossStreak              Int              @default(0)
+  isFirstPurchase         Boolean          @default(true)
+  totalSpent              Float            @default(0.0)
+  perfilVistas            Int              @default(0)
+  logros                  String[]         @default([])
+  accounts                Account[]
+  AuditLog                AuditLog[]
+  juezDe                  Concurso[]       @relation("JuezConcurso")
+  Draft                   Draft[]
+  entradas                Entrada[]
+  mensajes                Mensaje[]
+  PurchaseIntent          PurchaseIntent[]
+  sessions                Session[]
+  TiendaItem              TiendaItem[]
+  itemsAdquiridos         UserItem[]
+  UserMision              UserMision[]
+  Voto                    Voto[]
 }
 
 model Concurso {
-  id            String    @id @default(cuid())
-  titulo        String
-  descripcion   String
-  status        String    @default("waiting") // waiting, active, finished
-  startTime     DateTime?
-  scheduledTime DateTime?
-  duration      Int       @default(5400) // 1.5 hours in seconds
-  temaGeneral   String?
-  temaExacto    String?
-  categoria     String    @default("Principiante")
-  costoTinta    Int       @default(0)
-  isExamen      Boolean   @default(false)
-  processed     Boolean   @default(false) // Para la Cosecha de premios
-  tipo          String    @default("normal") // normal, casa
-  juezId        String?
-  juez          User?     @relation("JuezConcurso", fields: [juezId], references: [id])
-  createdAt     DateTime  @default(now())
-
-  entradas      Entrada[]
+  id               String    @id @default(cuid())
+  titulo           String
+  descripcion      String
+  status           String    @default("waiting")
+  startTime        DateTime?
+  scheduledTime    DateTime?
+  duration         Int       @default(5400)
+  temaGeneral      String?
+  temaExacto       String?
+  categoria        String    @default("Principiante")
+  costoTinta       Int       @default(0)
+  isExamen         Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  juezId           String?
+  processed        Boolean   @default(false)
+  tipo             String    @default("normal")
+  maxParticipants  Int?
+  prizePool        Int       @default(0)
+  rewardMultiplier Float     @default(1.0)
+  expiresAt        DateTime?
+  isFlash          Boolean   @default(false)
+  juez             User?     @relation("JuezConcurso", fields: [juezId], references: [id])
+  Draft            Draft[]
+  entradas         Entrada[]
 }
 
 model Entrada {
-  id            String    @id @default(cuid())
-  concursoId    String
-  userId        String
-  texto         String
-  participante  String    // Saved explicitly in case user changes name
-  suspicious    Boolean   @default(false)
-  tabSwitches   Int       @default(0)
-  puntajeTotal  Float     @default(0)
-  votos         Int       @default(0)
-  timestamp     DateTime  @default(now())
+  id           String   @id @default(cuid())
+  concursoId   String
+  userId       String
+  texto        String
+  participante String
+  suspicious   Boolean  @default(false)
+  tabSwitches  Int      @default(0)
+  puntajeTotal Float    @default(0)
+  votos        Int      @default(0)
+  timestamp    DateTime @default(now())
+  expertScore  Float    @default(0)
+  popularScore Float    @default(0)
+  isPublished  Boolean  @default(false)
+  isFeatured   Boolean  @default(false)
+  vistas       Int      @default(0)
+  concurso     Concurso @relation(fields: [concursoId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Voto         Voto[]
 
-  concurso      Concurso  @relation(fields: [concursoId], references: [id], onDelete: Cascade)
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  @@unique([userId, concursoId])
   @@index([concursoId])
   @@index([userId])
 }
 
 model Mensaje {
-  id            String    @id @default(cuid())
-  userId        String
-  texto         String
-  timestamp     DateTime  @default(now())
-
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  userId    String
+  texto     String
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// El Gran Mercado
 model TiendaItem {
-  id          String   @id @default(cuid())
-  nombre      String
-  descripcion String
-  precio      Float
-  precioTinta Int?     // Opción de compra con Tinta/XP si aplica
-  tipo        String   @default("tinta") // tinta, libro, objeto
-  cantidad    Int?     // Para packs de tinta (ej: +50)
-  imagenUrl   String?
-  enlacePdf   String?  // Para libros
-  enlaceEpub  String?  // Para libros
-  disponible  Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  propietarios UserItem[]
+  id             String     @id @default(cuid())
+  nombre         String
+  descripcion    String
+  precio         Float
+  precioTinta    Int?
+  tipo           String     @default("tinta")
+  cantidad       Int?
+  imagenUrl      String?
+  enlacePdf      String?
+  enlaceEpub     String?
+  disponible     Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  casaRequerida  String?
+  categoria      String?    @default("Tinta")
+  metadata       Json?
+  rangoRequerido String?
+  authorId       String?
+  commission     Float      @default(0.20)
+  stripePriceId  String?    @unique
+  User           User?      @relation(fields: [authorId], references: [id])
+  propietarios   UserItem[]
 }
 
 model UserItem {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   userId      String
   itemId      String
-  adquiridoEl DateTime @default(now())
-  
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adquiridoEl DateTime   @default(now())
+  cantidad    Int        @default(1)
+  status      String     @default("active")
   item        TiendaItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, itemId]) // Evitar duplicados de compra del mismo item
+  @@unique([userId, itemId])
+}
+
+model AuditLog {
+  id        String   @id
+  adminId   String
+  action    String
+  targetId  String?
+  details   String?
+  timestamp DateTime @default(now())
+  User      User     @relation(fields: [adminId], references: [id])
+}
+
+model Draft {
+  id          String    @id
+  concursoId  String
+  userId      String
+  username    String?
+  texto       String
+  suspicious  Boolean   @default(false)
+  tabSwitches Int       @default(0)
+  updatedAt   DateTime
+  startedAt   DateTime?
+  Concurso    Concurso  @relation(fields: [concursoId], references: [id], onDelete: Cascade)
+  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, concursoId])
+}
+
+model GlobalSettings {
+  id               String   @id @default("singleton")
+  gloriaMultiplier Float    @default(1.0)
+  inkBonus         Int      @default(0)
+  isEventActive    Boolean  @default(false)
+  eventName        String?
+  lastUpdate       DateTime
+  lastWeeklyWinner String?
+}
+
+model Mision {
+  id           String       @id
+  titulo       String
+  descripcion  String
+  tipo         String
+  meta         Int
+  recompensa   Json
+  rareza       String       @default("COMUN")
+  isPersistent Boolean      @default(false)
+  costoTinta   Int          @default(0)
+  UserMision   UserMision[]
+}
+
+model PurchaseIntent {
+  id                String   @id
+  userId            String
+  contestId         String?
+  itemId            String?
+  tintaMissing      Int
+  intentLevel       Int      @default(1)
+  contexto          Json?
+  timestamp         DateTime @default(now())
+  updatedAt         DateTime
+  wantsNotification Boolean  @default(false)
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserMision {
+  id          String   @id
+  userId      String
+  misionId    String
+  progreso    Int      @default(0)
+  completada  Boolean  @default(false)
+  reclamada   Boolean  @default(false)
+  fechaInicio DateTime @default(now())
+  ultimaAct   DateTime
+  aceptada    Boolean  @default(false)
+  fallida     Boolean  @default(false)
+  Mision      Mision   @relation(fields: [misionId], references: [id], onDelete: Cascade)
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, misionId])
+}
+
+model Voto {
+  id           String   @id
+  userId       String
+  entradaId    String
+  tipo         String   @default("POPULAR")
+  tecnica      Int?     @default(0)
+  creatividad  Int?     @default(0)
+  impacto      Int?     @default(0)
+  mencionHonor Boolean? @default(false)
+  comentario   String?
+  timestamp    DateTime @default(now())
+  Entrada      Entrada  @relation(fields: [entradaId], references: [id], onDelete: Cascade)
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, entradaId, tipo])
+}
+
+model Waitlist {
+  id        String   @id
+  email     String   @unique
+  username  String?
+  timestamp DateTime @default(now())
 }

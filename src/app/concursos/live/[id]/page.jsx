@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { safeFetch } from "@/lib/api";
 
 export default function LiveContestPage() {
     const { id } = useParams();
@@ -27,21 +28,23 @@ export default function LiveContestPage() {
 
     useEffect(() => {
         async function load() {
-            const resU = await fetch("/api/user");
-            const dataU = await resU.json();
-            setUser(dataU.user);
+            try {
+                const dataU = await safeFetch("/api/user");
+                setUser(dataU.user);
 
-            const resC = await fetch(`/api/concursos?id=${id}`);
-            const dataC = await resC.json();
-            if (dataC.ok) {
-                setConcurso(dataC.concurso);
-                setStatus(dataC.concurso.status);
-                if (dataC.concurso.status === "active") {
-                    const elapsed = Math.floor((Date.now() - dataC.concurso.startTime) / 1000);
-                    const remaining = Math.max(0, dataC.concurso.duration - elapsed);
-                    setTimeLeft(remaining);
+                const dataC = await safeFetch(`/api/concursos?id=${id}`);
+                if (dataC.ok) {
+                    setConcurso(dataC.concurso);
+                    setStatus(dataC.concurso.status);
+                    if (dataC.concurso.status === "active") {
+                        const elapsed = Math.floor((Date.now() - dataC.concurso.startTime) / 1000);
+                        const remaining = Math.max(0, dataC.concurso.duration - elapsed);
+                        setTimeLeft(remaining);
+                    }
+                    if (dataC.concurso.status === "finished") setIsFinished(true);
                 }
-                if (dataC.concurso.status === "finished") setIsFinished(true);
+            } catch (err) {
+                console.error("❌ Error al cargar datos del concurso:", err.message);
             }
         }
         load();
@@ -72,7 +75,7 @@ export default function LiveContestPage() {
                 }
                 lastTextLen.current = currentLen;
 
-                fetch("/api/hub", {
+                safeFetch("/api/hub", {
                     method: "POST",
                     body: JSON.stringify({
                         type: "draft",
@@ -83,7 +86,7 @@ export default function LiveContestPage() {
                         tabSwitches
                     }),
                     headers: { "Content-Type": "application/json" }
-                });
+                }).catch(err => console.warn("⚠️ Autosave failed:", err.message));
             }, 3000);
             return () => clearInterval(sync);
         }
@@ -111,18 +114,22 @@ export default function LiveContestPage() {
     }, [status, timeLeft]);
 
     const handleSubmit = async () => {
-        const res = await fetch("/api/entradas", {
-            method: "POST",
-            body: JSON.stringify({
-                concursoId: id,
-                texto: text,
-                participante: user.nombre,
-                suspicious: isSuspicious,
-                tabSwitches
-            }),
-            headers: { "Content-Type": "application/json" }
-        });
-        if (res.ok) router.push("/hub");
+        try {
+            await safeFetch("/api/entradas", {
+                method: "POST",
+                body: JSON.stringify({
+                    concursoId: id,
+                    texto: text,
+                    participante: user.nombre,
+                    suspicious: isSuspicious,
+                    tabSwitches
+                }),
+                headers: { "Content-Type": "application/json" }
+            });
+            router.push("/hub");
+        } catch (err) {
+            alert(`Error al enviar: ${err.message}`);
+        }
     };
 
     const startRecording = async () => {

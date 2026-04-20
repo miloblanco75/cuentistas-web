@@ -25,31 +25,44 @@ export const authOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (user) {
+    async jwt({ token, user, trigger, session }) {
+      // Prioridad: Variable de entorno ADMIN_EMAIL
+      const adminEmail = process.env.ADMIN_EMAIL || "ermiloblanco75@gmail.com";
+      const currentEmail = user?.email || token?.email;
+
+      if (currentEmail && currentEmail.toLowerCase().trim() === adminEmail.toLowerCase().trim()) {
+        token.rol = "ARCHITECT";
+        token.nivel = "Soberano Arquitecto";
+      } else if (user) {
         token.id = user.id;
         token.email = user.email;
-        
-        // REGLA SUPREMA: Normalización de email del Arquitecto
-        const targetEmail = "ermiloblanco75@gmail.com";
-        if (user.email && user.email.toLowerCase().trim() === targetEmail) {
-          token.rol = "ARCHITECT";
-        } else {
-          token.rol = user.rol || "CUENTISTA";
-        }
+        token.rol = user.rol || "CUENTISTA";
+        token.nivel = user.nivel || "Principiante";
       }
+      
+      // Soporte para actualizaciones manuales de sesión si es necesario
+      if (trigger === "update" && session) {
+         return { ...token, ...session.user };
+      }
+
       return token;
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.id;
         session.user.email = token.email;
         session.user.rol = token.rol;
+        session.user.nivel = token.nivel;
       }
       return session;
     }
   },
-  session: { strategy: "jwt" },
+  session: { 
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 días
+  },
+  useSecureCookies: process.env.NODE_ENV === "production",
   pages: { signIn: "/login" },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 };

@@ -33,6 +33,11 @@ function LoginContent() {
                         <input className="royal-input text-lg" placeholder="tu_pseudonimo" value={username} onChange={(e) => setUsername(e.target.value)} />
                     </div>
 
+                    <div className="space-y-4 text-left">
+                        <label className="text-[10px] tracking-[0.5em] uppercase text-amber-500/80 font-cinzel font-bold">Llave Maestra</label>
+                        <input className="royal-input text-lg" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+                    </div>
+
                     <button type="submit" disabled={loading} className="royal-button w-full py-8 text-base">
                         {loading ? "Descifrando..." : "Cruzar el Umbral"}
                     </button>

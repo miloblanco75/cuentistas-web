@@ -24,6 +24,8 @@ export const metadata: Metadata = {
 import { LanguageProvider } from "@/components/LanguageContext";
 import LanguageToggle from "@/components/LanguageToggle";
 import { Providers } from "@/components/Providers";
+import ErrorBoundary from "@/components/Utils/ErrorBoundary";
+import StatusBanner from "@/components/Utils/StatusBanner";
 
 export default function RootLayout({
     children,
@@ -35,13 +37,16 @@ export default function RootLayout({
             <body
                 className={`${cinzel.variable} ${crimsonPro.variable} antialiased`}
             >
-                <Providers>
-                    <LanguageProvider>
-                        <NotificationHost />
-                        {children}
-                        <LanguageToggle />
-                    </LanguageProvider>
-                </Providers>
+                <ErrorBoundary>
+                    <Providers>
+                        <LanguageProvider>
+                            <NotificationHost />
+                            {children}
+                            <StatusBanner />
+                            <LanguageToggle />
+                        </LanguageProvider>
+                    </Providers>
+                </ErrorBoundary>
             </body>
         </html>
     );
