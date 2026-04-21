@@ -19,76 +19,66 @@ export function UserProvider({ children }) {
     const [retryCount, setRetryCount] = useState(0);
 
     const refreshUser = useCallback(async () => {
-        if (status !== "authenticated") return;
-        
-        setLoading(true);
-        const startTime = Date.now();
-        
-        // V85: Trigger visual feedback for slow connection (> 3s)
-        const slowTrigger = setTimeout(() => {
-            setConnectionStatus("unstable");
-        }, 3000);
+        // V9: Hardening Crítico - Bloquear durante la carga de sesión
+        if (status === "loading") return;
 
-        try {
-            // Sincronización oficial con backend real
-            const data = await safeFetch("/api/user", {
-                retries: 1,
-                timeout: 7000 
-            });
-            
-            clearTimeout(slowTrigger);
-            const elapsedTime = Date.now() - startTime;
-
-            if (data && data.ok && data.user) {
-                setUserData(data.user);
-                setConnectionStatus("stable");
-                setRetryCount(0);
-            } else {
-                throw new APIError("Respuesta de API inválida", "SERVER");
-            }
-        } catch (err) {
-            clearTimeout(slowTrigger);
-            // ... (keeping the improved catch block)
-            console.error(`❌ [UserContext] Atrapado en catch: [${err.type || 'UNKNOWN'}] ${err.message}`, err);
-            
-            // V85: No tratar errores de autenticación o "not found" como fallos de infraestructura.
-            if (err.status === 401 || err.status === 404) {
-                setUserData(null);
-                setConnectionStatus("stable");
-                setRetryCount(0);
-                setLoading(false);
-                return;
-            }
-
-            const newRetryCount = retryCount + 1;
-            setRetryCount(newRetryCount);
-
-            if (err.type === "SERVER" || err.type === "TIMEOUT" || err.type === "INVALID_JSON") {
-                if (newRetryCount >= 3) {
-                    setConnectionStatus("maintenance");
+        // V9: Caso Autenticado (Prioridad Total)
+        if (status === "authenticated") {
+            setLoading(true);
+            try {
+                const data = await safeFetch("/api/user", { retries: 1, timeout: 8000 });
+                
+                if (data && data.ok && data.user) {
+                    setUserData({
+                        ...data.user,
+                        // V10: Trigger para Modal de Casa tras 1 interacción si no tiene casa
+                        shouldShowHouseModal: !data.user.casa && (data.user.interactions >= 1)
+                    });
+                    setConnectionStatus("stable");
+                    setRetryCount(0);
                 } else {
-                    setConnectionStatus("critical");
+                    throw new APIError("Sesión inválida en Backend", "SERVER");
                 }
-            } else {
-                setConnectionStatus("unstable");
+            } catch (err) {
+                console.error(`❌ [UserContext] Error Autenticado: ${err.message}`);
+                if (err.status === 401) {
+                    setUserData(null);
+                }
+                setConnectionStatus("critical");
+            } finally {
+                setLoading(false);
             }
-        } finally {
-            setLoading(false);
+            return;
         }
-    }, [status, retryCount]);
+
+        // V9: Caso Invitado (Solo si no hay sesión y NO está cargando)
+        if (status === "unauthenticated") {
+            setLoading(true);
+            try {
+                const guestRes = await safeFetch("/api/guest/status");
+                if (guestRes && guestRes.ok) {
+                    setUserData({
+                        rol: 'GUEST',
+                        guestId: guestRes.guestId,
+                        interactions: guestRes.interactions,
+                        limitReached: guestRes.limitReached,
+                        reason: guestRes.reason,
+                        isFirstAction: true
+                    });
+                }
+            } catch (err) {
+                console.warn("⚠️ [UserContext] Error en Guest Flow:", err.message);
+                setUserData(null);
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
+    }, [status]);
 
     useEffect(() => {
-        // V85: Eliminado desfibrilador (hacks de tiempo)
-        // La sincronización es reactiva al estado de NextAuth únicamente
-        if (status === "authenticated") {
-            refreshUser();
-        } else if (status === "unauthenticated") {
-            setUserData(null);
-            setLoading(false);
-            setConnectionStatus("stable");
-            setRetryCount(0);
-        }
-    }, [status]); // Solo reaccionamos a cambios de status
+        refreshUser();
+    }, [status, refreshUser]); 
 
     return (
         <UserContext.Provider value={{ 
@@ -97,7 +87,11 @@ export function UserProvider({ children }) {
             refreshUser, 
             setUserData,
             connectionStatus,
-            isMaintenance: connectionStatus === "maintenance"
+            isMaintenance: connectionStatus === "maintenance",
+            isGuest: userData?.rol === 'GUEST',
+            limitReached: userData?.limitReached || false,
+            activeBoost: userData?.activeBoost || 0,
+            boostExpiresAt: userData?.boostExpiresAt
         }}>
             {children}
         </UserContext.Provider>

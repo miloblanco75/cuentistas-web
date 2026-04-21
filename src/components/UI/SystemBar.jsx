@@ -14,20 +14,86 @@ export default function SystemBar({
     const userCtx = useUser();
     const userData = userCtx?.userData;
     const loading = userCtx?.loading ?? true;
+    const isGuest = userCtx?.isGuest ?? false;
+    const activeBoost = userCtx?.activeBoost ?? 0;
+    const boostExpiresAt = userCtx?.boostExpiresAt;
+    
     const [mounted, setMounted] = React.useState(false);
 
     React.useEffect(() => {
         setMounted(true);
     }, []);
 
-    // AUDITORÍA: Si no hemos completado el montaje en el cliente, evitamos renderizar
-    // lógica compleja que dependa de sesiones asíncronas para evitar el 'Application error'
     if (!mounted) return null;
 
-    // Lógica de descubrimiento progresivo
-    const hasHistory = userData?.hasPerformedFirstAction ?? false;
+    // Lógica de expiración del boost
+    const isBoostActive = activeBoost > 0 && boostExpiresAt && new Date(boostExpiresAt) > new Date();
+    const [daysRemaining, setDaysRemaining] = React.useState(0);
 
-    // Si aún está cargando, mostramos una versión mínima placeholder
+    React.useEffect(() => {
+        if (isBoostActive) {
+            const diff = new Date(boostExpiresAt).getTime() - Date.now();
+            setDaysRemaining(Math.ceil(diff / (1000 * 60 * 60 * 24)));
+        }
+    }, [isBoostActive, boostExpiresAt]);
+
+    // V10: Simulación de Guerra de Casas
+    const [warSignal, setWarSignal] = React.useState("Casa Lobo lidera hoy");
+    React.useEffect(() => {
+        const signals = [
+            "Casa Lobo lidera hoy",
+            "Casa Lechuza: +14 victorias semana",
+            "Quimera está remontando el duelo",
+            "El Tribunal observa a Casa Lobo",
+            "Incursión creativa de Lechuza activa"
+        ];
+        const int = setInterval(() => {
+            setWarSignal(signals[Math.floor(Math.random() * signals.length)]);
+        }, 15000);
+        return () => clearInterval(int);
+    }, []);
+
+    // ... (rest of the system bar code continues)
+    
+    // Mapeo de Iconos de Casa
+    const HouseIcon = ({ casa, className }) => {
+        if (casa === "LOBO") return <Shield className={`${className} text-gray-300`} />;
+        if (casa === "LECHUZA") return <Brain className={`${className} text-amber-400`} />;
+        if (casa === "QUIMERA") return <Sparkles className={`${className} text-rose-500`} />;
+        return null;
+    };
+
+    const hasHistory = userData?.hasPerformedFirstAction ?? false;
+    const interactionsLeft = 3 - (userData?.interactions ?? 0);
+
+    // Banner de Espectador (V10: Micro-conversion hints)
+    const SpectatorBanner = () => (
+        <div className="fixed top-[72px] left-0 w-full z-[99] bg-gold/10 backdrop-blur-md border-b border-gold/20 px-8 py-2 flex justify-between items-center transition-all animate-in slide-in-from-top duration-500">
+            <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                    <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-gold"></span>
+                    </span>
+                    <p className="text-[9px] tracking-[0.3em] uppercase text-gold font-bold">
+                        Modo Espectador — <span className="opacity-60">Nivel Simulada: Aspirante</span>
+                    </p>
+                </div>
+                <div className="h-4 w-[1px] bg-gold/20"></div>
+                <p className="text-[9px] tracking-[0.2em] uppercase text-gold/80 italic">
+                    {interactionsLeft <= 1 
+                        ? "Te queda 1 decisión de gracia..." 
+                        : `Te quedan ${interactionsLeft} decisiones para desbloquear tu perfil`}
+                </p>
+            </div>
+            <Link href="/login" className="bg-gold text-black text-[9px] px-6 py-1 font-black tracking-widest uppercase rounded-sm hover:scale-105 transition-transform flex items-center gap-2">
+                <Zap className="w-3 h-3 fill-black" />
+                Obtener Poder Real
+            </Link>
+        </div>
+    );
+
+    // Placeholder de carga
     if (loading && mode === "full") {
         return (
             <div className="fixed top-0 left-0 w-full z-[100] bg-black/40 backdrop-blur-md border-b border-white/5 px-8 py-6 flex justify-between items-center h-[72px]">
@@ -45,18 +111,28 @@ export default function SystemBar({
         return `${m}:${s.toString().padStart(2, "0")}`;
     };
 
-    // Caso: No hay usuario (es un invitado)
-    if (!userData && mode === "full") {
+    // Caso: Invitado o Sin Sesión
+    if ((!userData || isGuest) && mode === "full") {
         return (
-            <nav className="fixed top-0 left-0 w-full z-[100] bg-black/40 backdrop-blur-md border-b border-white/5 px-8 py-4 flex justify-between items-center h-[72px]">
-                <Link href="/" className="group flex items-center gap-3">
-                    <div className="w-8 h-8 border border-gold/40 flex items-center justify-center group-hover:rotate-45 transition-transform duration-500 text-gold text-xs font-black">C</div>
-                    <span className="text-white/80 text-[10px] tracking-[0.5em] uppercase font-cinzel">Ciudadela</span>
-                </Link>
-                <Link href="/login" className="text-[10px] tracking-[0.4em] uppercase text-gold hover:text-white transition-colors font-bold">
-                    Unirse al Cónclave
-                </Link>
-            </nav>
+            <>
+                <nav className="fixed top-0 left-0 w-full z-[100] bg-black/40 backdrop-blur-md border-b border-white/5 px-8 py-4 flex justify-between items-center h-[72px]">
+                    <div className="flex items-center gap-8">
+                        <Link href="/" className="group flex items-center gap-3">
+                            <div className="w-8 h-8 border border-gold/40 flex items-center justify-center group-hover:rotate-45 transition-transform duration-500 text-gold text-xs font-black">C</div>
+                            <span className="text-white/80 text-[10px] tracking-[0.5em] uppercase font-cinzel">Ciudadela</span>
+                        </Link>
+                        <div className="hidden lg:block w-px h-6 bg-white/10"></div>
+                        <div className="hidden lg:block">
+                            <ActivityTicker />
+                        </div>
+                    </div>
+                    <Link href="/login" className="text-[10px] tracking-[0.4em] uppercase text-gold hover:text-white transition-colors font-bold flex items-center gap-3 group">
+                        <User className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        Unirse al Cónclave
+                    </Link>
+                </nav>
+                {isGuest && <SpectatorBanner />}
+            </>
         );
     }
 
@@ -156,37 +232,31 @@ export default function SystemBar({
             <div className="flex items-center gap-4 md:gap-8">
                 {/* Basic Stats & Streak */}
                 <div className="flex items-center gap-4 md:gap-6">
-                    {/* Racha / Streak */}
-                    {(userData?.streak ?? 0) > 0 && (
-                        <div className="flex items-center gap-2 group relative">
-                            <div className="p-2 bg-orange-500/10 rounded-full border border-orange-500/30 group-hover:bg-orange-500/20 transition-all shadow-[0_0_10px_rgba(249,115,22,0.1)]">
-                                <span className="text-sm">🔥</span>
-                            </div>
+                    {/* Casa War Ticker (V10) */}
+                    <div className="hidden lg:flex flex-col items-end px-4 border-r border-white/5 opacity-40 hover:opacity-100 transition-opacity">
+                        <span className="text-[7px] text-gold font-black uppercase tracking-[0.2em] leading-none mb-1">Guerra de Casas</span>
+                        <span className="text-[9px] text-white/60 uppercase tracking-widest font-serif italic animate-elegant">"{warSignal}"</span>
+                    </div>
+
+                    {/* Boost Indicator (V9) */}
+                    {isBoostActive && (
+                        <div className="flex items-center gap-2 group relative bg-gold/10 px-3 py-1.5 rounded-sm border border-gold/30">
+                            <Zap className="w-3.5 h-3.5 text-gold animate-pulse" />
                             <div className="flex flex-col">
-                                <span className="text-[8px] text-gray-500 uppercase tracking-widest leading-none font-bold">Racha</span>
-                                <span className="text-orange-500 font-black text-sm font-mono leading-none">{userData?.streak ?? 0}</span>
+                                <span className="text-[10px] text-gold font-black leading-none">+{activeBoost * 100}%</span>
+                                <span className="text-[7px] text-gold/60 uppercase tracking-tighter leading-none font-bold mt-1">Activo ({daysRemaining}d)</span>
                             </div>
-                            
-                            {/* Warning logic: Si no ha participado HOY */}
-                            {(() => {
-                                if (!userData?.lastParticipation) return null;
-                                const last = new Date(userData.lastParticipation);
-                                const now = new Date();
-                                const isToday = last.getDate() === now.getDate() && 
-                                                last.getMonth() === now.getMonth() && 
-                                                last.getFullYear() === now.getFullYear();
-                                
-                                if (!isToday) {
-                                    return (
-                                        <div className="absolute -bottom-6 left-0 whitespace-nowrap">
-                                            <span className="text-[7px] text-red-500 font-bold uppercase tracking-tighter animate-pulse flex items-center gap-1">
-                                                ⚠️ Tu racha está en riesgo
-                                            </span>
-                                        </div>
-                                    );
-                                }
-                                return null;
-                            })()}
+                        </div>
+                    )}
+                    
+                    {/* Casa Identity (V10) */}
+                    {userData?.casa && (
+                        <div className="flex items-center gap-3 px-4 border-l border-white/5 group">
+                            <HouseIcon casa={userData.casa} className="w-4 h-4 animate-elegant" />
+                            <div className="flex flex-col">
+                                <span className="text-[8px] text-gray-500 uppercase tracking-widest leading-none font-bold">Casa</span>
+                                <span className="text-white font-black text-[10px] tracking-widest uppercase">{userData.casa}</span>
+                            </div>
                         </div>
                     )}
 

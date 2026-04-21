@@ -27,31 +27,17 @@ export default function TiendaPage() {
     }, []);
 
     const handleBuy = async (item) => {
+        // V10: BLOQUEO DE TIENDA (MODO BETA SEGURO)
+        alert("Modo Beta: Las compras y recargas de Tinta estarán disponibles próximamente.");
+        setBuying(null);
+        return;
+        
+        // El código original ha sido deshabilitado por seguridad comercial
+        /*
         setBuying(item);
-        // Simular retraso de pasarela de pago (Aquí iría Stripe/PayPal)
         await new Promise(r => setTimeout(r, 2000));
-
-        const res = await fetch("/api/user", {
-            method: "POST",
-            body: JSON.stringify({ 
-                action: "buy", 
-                itemId: item.id,
-                cantidad: item.cantidad // Para packs de tinta
-            }),
-            headers: { "Content-Type": "application/json" }
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            setUser(prev => ({ ...prev, tinta: data.tinta }));
-            setBuying(null);
-            
-            if (item.tipo === 'libro') {
-                alert(`¡Éxito! Has adquirido "${item.nombre}". Podrás encontrar los enlaces de descarga en tu biblioteca.`);
-            } else {
-                alert(`¡Gracias! Has recibido ${item.cantidad} de Tinta.`);
-            }
-        }
+        ...
+        */
     };
 
     if (loading) return <div className="min-h-screen bg-[#050509] flex items-center justify-center font-serif italic text-purple-400 animate-pulse">Consultando el inventario del mercado...</div>;

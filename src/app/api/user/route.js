@@ -49,6 +49,19 @@ export async function GET() {
             return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
         }
 
+        // V9: Sincronización de referido al primer login/visita
+        if (!user.referredBy) {
+            const { cookies } = await import("next/headers");
+            const cookieStore = cookies();
+            const referrer = cookieStore.get("referrer")?.value;
+            if (referrer && referrer !== user.username) {
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { referredBy: referrer }
+                });
+            }
+        }
+
         // --- ASIGNACIÓN DE MANDATOS DIARIOS ---
         // V81: Importación dinámica protegida para evitar crashes si el archivo falta
         try {
@@ -60,13 +73,29 @@ export async function GET() {
             console.error("⚠️ Fallo en mandatos:", e.message);
         }
 
-        // Forzado de roles para el administrador central
+        // Forzado de roles y normalización de datos (V9 Hardening)
         const isMaster = user.email.toLowerCase().trim() === adminEmail.toLowerCase().trim();
         
         const userData = {
-            ...user,
-            rol: isMaster ? "ARCHITECT" : user.rol,
-            nivel: isMaster ? "Soberano Arquitecto" : user.nivel
+            id: user.id,
+            email: user.email,
+            nombre: user.nombre || user.name || "Nómada",
+            username: user.username,
+            image: user.image,
+            rol: isMaster ? "ARCHITECT" : (user.rol || "CUENTISTA"),
+            tinta: user.tinta ?? 0,
+            nivel: isMaster ? "Soberano Arquitecto" : (user.nivel || "Iniciado"),
+            casa: isMaster ? (user.casa || "Cónclave") : (user.casa || null),
+            streak: user.streak || 0,
+            puntos: user.puntos || 0,
+            puntosCasa: user.puntosCasa || 0,
+            hasPerformedFirstAction: isMaster ? true : (user.hasPerformedFirstAction || false),
+            lastParticipation: user.lastParticipation || null,
+            activeBoost: user.activeBoost || 0,
+            boostExpiresAt: user.boostExpiresAt || null,
+            referredBy: user.referredBy || null,
+            referralRewardClaimed: user.referralRewardClaimed || false,
+            misiones: user.misiones || []
         };
 
         return NextResponse.json({ ok: true, user: userData });
@@ -80,7 +109,8 @@ export async function POST(req) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Reintento breve por latencia de sesión
+            await new Promise(resolve => setTimeout(resolve, 800));
             const reSession = await getServerSession(authOptions);
             if (!reSession?.user?.email) return NextResponse.json({ ok: false, error: "Sesión no sincronizada" }, { status: 401 });
             return handleUpdate(reSession, req);
@@ -93,10 +123,15 @@ export async function POST(req) {
 
 async function handleUpdate(session, req) {
     const body = await req.json();
-    const { casa, action } = body;
-    let updateData = {};
-    if (casa) updateData.casa = casa;
     if (action === "joinHouse" || action === "completeOnboarding") updateData.hasPerformedFirstAction = true;
+    
+    // V10: BLOQUEO COMERCIAL (PROTECCIÓN BACKEND)
+    if (action === "buy") {
+        return NextResponse.json({ 
+            ok: false, 
+            error: "Módulo de pagos deshabilitado en Modo Beta" 
+        }, { status: 501 });
+    }
 
     try {
         const user = await prisma.user.update({
@@ -104,28 +139,36 @@ async function handleUpdate(session, req) {
             data: updateData,
             include: { misiones: { include: { mision: true } } }
         });
+        
         const isMaster = user.email && user.email.toLowerCase().trim() === "ermiloblanco75@gmail.com";
+        
+        // V9 Hardening: Hidratación Total e Idéntica a GET
         return NextResponse.json({ 
             ok: true, 
             user: {
                 id: user.id,
                 email: user.email,
-                nombre: user.nombre || user.name,
+                nombre: user.nombre || user.name || "Nómada",
                 username: user.username,
                 image: user.image,
                 rol: isMaster ? "ARCHITECT" : (user.rol || "CUENTISTA"),
-                tinta: user.tinta || 0,
-                nivel: isMaster ? "Soberano Creador" : (!user.hasPerformedFirstAction ? "Visitante" : (user.nivel || "Iniciado")),
+                tinta: user.tinta ?? 0,
+                nivel: isMaster ? "Soberano Creador" : (user.nivel || "Iniciado"),
                 casa: isMaster ? (user.casa || "Cónclave") : (user.casa || null),
                 streak: user.streak || 0,
                 puntos: user.puntos || 0,
                 puntosCasa: user.puntosCasa || 0,
                 hasPerformedFirstAction: isMaster ? true : (user.hasPerformedFirstAction || false),
                 lastParticipation: user.lastParticipation || null,
+                activeBoost: user.activeBoost || 0,
+                boostExpiresAt: user.boostExpiresAt || null,
+                referredBy: user.referredBy || null,
+                referralRewardClaimed: user.referralRewardClaimed || false,
                 misiones: user.misiones || []
             } 
         });
     } catch (dbError) {
+        console.error("❌ Error handleUpdate:", dbError.message);
         return NextResponse.json({ ok: false, error: "Error de sincronización" }, { status: 500 });
     }
 }

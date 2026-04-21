@@ -3,10 +3,12 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { safeFetch } from "@/lib/api";
+import { useUser } from "@/components/UserContext";
 
 export default function LiveContestPage() {
     const { id } = useParams();
     const router = useRouter();
+    const { userData, isGuest } = useUser();
     const [concurso, setConcurso] = useState(null);
     const [user, setUser] = useState(null);
     const [timeLeft, setTimeLeft] = useState(0);
@@ -114,8 +116,13 @@ export default function LiveContestPage() {
     }, [status, timeLeft]);
 
     const handleSubmit = async () => {
+        if (isGuest) {
+            // Simulación para invitados
+            router.push("/hub");
+            return;
+        }
         try {
-            await safeFetch("/api/entradas", {
+            const res = await safeFetch("/api/entradas", {
                 method: "POST",
                 body: JSON.stringify({
                     concursoId: id,
@@ -126,6 +133,12 @@ export default function LiveContestPage() {
                 }),
                 headers: { "Content-Type": "application/json" }
             });
+            
+            // Mostrar feedback de boost si existe
+            if (res.boostApplied) {
+                alert("Tu +5% Boost fue aplicado a esta participación");
+            }
+
             router.push("/hub");
         } catch (err) {
             alert(`Error al enviar: ${err.message}`);
@@ -211,6 +224,19 @@ export default function LiveContestPage() {
                     <div className="royal-card px-24 py-12 border-gold/40">
                         <p className="text-gold text-5xl font-light tracking-[0.6em] uppercase">Pulso de Tinta</p>
                         <p className="text-[11px] text-center mt-6 tracking-widest opacity-40 uppercase">30 minutos han transcurrido</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Spectator Warning (V9) */}
+            {isGuest && (
+                <div className="fixed top-24 left-0 w-full z-[100] flex justify-center pointer-events-none">
+                    <div className="royal-card px-12 py-3 border-gold/40 bg-gold/5 flex items-center gap-4 animate-in fade-in slide-in-from-top duration-700">
+                        <span className="flex h-2 w-2 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-gold"></span>
+                        </span>
+                        <p className="text-[10px] tracking-[0.4em] uppercase text-gold font-black">Modo Espectador Activo</p>
                     </div>
                 </div>
             )}

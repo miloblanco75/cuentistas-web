@@ -50,18 +50,40 @@ export async function POST(request) {
         );
       }
 
-      const nueva = await prisma.entrada.create({
-          data: {
-              concursoId,
-              userId: session.user.id,
-              texto,
-              participante: participante || session.user.username,
-              puntajeTotal: 0,
-              votos: 0
+      const userId = session.user.id;
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      const now = new Date();
+      const isBoostActive = user.activeBoost > 0 && user.boostExpiresAt && new Date(user.boostExpiresAt) > now;
+
+      const nueva = await prisma.$transaction(async (tx) => {
+          const entry = await tx.entrada.create({
+              data: {
+                  concursoId,
+                  userId,
+                  texto,
+                  participante: participante || user.username || "Anónimo",
+                  puntajeTotal: 0,
+                  votos: 0,
+                  boostApplied: isBoostActive
+              }
+          });
+
+          if (isBoostActive) {
+              await tx.user.update({
+                  where: { id: userId },
+                  data: { activeBoost: 0, boostExpiresAt: null }
+              });
           }
+
+          return entry;
       });
 
-      return NextResponse.json({ ok: true, entrada: nueva }, { status: 201 });
+      return NextResponse.json({ 
+          ok: true, 
+          entrada: nueva,
+          boostApplied: isBoostActive,
+          message: isBoostActive ? "Tu +5% Boost fue aplicado a esta participación" : null
+      }, { status: 201 });
   } catch (e) {
       return NextResponse.json({ ok: false, error: "No se pudo crear la entrada" }, { status: 500 });
   }

@@ -62,35 +62,19 @@ export default function PlatformHub() {
     const router = useRouter();
 
     useEffect(() => {
-        if (status === "unauthenticated") {
-            router.push("/login");
-            return;
-        }
+        // V9: No redirigir si es invitado, el middleware y el SpectatorBlocker gestionan los límites
+        if (status === "loading") return;
+        
         if (status === "authenticated") {
             fetch("/api/user")
                 .then(res => res.json())
                 .then(data => {
                     if (data.ok) {
                         setUserData(data.user);
-                    } else {
-                        setUserData({
-                            nombre: session.user.name || "Mago de las Letras",
-                            rol: "spectator",
-                            nivel: "Iniciado",
-                            tinta: 0,
-                        });
                     }
-                })
-                .catch(() => {
-                    setUserData({
-                        nombre: session.user.name || "Visitante Arcano",
-                        rol: "spectator",
-                        nivel: "Iniciado",
-                        tinta: 0,
-                    });
                 });
         }
-    }, [status, session, router]);
+    }, [status]);
 
     const isMaster = userData?.rol === "Maestro";
 

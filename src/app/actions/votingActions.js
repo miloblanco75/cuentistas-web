@@ -5,6 +5,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 
+import crypto from "crypto";
+
 export async function castLaurelVote(entradaId) {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
@@ -47,7 +49,7 @@ export async function castLaurelVote(entradaId) {
                 data: { 
                     votos: newVotos,
                     popularScore: newPopularScore,
-                    puntajeTotal: newPopularScore + (entrada.expertScore || 0)
+                    puntajeTotal: (newPopularScore + (entrada.expertScore || 0)) * (entrada.boostApplied ? 1.05 : 1)
                 }
             });
 
@@ -55,6 +57,62 @@ export async function castLaurelVote(entradaId) {
                 where: { id: userId },
                 data: { votosHoy: votosHoy + 1 }
             });
+
+            // V9: GROWTH ENGINE - LÓGICA DE RECOMPENSAS
+            if (user.referredBy && !user.referralRewardClaimed) {
+                // V9: Obtener deviceHash para fortalecer idempotencia
+                const { cookies } = await import("next/headers");
+                const guestId = cookies().get("guestId")?.value;
+                let deviceHash = "no-hw-sig";
+                
+                if (guestId) {
+                    const gSession = await tx.guestSession.findUnique({ where: { guestId } });
+                    if (gSession) deviceHash = gSession.deviceHash;
+                }
+
+                // Generar RewardKey para idempotencia (ID + Fecha para evitar duplicidad diaria por IP/Device)
+                const dayKey = now.toISOString().split('T')[0];
+                const inviter = await tx.user.findUnique({ where: { username: user.referredBy } });
+                
+                if (inviter) {
+                    const rewardKey = crypto.createHash('sha256')
+                        .update(`${inviter.id}-${userId}-${deviceHash}-${dayKey}`)
+                        .digest('hex');
+
+                    try {
+                        // El RewardLog.create fallará si la key ya existe (idempotencia real)
+                        await tx.rewardLog.create({ data: { rewardKey } });
+
+                        // Otorgar Recompensas (Invitador)
+                        await tx.user.update({
+                            where: { id: inviter.id },
+                            data: { 
+                                tinta: { increment: 5 },
+                                activeBoost: 0.05,
+                                boostExpiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+                            }
+                        });
+
+                        // Otorgar Recompensas (Invitado)
+                        await tx.user.update({
+                            where: { id: userId },
+                            data: { 
+                                tinta: { increment: 5 },
+                                activeBoost: 0.05,
+                                boostExpiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+                                referralRewardClaimed: true
+                            }
+                        });
+
+                        console.log(`✅ [GrowthEngine] Recompensa otorgada por referido: ${user.referredBy} -> ${user.username}`);
+                    } catch (err) {
+                        // P2002 es error de duplicado en Prisma, lo ignoramos (idempotencia exitosa)
+                        if (err.code !== 'P2002') {
+                            console.error("❌ [GrowthEngine] Error al procesar recompensa:", err.message);
+                        }
+                    }
+                }
+            }
         });
 
         revalidatePath("/biblioteca");
@@ -92,7 +150,10 @@ export async function castJudgeJudgment(data) {
             const entrada = await tx.entrada.findUnique({ where: { id: entradaId } });
             await tx.entrada.update({
                 where: { id: entradaId },
-                data: { expertScore, puntajeTotal: (entrada.popularScore || 0) + expertScore }
+                data: { 
+                    expertScore, 
+                    puntajeTotal: ((entrada.popularScore || 0) + expertScore) * (entrada.boostApplied ? 1.05 : 1)
+                }
             });
 
             // Notificación (opcional aquí, ya registrada en Prisma)
