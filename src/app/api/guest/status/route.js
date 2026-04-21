@@ -65,9 +65,9 @@ export async function GET(request) {
         return NextResponse.json({
             ok: true,
             guestId: session.guestId,
-            interactions: session.interactionCount,
-            remainingTime,
-            limitReached,
+            interactions: Number(session.interactionCount),
+            remainingTime: Number(remainingTime),
+            limitReached: Boolean(limitReached),
             reason: timeExpired ? "time_expired" : (interactionLimit ? "interaction_limit" : null),
             deviceHash: session.deviceHash
         });
