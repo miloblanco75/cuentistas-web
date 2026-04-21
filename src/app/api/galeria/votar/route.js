@@ -1,20 +1,20 @@
-import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { withTransactionRetry } from "@/lib/resilientDb";
 
 export async function POST(request) {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
-        return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+        return Response.json({ ok: false, error: "No autorizado" }, { status: 401 });
     }
 
     const { entradaId } = await request.json();
     const userId = session.user.id;
 
     try {
-        // PHASE HOTFIX 8: ATOMIC VOTING FLOW
-        const result = await prisma.$transaction(async (tx) => {
+        // PHASE HOTFIX 9: MASTER RESILIENT VOTING
+        await withTransactionRetry(async (tx) => {
             const user = await tx.user.findUnique({ 
                 where: { id: userId },
                 select: { votosHoy: true, ultimoVotoReset: true }
@@ -60,21 +60,20 @@ export async function POST(request) {
                     ultimoVotoReset: diffHours >= 24 ? now : undefined
                 }
             });
-
-            return { ok: true };
         }, {
+            maxRetries: 3,
             timeout: 25000
         });
 
-        return NextResponse.json({ ok: true });
+        return Response.json({ ok: true });
     } catch (error) {
-        console.error("❌ Voting Error (Hotfix 8):", error);
+        console.error("❌ Voting Error (Hotfix 9):", error);
         if (error.message === "LIMIT_REACHED") {
-            return NextResponse.json({ ok: false, error: "Tinta de Voto agotada por hoy (Máx 5)" }, { status: 429 });
+            return Response.json({ ok: false, error: "Tinta de Voto agotada por hoy (Máx 5)" }, { status: 429 });
         }
         if (error.code === 'P2002') {
-            return NextResponse.json({ ok: false, error: "Ya has ofrecido tu laurel a esta obra." }, { status: 400 });
+            return Response.json({ ok: false, error: "Ya has ofrecido tu laurel a esta obra." }, { status: 400 });
         }
-        return NextResponse.json({ ok: false, error: "El Tribunal está saturado. Reintenta en breve." }, { status: 503 });
+        return Response.json({ ok: false, error: "El Tribunal está saturado. Reintenta en breve." }, { status: 503 });
     }
 }

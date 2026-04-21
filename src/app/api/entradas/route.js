@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { withTransactionRetry } from "@/lib/resilientDb";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
@@ -49,8 +50,8 @@ export async function POST(request) {
 
       const userId = session.user.id;
 
-      // PHASE HOTFIX 8: DECOUPLED ATOMIC SUBMISSION (Resilience Max)
-      const { entry, action } = await prisma.$transaction(async (tx) => {
+      // PHASE HOTFIX 9: MASTER RESILIENT SUBMISSION
+      const { entry, action } = await withTransactionRetry(async (tx) => {
           const existing = await tx.entrada.findUnique({
               where: {
                   userId_concursoId: { userId, concursoId }
@@ -79,7 +80,8 @@ export async function POST(request) {
               return { entry: created, action: "created" };
           }
       }, {
-          timeout: 25000 // AUMENTADO A 25s PARA SOBREVIVIR LATENCIA EXTREMA
+          maxRetries: 3,
+          timeout: 25000
       });
 
       // SECONDARY ACTION: DECOUPLED BOOST (If creation succeeded)
