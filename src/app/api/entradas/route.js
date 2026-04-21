@@ -49,27 +49,23 @@ export async function POST(request) {
 
       const userId = session.user.id;
 
-      // PHASE HOTFIX 7: HARDENED TRANSACTION WITH EXTENDED TIMEOUT (20s)
-      const result = await prisma.$transaction(async (tx) => {
+      // PHASE HOTFIX 8: DECOUPLED ATOMIC SUBMISSION (Resilience Max)
+      const { entry, action } = await prisma.$transaction(async (tx) => {
           const existing = await tx.entrada.findUnique({
               where: {
                   userId_concursoId: { userId, concursoId }
               },
-              select: { id: true, boostApplied: true }
+              select: { id: true }
           });
 
-          let action;
-          let entry;
-
           if (existing) {
-              entry = await tx.entrada.update({
+              const updated = await tx.entrada.update({
                   where: { id: existing.id },
-                  data: { texto: texto }
+                  data: { texto }
               });
-              action = "updated";
+              return { entry: updated, action: "updated" };
           } else {
-              // CREATE NEW - Single Step for Base Data
-              entry = await tx.entrada.create({
+              const created = await tx.entrada.create({
                   data: {
                       concursoId,
                       userId,
@@ -80,49 +76,57 @@ export async function POST(request) {
                       boostApplied: false
                   }
               });
-              action = "created";
+              return { entry: created, action: "created" };
           }
+      }, {
+          timeout: 25000 // AUMENTADO A 25s PARA SOBREVIVIR LATENCIA EXTREMA
+      });
 
-          let boostAppliedNow = false;
-          if (action === "created") {
-              const user = await tx.user.findUnique({ 
+      // SECONDARY ACTION: DECOUPLED BOOST (If creation succeeded)
+      let boostAppliedNow = false;
+      if (action === "created") {
+          try {
+              const user = await prisma.user.findUnique({ 
                   where: { id: userId },
                   select: { activeBoost: true, boostExpiresAt: true }
               });
 
-              if (user?.activeBoost && user.activeBoost > 0 && user.boostExpiresAt && new Date(user.boostExpiresAt) > new Date()) {
-                  await tx.entrada.update({
+              const isBoostActive = user?.activeBoost && user.activeBoost > 0 && 
+                                   user.boostExpiresAt && new Date(user.boostExpiresAt) > new Date();
+
+              if (isBoostActive) {
+                  // Lo hacemos en operaciones separadas para no bloquear el registro principal
+                  await prisma.entrada.update({
                       where: { id: entry.id },
                       data: { boostApplied: true }
                   });
-                  await tx.user.update({
+                  await prisma.user.update({
                       where: { id: userId },
                       data: { activeBoost: 0, boostExpiresAt: null }
                   });
                   boostAppliedNow = true;
+                  console.log("🔱 Boost aplicado (Hotfix 8 Safe Flow)");
               }
+          } catch (boostError) {
+              console.warn("⚠️ Falló la aplicación de Boost, pero el manuscrito está a salvo:", boostError.message);
           }
-
-          return { entry, action, boostAppliedNow };
-      }, {
-          timeout: 20000 // AUMENTADO A 20s PARA RESILIENCIA EN PRODUCCIÓN
-      });
+      }
 
       return NextResponse.json({ 
           ok: true, 
-          action: result.action,
-          entradaId: result.entry.id,
-          boostApplied: result.boostAppliedNow,
-          message: result.action === "created" 
+          action,
+          entradaId: entry.id,
+          boostApplied: boostAppliedNow,
+          message: action === "created" 
             ? "Tu manuscrito ha sido enviado al Tribunal 🔱" 
             : "Tu manuscrito fue actualizado correctamente 🔱"
-      }, { status: result.action === "created" ? 201 : 200 });
+      }, { status: action === "created" ? 201 : 200 });
 
   } catch (error) {
-      console.error("❌ Submission Error:", error);
+      console.error("❌ Submission Error (Hotfix 8):", error);
       if (error.code === 'P2002') {
           return NextResponse.json({ ok: false, error: "Ya existe una entrada para este concurso" }, { status: 409 });
       }
-      return NextResponse.json({ ok: false, error: "Error interno del servidor" }, { status: 500 });
+      return NextResponse.json({ ok: false, error: "Error del Tribunal (Saturación). Reintenta en unos instantes." }, { status: 503 });
   }
 }
