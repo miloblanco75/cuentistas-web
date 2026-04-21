@@ -18,6 +18,8 @@ export default function LiveContestPage() {
     const [showAlarm, setShowAlarm] = useState(false);
     const [tabSwitches, setTabSwitches] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     
     // Creator Mode & Recording
     const [isCreatorMode, setIsCreatorMode] = useState(false);
@@ -120,13 +122,14 @@ export default function LiveContestPage() {
     }, [status, timeLeft]);
 
     const handleSubmit = async () => {
-        if (isGuest) {
-            // Simulación para invitados
-            router.push("/hub");
+        if (isGuest || isSubmitting) {
+            router.push("/galeria");
             return;
         }
+
+        setIsSubmitting(true);
         try {
-            const res = await safeFetch("/api/entradas", {
+            await safeFetch("/api/entradas", {
                 method: "POST",
                 body: JSON.stringify({
                     concursoId: id,
@@ -138,14 +141,14 @@ export default function LiveContestPage() {
                 headers: { "Content-Type": "application/json" }
             });
             
-            // Mostrar feedback de boost si existe
-            if (res.boostApplied) {
-                alert("Tu +5% Boost fue aplicado a esta participación");
-            }
-
-            router.push("/hub");
+            setIsSuccess(true);
+            
+            setTimeout(() => {
+                router.push("/galeria");
+            }, 1200);
         } catch (err) {
             alert(`Error al enviar: ${err.message}`);
+            setIsSubmitting(false);
         }
     };
 
@@ -207,17 +210,21 @@ export default function LiveContestPage() {
     const isPressureMode = timeLeft > 0 && timeLeft <= 600;    return (
         <main className={`min-h-screen animate-elegant font-serif relative overflow-hidden transition-colors duration-1000 ${isPressureMode ? 'mode-pressure' : 'bg-[#050508]'} text-[#ffffff]`}>
             {/* Security Seal Overlay */}
-            {isFinished && (
+            {(isFinished || isSuccess) && (
                 <div className="sello-overlay">
                     <div className="sello-content animate-elegant">
                         <div className="w-24 h-24 border border-gold rounded-full flex items-center justify-center mx-auto mb-8 royal-card">
-                            <span className="text-gold text-4xl">🔱</span>
+                            <span className="text-gold text-4xl">{isSuccess ? "✨" : "🔱"}</span>
                         </div>
-                        <h2 className="text-5xl font-light tracking-[0.5em] uppercase text-white mb-6">Crónica Sellada</h2>
+                        <h2 className="text-5xl font-light tracking-[0.5em] uppercase text-white mb-6">
+                            {isSuccess ? "Vínculo Creado" : "Crónica Sellada"}
+                        </h2>
                         <p className="text-gray-500 font-sans text-[11px] tracking-widest uppercase mb-16 italic opacity-60">
-                            El Tribunal Supremo ha cerrado la recepción de runas.
+                            {isSuccess 
+                                ? "Tu manuscrito ha sido enviado al Tribunal con éxito." 
+                                : "El Tribunal Supremo ha cerrado la recepción de runas."}
                         </p>
-                        <button onClick={handleSubmit} className="royal-button px-24">Entregar al Legado</button>
+                        {!isSuccess && <button onClick={handleSubmit} className="royal-button px-24">Entregar al Legado</button>}
                     </div>
                 </div>
             )}
@@ -250,13 +257,13 @@ export default function LiveContestPage() {
                     <div className="flex items-center gap-4">
                         <div className="w-4 h-[1px] bg-gold/50"></div>
                         <p className={`text-[11px] tracking-[0.5em] uppercase font-sans ${isPressureMode ? 'text-red-500 animate-pulse' : 'text-gold'}`}>
-                            {isPressureMode ? 'PRESIÓN REAL' : (concurso?.titulo || "Concurso")}
+                            {status === "loading" ? 'SINTONIZANDO...' : (isPressureMode ? 'PRESIÓN REAL' : (concurso?.titulo || "Concurso"))}
                         </p>
                     </div>
                     {tabSwitches > 0 && <p className="text-[9px] tracking-[0.3em] text-red-500/60 uppercase font-sans pl-8">Integridad Comprometida: {tabSwitches}</p>}
                 </div>
                 <div className={`text-6xl font-light tracking-tighter transition-all duration-1000 ${isPressureMode ? 'text-pressure' : (timeLeft < 300 ? 'text-gold' : 'text-white/10')}`}>
-                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                    {status === "loading" ? "--:--" : (isFinished ? "0:00" : `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`)}
                 </div>
             </header>
 
@@ -337,17 +344,18 @@ export default function LiveContestPage() {
             </div>
 
             {/* Recorder Toolbar - Floating at bottom of screen */}
-            <div className="recorder-toolbar">
-                {/* BOTÓN ENTREGAR - SIEMPRE VISIBLE EN ACTIVE/WRITING */}
-                {!isFinished && status === "active" && (
+            <div className="recorder-toolbar z-[1000]">
+                {/* BOTÓN ENTREGAR - DOMINANT CTA (HOTFIX 5) */}
+                {!isFinished && !isSuccess && status === "active" && (
                      <>
                         <button 
                             onClick={handleSubmit}
-                            className="bg-gold text-black text-[9px] tracking-[0.4em] uppercase font-black px-8 py-2 rounded-full hover:scale-105 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+                            disabled={isSubmitting || isGuest}
+                            className={`bg-gradient-to-r from-gold-vibrant to-amber-600 text-black text-[12px] tracking-[0.4em] uppercase font-black px-10 py-3 rounded-xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.6)] flex items-center gap-3 ${isSubmitting ? 'opacity-50' : 'animate-pulse-subtle'} ${isGuest ? 'grayscale opacity-50' : ''}`}
                         >
-                            Entregar Manuscrito 🔱
+                            {isSubmitting ? "Enviando..." : (isGuest ? "Modo Espectador" : "Entregar Manuscrito 🔱")}
                         </button>
-                        <div className="w-[1px] h-4 bg-white/10 mx-2"></div>
+                        <div className="w-[1px] h-6 bg-white/10 mx-4"></div>
                     </>
                 )}
 

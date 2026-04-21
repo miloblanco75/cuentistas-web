@@ -6,9 +6,7 @@ import Link from "next/link";
 
 export default async function BibliotecaPage() {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-        redirect("/login");
-    }
+    // HOTFIX 5: Permite acceso a invitados para aumentar retención
 
     const obras = await prisma.entrada.findMany({
         where: { concurso: { status: "finished" } },
