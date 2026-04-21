@@ -78,6 +78,17 @@ export function UserProvider({ children }) {
 
     useEffect(() => {
         refreshUser();
+
+        // V10: Poll para invitados (detectar expiración por tiempo sin interacción)
+        let interval;
+        if (status === "unauthenticated") {
+            interval = setInterval(() => {
+                refreshUser();
+            }, 60000); // 60s
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
     }, [status, refreshUser]); 
 
     return (
@@ -88,7 +99,7 @@ export function UserProvider({ children }) {
             setUserData,
             connectionStatus,
             isMaintenance: connectionStatus === "maintenance",
-            isGuest: userData?.rol === 'GUEST',
+            isGuest: userData?.rol === 'GUEST' || (status === "unauthenticated"),
             limitReached: userData?.limitReached || false,
             activeBoost: userData?.activeBoost || 0,
             boostExpiresAt: userData?.boostExpiresAt

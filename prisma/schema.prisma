@@ -219,7 +219,7 @@ model UserItem {
 }
 
 model AuditLog {
-  id        String   @id
+  id        String   @id @default(cuid())
   adminId   String
   action    String
   targetId  String?
@@ -229,7 +229,7 @@ model AuditLog {
 }
 
 model Draft {
-  id          String    @id
+  id          String    @id @default(uuid())
   concursoId  String
   userId      String
   username    String?
@@ -255,7 +255,7 @@ model GlobalSettings {
 }
 
 model Mision {
-  id           String       @id
+  id           String       @id @default(cuid())
   titulo       String
   descripcion  String
   tipo         String
@@ -282,7 +282,7 @@ model PurchaseIntent {
 }
 
 model UserMision {
-  id          String   @id
+  id          String   @id @default(cuid())
   userId      String
   misionId    String
   progreso    Int      @default(0)
@@ -299,7 +299,7 @@ model UserMision {
 }
 
 model Voto {
-  id           String   @id
+  id           String   @id @default(cuid())
   userId       String
   entradaId    String
   tipo         String   @default("POPULAR")
@@ -316,7 +316,7 @@ model Voto {
 }
 
 model Waitlist {
-  id        String   @id
+  id        String   @id @default(cuid())
   email     String   @unique
   username  String?
   timestamp DateTime @default(now())

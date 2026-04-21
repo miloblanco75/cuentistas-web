@@ -57,6 +57,9 @@ export default function LaurelButton({ entradaId, totalVotos, onVote }) {
             setIsAnalyzing(false);
             setShowLaurel(true);
             
+            // Sync user state immediately after interaction
+            useUser().refreshUser?.();
+
             // Auto-cerrar después de 5s para dar tiempo a leer
             setTimeout(() => {
                 setShowLaurel(false);
