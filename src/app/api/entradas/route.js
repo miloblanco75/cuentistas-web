@@ -49,7 +49,7 @@ export async function POST(request) {
 
       const userId = session.user.id;
 
-      // PHASE HOTFIX 6: RACE-SAFE TRANSACTIONAL IDEMPOTENCY
+      // PHASE HOTFIX 7: HARDENED TRANSACTION WITH EXTENDED TIMEOUT (20s)
       const result = await prisma.$transaction(async (tx) => {
           const existing = await tx.entrada.findUnique({
               where: {
@@ -64,10 +64,11 @@ export async function POST(request) {
           if (existing) {
               entry = await tx.entrada.update({
                   where: { id: existing.id },
-                  data: { texto }
+                  data: { texto: texto }
               });
               action = "updated";
           } else {
+              // CREATE NEW - Single Step for Base Data
               entry = await tx.entrada.create({
                   data: {
                       concursoId,
@@ -76,13 +77,12 @@ export async function POST(request) {
                       participante: participante || "Anónimo",
                       puntajeTotal: 0,
                       votos: 0,
-                      boostApplied: false // Se aplica debajo si procede
+                      boostApplied: false
                   }
               });
               action = "created";
           }
 
-          // LOCK-GUARDED BOOST CONSUMPTION
           let boostAppliedNow = false;
           if (action === "created") {
               const user = await tx.user.findUnique({ 
@@ -90,10 +90,7 @@ export async function POST(request) {
                   select: { activeBoost: true, boostExpiresAt: true }
               });
 
-              const isBoostActive = user?.activeBoost && user.activeBoost > 0 && 
-                                   user.boostExpiresAt && new Date(user.boostExpiresAt) > new Date();
-
-              if (isBoostActive) {
+              if (user?.activeBoost && user.activeBoost > 0 && user.boostExpiresAt && new Date(user.boostExpiresAt) > new Date()) {
                   await tx.entrada.update({
                       where: { id: entry.id },
                       data: { boostApplied: true }
@@ -107,6 +104,8 @@ export async function POST(request) {
           }
 
           return { entry, action, boostAppliedNow };
+      }, {
+          timeout: 20000 // AUMENTADO A 20s PARA RESILIENCIA EN PRODUCCIÓN
       });
 
       return NextResponse.json({ 

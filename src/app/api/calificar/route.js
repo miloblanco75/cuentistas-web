@@ -22,12 +22,16 @@ export async function POST(request) {
         );
       }
 
+      // PHASE HOTFIX 7: RESILIENT UPDATE
       const actualizada = await prisma.entrada.update({
           where: { id },
           data: {
               votos: { increment: 1 },
               puntajeTotal: { increment: Number(score) }
           }
+      }).catch(e => {
+          console.error("❌ Voting DB Error:", e);
+          throw new Error("DB_TIMEOUT_OR_FAILURE");
       });
 
       return NextResponse.json(
@@ -38,9 +42,10 @@ export async function POST(request) {
         { status: 200 }
       );
   } catch (error) {
+      console.error("❌ Calificar Error:", error);
       return NextResponse.json(
-        { message: "No se encontró la entrada o error DB." },
-        { status: 404 }
+        { message: error.message === "DB_TIMEOUT_OR_FAILURE" ? "El Tribunal está saturado, reintenta." : "No se encontró la entrada o error DB." },
+        { status: error.message === "DB_TIMEOUT_OR_FAILURE" ? 503 : 404 }
       );
   }
 }
