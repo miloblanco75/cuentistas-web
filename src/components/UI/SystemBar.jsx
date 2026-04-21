@@ -105,7 +105,7 @@ export default function SystemBar({
     }
 
     const formatTime = (seconds) => {
-        if (seconds === null || seconds === undefined) return "--:--";
+        if (seconds === null || seconds === undefined || isNaN(seconds)) return "0:00";
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         return `${m}:${s.toString().padStart(2, "0")}`;

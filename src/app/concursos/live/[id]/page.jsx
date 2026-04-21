@@ -39,9 +39,12 @@ export default function LiveContestPage() {
                     setConcurso(dataC.concurso);
                     setStatus(dataC.concurso.status);
                     if (dataC.concurso.status === "active") {
-                        const elapsed = Math.floor((Date.now() - dataC.concurso.startTime) / 1000);
-                        const remaining = Math.max(0, dataC.concurso.duration - elapsed);
-                        setTimeLeft(remaining);
+                        const start = new Date(dataC.concurso.startTime).getTime();
+                        if (!isNaN(start)) {
+                            const elapsed = Math.floor((Date.now() - start) / 1000);
+                            const remaining = Math.max(0, dataC.concurso.duration - elapsed);
+                            setTimeLeft(remaining);
+                        }
                     }
                     if (dataC.concurso.status === "finished") setIsFinished(true);
                 }
@@ -99,11 +102,12 @@ export default function LiveContestPage() {
         if (status === "active" && timeLeft > 0) {
             timer = setInterval(() => {
                 setTimeLeft((prev) => {
-                    if (prev <= 1) {
+                    const safePrev = isNaN(prev) ? 0 : prev;
+                    if (safePrev <= 1) {
                         setIsFinished(true);
                         return 0;
                     }
-                    const next = prev - 1;
+                    const next = safePrev - 1;
                     if (next === 3600 || next === 1800) {
                         setShowAlarm(true);
                         setTimeout(() => setShowAlarm(false), 5000);
@@ -334,6 +338,19 @@ export default function LiveContestPage() {
 
             {/* Recorder Toolbar - Floating at bottom of screen */}
             <div className="recorder-toolbar">
+                {/* BOTÓN ENTREGAR - SIEMPRE VISIBLE EN ACTIVE/WRITING */}
+                {!isFinished && status === "active" && (
+                     <>
+                        <button 
+                            onClick={handleSubmit}
+                            className="bg-gold text-black text-[9px] tracking-[0.4em] uppercase font-black px-8 py-2 rounded-full hover:scale-105 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+                        >
+                            Entregar Manuscrito 🔱
+                        </button>
+                        <div className="w-[1px] h-4 bg-white/10 mx-2"></div>
+                    </>
+                )}
+
                 <button 
                     onClick={() => setIsCreatorMode(!isCreatorMode)}
                     className={`text-[9px] tracking-widest uppercase font-bold px-6 py-2 rounded-full transition-all border ${isCreatorMode ? 'bg-gold text-black border-gold' : 'text-gold border-gold/30 hover:bg-gold/10'}`}

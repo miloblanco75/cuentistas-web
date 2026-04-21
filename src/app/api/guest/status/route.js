@@ -49,14 +49,15 @@ export async function GET(request) {
             });
         }
 
-        // V9 Hardening: Autoritative Limit Check
-        const now = new Date();
-        const firstActivity = new Date(session.firstActivityAt);
-        const elapsedMs = now.getTime() - firstActivity.getTime();
+        const nowMs = Date.now();
+        const firstActivityMs = new Date(session.firstActivityAt).getTime();
+        const elapsedMs = nowMs - firstActivityMs;
         const maxMs = 5 * 60 * 1000;
+        const bufferMs = 2000; // 2s tolerance for clock drift
         
-        const remainingTime = Math.max(0, Math.floor((maxMs - elapsedMs) / 1000));
-        const timeExpired = elapsedMs >= maxMs;
+        // V9 Hardening: Buffer helps avoid premature expiry on fresh sessions
+        const remainingTime = Math.max(0, Math.floor((maxMs + bufferMs - elapsedMs) / 1000));
+        const timeExpired = elapsedMs > (maxMs + bufferMs);
         const interactionLimit = session.interactionCount >= 3;
         
         const limitReached = timeExpired || interactionLimit;
@@ -89,11 +90,13 @@ export async function POST(request) {
         const session = await prisma.guestSession.findUnique({ where: { guestId } });
         if (!session) return NextResponse.json({ ok: false }, { status: 404 });
 
-        const now = new Date();
-        const elapsedMs = now.getTime() - new Date(session.firstActivityAt).getTime();
+        const nowMs = Date.now();
+        const firstActivityMs = new Date(session.firstActivityAt).getTime();
+        const elapsedMs = nowMs - firstActivityMs;
         const maxMs = 5 * 60 * 1000;
+        const bufferMs = 2000;
 
-        if (session.interactionCount >= 3 || elapsedMs >= maxMs) {
+        if (session.interactionCount >= 3 || elapsedMs > (maxMs + bufferMs)) {
             return NextResponse.json({ 
                 ok: false, 
                 limitReached: true, 
