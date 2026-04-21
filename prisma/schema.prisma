@@ -150,7 +150,7 @@ model Concurso {
 }
 
 model Entrada {
-  id           String   @id @default(cuid())
+  id           String   @id @default(uuid())
   concursoId   String
   userId       String
   texto        String
@@ -160,6 +160,7 @@ model Entrada {
   puntajeTotal Float    @default(0)
   votos        Int      @default(0)
   timestamp    DateTime @default(now())
+  updatedAt    DateTime @updatedAt @default(now())
   expertScore  Float    @default(0)
   popularScore Float    @default(0)
   isPublished  Boolean  @default(false)

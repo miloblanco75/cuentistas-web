@@ -20,6 +20,7 @@ export default function LiveContestPage() {
     const [isFinished, setIsFinished] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [submitAction, setSubmitAction] = useState(null); // created | updated
     
     // Creator Mode & Recording
     const [isCreatorMode, setIsCreatorMode] = useState(false);
@@ -123,13 +124,13 @@ export default function LiveContestPage() {
 
     const handleSubmit = async () => {
         if (isGuest || isSubmitting) {
-            router.push("/galeria");
+            if (isGuest) router.push("/galeria");
             return;
         }
 
         setIsSubmitting(true);
         try {
-            await safeFetch("/api/entradas", {
+            const res = await safeFetch("/api/entradas", {
                 method: "POST",
                 body: JSON.stringify({
                     concursoId: id,
@@ -140,14 +141,20 @@ export default function LiveContestPage() {
                 }),
                 headers: { "Content-Type": "application/json" }
             });
-            
-            setIsSuccess(true);
-            
-            setTimeout(() => {
-                router.push("/galeria");
-            }, 1200);
+
+            if (res.ok) {
+                setSubmitAction(res.action);
+                setIsSuccess(true);
+                
+                setTimeout(() => {
+                    router.push("/galeria");
+                }, 1200);
+            } else {
+                throw new Error(res.error || "Error al entregar");
+            }
         } catch (err) {
-            alert(`Error al enviar: ${err.message}`);
+            console.error("❌ Submission Error:", err);
+            alert(`Error del Tribunal: ${err.message}`);
             setIsSubmitting(false);
         }
     };
@@ -221,7 +228,9 @@ export default function LiveContestPage() {
                         </h2>
                         <p className="text-gray-500 font-sans text-[11px] tracking-widest uppercase mb-16 italic opacity-60">
                             {isSuccess 
-                                ? "Tu manuscrito ha sido enviado al Tribunal con éxito." 
+                                ? (submitAction === "updated" 
+                                    ? "Tu manuscrito fue actualizado correctamente." 
+                                    : "Tu manuscrito ha sido enviado al Tribunal con éxito.") 
                                 : "El Tribunal Supremo ha cerrado la recepción de runas."}
                         </p>
                         {!isSuccess && <button onClick={handleSubmit} className="royal-button px-24">Entregar al Legado</button>}

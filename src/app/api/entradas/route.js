@@ -44,47 +44,86 @@ export async function POST(request) {
       const { concursoId, texto, participante } = await request.json();
 
       if (!concursoId || !texto) {
-        return NextResponse.json(
-          { ok: false, error: "Datos incompletos" },
-          { status: 400 }
-        );
+        return NextResponse.json({ ok: false, error: "Datos incompletos" }, { status: 400 });
       }
 
       const userId = session.user.id;
-      const user = await prisma.user.findUnique({ where: { id: userId } });
-      const now = new Date();
-      const isBoostActive = user.activeBoost > 0 && user.boostExpiresAt && new Date(user.boostExpiresAt) > now;
 
-      const nueva = await prisma.$transaction(async (tx) => {
-          const entry = await tx.entrada.create({
-              data: {
-                  concursoId,
-                  userId,
-                  texto,
-                  participante: participante || user.username || "Anónimo",
-                  puntajeTotal: 0,
-                  votos: 0,
-                  boostApplied: isBoostActive
-              }
+      // PHASE HOTFIX 6: RACE-SAFE TRANSACTIONAL IDEMPOTENCY
+      const result = await prisma.$transaction(async (tx) => {
+          const existing = await tx.entrada.findUnique({
+              where: {
+                  userId_concursoId: { userId, concursoId }
+              },
+              select: { id: true, boostApplied: true }
           });
 
-          if (isBoostActive) {
-              await tx.user.update({
-                  where: { id: userId },
-                  data: { activeBoost: 0, boostExpiresAt: null }
+          let action;
+          let entry;
+
+          if (existing) {
+              entry = await tx.entrada.update({
+                  where: { id: existing.id },
+                  data: { texto }
               });
+              action = "updated";
+          } else {
+              entry = await tx.entrada.create({
+                  data: {
+                      concursoId,
+                      userId,
+                      texto,
+                      participante: participante || "Anónimo",
+                      puntajeTotal: 0,
+                      votos: 0,
+                      boostApplied: false // Se aplica debajo si procede
+                  }
+              });
+              action = "created";
           }
 
-          return entry;
+          // LOCK-GUARDED BOOST CONSUMPTION
+          let boostAppliedNow = false;
+          if (action === "created") {
+              const user = await tx.user.findUnique({ 
+                  where: { id: userId },
+                  select: { activeBoost: true, boostExpiresAt: true }
+              });
+
+              const isBoostActive = user?.activeBoost && user.activeBoost > 0 && 
+                                   user.boostExpiresAt && new Date(user.boostExpiresAt) > new Date();
+
+              if (isBoostActive) {
+                  await tx.entrada.update({
+                      where: { id: entry.id },
+                      data: { boostApplied: true }
+                  });
+                  await tx.user.update({
+                      where: { id: userId },
+                      data: { activeBoost: 0, boostExpiresAt: null }
+                  });
+                  boostAppliedNow = true;
+              }
+          }
+
+          return { entry, action, boostAppliedNow };
       });
 
       return NextResponse.json({ 
           ok: true, 
-          entrada: nueva,
-          boostApplied: isBoostActive,
-          message: isBoostActive ? "Tu +5% Boost fue aplicado a esta participación" : null
-      }, { status: 201 });
-  } catch (e) {
-      return NextResponse.json({ ok: false, error: "No se pudo crear la entrada" }, { status: 500 });
+          action: result.action,
+          entradaId: result.entry.id,
+          boostApplied: result.boostAppliedNow,
+          message: result.action === "created" 
+            ? "Tu manuscrito ha sido enviado al Tribunal 🔱" 
+            : "Tu manuscrito fue actualizado correctamente 🔱"
+      }, { status: result.action === "created" ? 201 : 200 });
+
+  } catch (error) {
+      console.error("❌ Submission Error:", error);
+      if (error.code === 'P2002') {
+          return NextResponse.json({ ok: false, error: "Ya existe una entrada para este concurso" }, { status: 409 });
+      }
+      return NextResponse.json({ ok: false, error: "Error interno del servidor" }, { status: 500 });
   }
 }

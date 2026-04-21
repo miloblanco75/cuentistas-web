@@ -9,9 +9,15 @@ export default async function BibliotecaPage() {
     // HOTFIX 5: Permite acceso a invitados para aumentar retención
 
     const obras = await prisma.entrada.findMany({
-        where: { concurso: { status: "finished" } },
+        where: {
+            OR: [
+                { concurso: { status: "finished" } },
+                { concurso: { status: "active" } },
+                { isPublished: true }
+            ]
+        },
         include: { concurso: true },
-        orderBy: { timestamp: "desc" }
+        orderBy: { updatedAt: "desc" }
     });
 
     return (
@@ -30,7 +36,12 @@ export default async function BibliotecaPage() {
                         <p className="text-gray-500 italic text-xl">Los anaqueles están vacíos por ahora.</p>
                     ) : (
                         obras.map(obra => (
-                            <div key={obra.id} className="royal-card p-12 space-y-12">
+                            <div key={obra.id} className="royal-card p-12 space-y-12 relative">
+                                {session?.user?.id === obra.userId && (
+                                    <div className="absolute top-8 right-8 animate-pulse-subtle">
+                                        <span className="bg-gold/20 text-gold text-[8px] tracking-[0.3em] font-black uppercase px-3 py-1 rounded-full border border-gold/40">Tu Entrada</span>
+                                    </div>
+                                )}
                                 <div className="space-y-4">
                                     <h3 className="text-4xl font-serif italic text-white/90">{obra.concurso.titulo}</h3>
                                     <div className="flex gap-4 items-center">
