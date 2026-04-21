@@ -111,6 +111,9 @@ model GuestSession {
   deviceHash       String?
   arenaDwellStart  DateTime?
   lastActivity     DateTime  @updatedAt
+
+  @@index([guestId])
+  @@index([deviceHash])
 }
 
 model RewardLog {

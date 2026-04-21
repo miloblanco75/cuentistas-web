@@ -17,6 +17,16 @@ function getDeviceHash(req) {
     return crypto.createHash('sha256').update(ipSegment + normalizedUA).digest('hex');
 }
 
+// HOTFIX 4: Resilience Wrapper
+const withTimeout = (promise, ms = 1500) => {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("timeout")), ms)
+        )
+    ]);
+};
+
 export async function GET(request) {
     try {
         const cookieStore = cookies();
@@ -26,20 +36,20 @@ export async function GET(request) {
         let session;
 
         if (guestId) {
-            session = await prisma.guestSession.findUnique({
+            session = await withTimeout(prisma.guestSession.findUnique({
                 where: { guestId }
-            });
+            }), 1500);
         }
 
         if (!session) {
             guestId = uuidv4();
-            session = await prisma.guestSession.create({
+            session = await withTimeout(prisma.guestSession.create({
                 data: {
                     guestId,
                     deviceHash,
                     interactionCount: 0
                 }
-            });
+            }), 1500);
             
             cookieStore.set("guestId", guestId, { 
                 maxAge: 30 * 24 * 60 * 60,
@@ -74,7 +84,15 @@ export async function GET(request) {
 
     } catch (error) {
         console.error("❌ [GuestStatus] Error:", error.message);
-        return NextResponse.json({ ok: false, error: "Error de sesión" }, { status: 500 });
+        // FAIL-SAFE RESPONSE (HOTFIX 4)
+        return NextResponse.json({ 
+            ok: true, 
+            status: "fallback",
+            interactionCount: 0,
+            remainingTime: 300,
+            limitReached: false,
+            reason: null 
+        });
     }
 }
 
@@ -87,7 +105,7 @@ export async function POST(request) {
 
         if (!guestId) return NextResponse.json({ ok: false }, { status: 400 });
 
-        const session = await prisma.guestSession.findUnique({ where: { guestId } });
+        const session = await withTimeout(prisma.guestSession.findUnique({ where: { guestId } }), 1500);
         if (!session) return NextResponse.json({ ok: false }, { status: 404 });
 
         const nowMs = Date.now();
@@ -104,13 +122,13 @@ export async function POST(request) {
             });
         }
 
-        const updated = await prisma.guestSession.update({
+        const updated = await withTimeout(prisma.guestSession.update({
             where: { guestId },
             data: { 
                 interactionCount: { increment: 1 },
-                arenaDwellStart: action === 'arena_start' ? now : undefined
+                arenaDwellStart: action === 'arena_start' ? new Date() : undefined
             }
-        });
+        }), 1500);
 
         // Consistent Auth Response
         return NextResponse.json({ 
@@ -120,6 +138,12 @@ export async function POST(request) {
         });
         
     } catch (error) {
-        return NextResponse.json({ ok: false }, { status: 500 });
+        console.warn("⚠️ [GuestStatus POST] Fallback triggered:", error.message);
+        return NextResponse.json({ 
+            ok: true, 
+            status: "fallback",
+            interactions: 0,
+            limitReached: false 
+        });
     }
 }
