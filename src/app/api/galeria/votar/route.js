@@ -52,12 +52,14 @@ export async function POST(request) {
                 }
             });
 
-            // ACTUALIZACIÓN DE USUARIO
+            // ACTUALIZACIÓN DE USUARIO (RECOMPENSA)
             await tx.user.update({
                 where: { id: userId },
                 data: { 
                     votosHoy: currentVotosHoy + 1,
-                    ultimoVotoReset: diffHours >= 24 ? now : undefined
+                    ultimoVotoReset: diffHours >= 24 ? now : undefined,
+                    tinta: { increment: 1 }, // Recompensa por juicio
+                    puntos: { increment: 5 } // Recompensa de Experiencia
                 }
             });
         }, {

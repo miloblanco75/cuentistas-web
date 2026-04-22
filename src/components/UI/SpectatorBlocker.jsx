@@ -5,14 +5,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Lock, UserPlus, Zap } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useUser } from "../UserContext";
+import { useGuest } from "../GuestContext";
 
 export default function SpectatorBlocker() {
     const { isGuest, limitReached, userData } = useUser();
+    const { isBlocked: globalBlocked, status } = useGuest();
 
-    if (!isGuest || !limitReached) return null;
+    const effectivelyBlocked = (status === "unauthenticated" && (globalBlocked || limitReached));
 
-    const reason = userData?.reason === "time_expired" 
-        ? "Tu tiempo de descubrimiento ha concluido." 
+    if (!effectivelyBlocked) return null;
+
+    const reason = globalBlocked 
+        ? "Tu tiempo de descubrimiento (5 min) ha concluido." 
         : "Has alcanzado el límite de interacciones gratuitas.";
 
     return (

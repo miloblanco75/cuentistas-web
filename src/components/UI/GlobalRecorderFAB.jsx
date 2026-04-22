@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import RecorderModal from "../recorder/RecorderModal";
 import { useFeed } from "../FeedContext";
+import { useUser } from "../UserContext";
 
 /**
  * GlobalRecorderFAB.jsx - V3 Release Candidate
@@ -14,6 +15,7 @@ export default function GlobalRecorderFAB() {
     const pathname = usePathname();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { activeEntryId } = useFeed();
+    const { isGuest } = useUser();
 
     // Visible only in discovery/competitive routes
     const visibleRoutes = ["/feed", "/arena", "/galeria", "/biblioteca"];
@@ -21,10 +23,18 @@ export default function GlobalRecorderFAB() {
 
     if (!isVisible) return null;
 
+    const handleOpen = () => {
+        if (isGuest) {
+            alert("🔱 Solo los miembros del Tribunal pueden sellar historias. ¡Regístrate para participar!");
+            return;
+        }
+        setIsModalOpen(true);
+    };
+
     return (
         <>
             <button 
-                onClick={() => setIsModalOpen(true)}
+                onClick={handleOpen}
                 className="fixed bottom-10 right-32 z-[130] group flex items-center gap-5 bg-gold hover:bg-white text-black font-black py-5 px-10 rounded-full shadow-[0_0_60px_rgba(212,175,55,0.4)] transition-all hover:scale-105 active:scale-95 animate-elegant"
             >
                 <div className="relative">

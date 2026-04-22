@@ -14,6 +14,8 @@ export default function ArenaPage() {
     const [leadVotes, setLeadVotes] = useState(2);
     const [duelActive, setDuelActive] = useState(true);
     const [showExitToast, setShowExitToast] = useState(false);
+    const [currentEntry, setCurrentEntry] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     // Ciclo de Simulación (8-15s)
     useEffect(() => {
@@ -36,13 +38,22 @@ export default function ArenaPage() {
         };
     }, []);
 
-    // Placeholder data para el Arena (En prod esto vendría de API)
-    const currentEntry = {
-        id: "mock-arena-1",
-        participante: "Cuentista Anónimo",
-        texto: "Las sombras no son el final del camino, sino el principio de la verdadera visión. Aquel que teme a la oscuridad nunca podrá ver el brillo real de la luna sobre el mar de plata...",
-        totalVotos: 142
-    };
+    const fetchDuel = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await fetch("/api/galeria/random");
+            const data = await res.json();
+            if (data.ok) setCurrentEntry(data.entry);
+        } catch (e) {
+            console.error("Arena fetch error:", e);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchDuel();
+    }, [fetchDuel]);
 
     return (
         <main className="min-h-screen bg-[#050508] text-white font-serif relative overflow-hidden flex flex-col items-center py-24 px-6">
@@ -92,23 +103,47 @@ export default function ArenaPage() {
                         <h1 className="text-6xl font-light tracking-tighter uppercase italic">La Arena</h1>
                     </header>
 
-                    <div className="royal-card p-12 md:p-20 space-y-12 relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent"></div>
-                        
-                        <div className="space-y-4">
-                            <p className="text-[10px] tracking-[0.4em] uppercase text-gold/40">{currentEntry.participante}</p>
-                            <div className="text-3xl md:text-4xl text-white/90 leading-relaxed italic first-letter:text-7xl first-letter:float-left first-letter:mr-4 font-serif">
-                                "{currentEntry.texto}"
+                    {loading ? (
+                        <div className="royal-card h-96 flex flex-col items-center justify-center space-y-8 animate-pulse border-gold/10">
+                            <div className="w-16 h-16 border-2 border-gold/20 border-t-gold rounded-full animate-spin"></div>
+                            <p className="text-gold text-[10px] tracking-[0.5em] uppercase font-black">Invocando el Siguiente Duelo...</p>
+                        </div>
+                    ) : currentEntry ? (
+                        <div className="royal-card p-12 md:p-20 space-y-12 relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent"></div>
+                            
+                            <div className="space-y-4">
+                                <p className="text-[10px] tracking-[0.4em] uppercase text-gold/40">
+                                    {currentEntry.user?.nombre || currentEntry.participante || "Anónimo"}
+                                    {currentEntry.user?.casa && ` • Casa ${currentEntry.user.casa}`}
+                                </p>
+                                <div className="text-3xl md:text-4xl text-white/90 leading-relaxed italic first-letter:text-7xl first-letter:float-left first-letter:mr-4 font-serif">
+                                    "{currentEntry.texto}"
+                                </div>
+                                {currentEntry.concurso?.titulo && (
+                                    <p className="text-[9px] text-white/20 uppercase tracking-[0.3em] italic text-right pt-4">— {currentEntry.concurso.titulo}</p>
+                                )}
+                            </div>
+
+                            <div className="flex justify-center pt-8 border-t border-white/5">
+                                <LaurelButton 
+                                    entradaId={currentEntry.id} 
+                                    totalVotos={currentEntry.popularScore || currentEntry.totalVotos || 0} 
+                                    onVote={() => {
+                                        // Refetch after a short delay for UX
+                                        setTimeout(fetchDuel, 3000);
+                                    }}
+                                />
                             </div>
                         </div>
-
-                        <div className="flex justify-center pt-8 border-t border-white/5">
-                            <LaurelButton 
-                                entradaId={currentEntry.id} 
-                                totalVotos={currentEntry.totalVotos} 
-                            />
+                    ) : (
+                         <div className="royal-card p-20 text-center space-y-8 border-white/5 bg-white/[0.02]">
+                            <span className="text-6xl opacity-20">🔱</span>
+                            <h2 className="text-2xl font-serif italic text-white/40 uppercase tracking-widest">Silencio en la Arena</h2>
+                            <p className="text-gray-600 text-xs tracking-widest uppercase">No hay duelos pendientes de juicio en este momento.</p>
+                            <button onClick={fetchDuel} className="royal-button px-12 py-4 text-[10px] tracking-widest uppercase">Reintentar</button>
                         </div>
-                    </div>
+                    )}
 
                     {/* Micro-Conversion Hooks (V10 Polished) */}
                     <div className="text-center py-8">

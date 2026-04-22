@@ -202,7 +202,7 @@ export default function SystemBar({
 
                 {hasHistory && (
                     <>
-                        <Link href="/mercado" className="p-2 md:px-4 flex items-center gap-2 text-white/30 hover:text-amber-400 transition-all group border-l border-white/5">
+                        <Link href="/tienda" className="p-2 md:px-4 flex items-center gap-2 text-white/30 hover:text-amber-400 transition-all group border-l border-white/5">
                             <ShoppingBag className="w-4 h-4 group-hover:scale-110 transition-transform" />
                             <span className="text-[9px] uppercase tracking-[0.2em] font-bold hidden md:block">Mercado</span>
                         </Link>

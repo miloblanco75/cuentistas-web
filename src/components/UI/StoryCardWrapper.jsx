@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import StoryCard from "./StoryCard";
 import { useFeed } from "../FeedContext";
+import { useGuest } from "../GuestContext";
+import { useRouter } from "next/navigation";
 
 /**
  * StoryCardWrapper.jsx - V3 Release Candidate
@@ -12,21 +14,24 @@ import { useFeed } from "../FeedContext";
 export default function StoryCardWrapper({ entry, index, total }) {
     const [isVisible, setIsVisible] = useState(false);
     const [interactionCount, setInteractionCount] = useState(0);
-    const [showBlocker, setShowBlocker] = useState(false);
+    const { isBlocked: globalBlocked, status } = useGuest();
+    const [localBlocked, setLocalBlocked] = useState(false);
     const [funnelState, setFunnelState] = useState("free"); // free, fade, message, blocked
+    const router = useRouter();
     const { setActiveEntryId } = useFeed();
     const containerRef = useRef(null);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             ([entryObs]) => {
-                const isIntersecting = entryObs.isIntersecting;
                 setIsVisible(isIntersecting);
                 
                 // V3 RC: Activate entry only if visible enough
-                if (isIntersecting) {
+                if (isIntersecting && status === "unauthenticated") {
                     setActiveEntryId(entry.id);
                     processInteraction();
+                } else if (isIntersecting) {
+                    setActiveEntryId(entry.id);
                 }
             },
             { threshold: 0.7 } 
@@ -71,10 +76,12 @@ export default function StoryCardWrapper({ entry, index, total }) {
             
             setTimeout(() => {
                 setFunnelState("blocked");
-                setShowBlocker(true);
+                setLocalBlocked(true);
             }, 400);
         }, 650);
     };
+
+    const isEffectivelyBlocked = (status === "unauthenticated" && (globalBlocked || localBlocked));
 
     return (
         <div ref={containerRef} className="w-full h-full snap-start relative">
@@ -97,7 +104,7 @@ export default function StoryCardWrapper({ entry, index, total }) {
                 </div>
             )}
             
-            {showBlocker && (
+            {isEffectivelyBlocked && (
                 <div className="absolute inset-0 z-[120] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-12 text-center animate-elegant">
                     <div className="royal-card p-12 space-y-12 border-gold/30 border-2 max-w-sm bg-black/80 shadow-[0_0_50px_rgba(212,175,55,0.05)]">
                         <div className="space-y-6">
@@ -107,16 +114,21 @@ export default function StoryCardWrapper({ entry, index, total }) {
                         
                         <div className="space-y-6">
                              <div className="bg-gold/5 border border-gold/20 py-2 rounded-full">
-                                <p className="text-gold text-[11px] font-black tracking-[0.4em] uppercase">Precisión estimada: 72%</p>
+                                <p className="text-gold text-[11px] font-black tracking-[0.4em] uppercase">
+                                    {globalBlocked ? "Tiempo de Gracia Agotado" : "Precisión estimada: 72%"}
+                                </p>
                              </div>
                              <p className="text-gray-400 text-[12px] leading-relaxed font-serif italic opacity-80 antialiased">
-                                Has alcanzado el límite de visión gratuita. <br/>Únete al Tribunal para sellar tu propio criterio en la Arena.
+                                {globalBlocked 
+                                    ? "Has explorado la Ciudadela por más de 5 minutos." 
+                                    : "Has alcanzado el límite de visión gratuita."}
+                                <br/>Únete al Tribunal para sellar tu propio criterio en la Arena.
                              </p>
                         </div>
 
                         <div className="flex flex-col gap-6 pt-4">
-                            <button className="royal-button py-6 font-black tracking-[0.1em] text-sm shadow-[0_0_50px_rgba(212,175,55,0.2)]">Unirme Ahora 🔱</button>
-                            <button onClick={() => { setShowBlocker(false); setFunnelState('free'); }} className="text-white/20 text-[10px] font-bold uppercase tracking-[0.4em] hover:text-white transition-all underline decoration-gold/20">Seguir mirando (Limitado)</button>
+                            <button onClick={() => router.push('/registro')} className="royal-button py-6 font-black tracking-[0.1em] text-sm shadow-[0_0_50px_rgba(212,175,55,0.2)]">Unirme Ahora 🔱</button>
+                            <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.4em] italic">Evolución bloqueada para invitados</p>
                         </div>
                     </div>
                 </div>

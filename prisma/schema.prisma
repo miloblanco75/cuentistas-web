@@ -90,6 +90,12 @@ model User {
   boostExpiresAt          DateTime?
   videoUploadsToday       Int              @default(0)
   lastVideoUpload         DateTime?
+  
+  // PRESTIGE IDENTITY
+  activeFrameId           String?
+  activeBadgeId           String?
+  activeTitleId           String?
+
   accounts                Account[]
   AuditLog                AuditLog[]
   juezDe                  Concurso[]       @relation("JuezConcurso")
@@ -99,7 +105,7 @@ model User {
   PurchaseIntent          PurchaseIntent[]
   sessions                Session[]
   TiendaItem              TiendaItem[]
-  itemsAdquiridos         UserItem[]
+  inventory               Inventory[]
   UserMision              UserMision[]
   Voto                    Voto[]
 }
@@ -214,20 +220,44 @@ model TiendaItem {
   commission     Float      @default(0.20)
   stripePriceId  String?    @unique
   User           User?      @relation(fields: [authorId], references: [id])
-  propietarios   UserItem[]
+  inventory      Inventory[]
 }
 
-model UserItem {
-  id          String     @id @default(cuid())
-  userId      String
-  itemId      String
-  adquiridoEl DateTime   @default(now())
-  cantidad    Int        @default(1)
-  status      String     @default("active")
-  item        TiendaItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+model StoreItem {
+  id             String      @id @default(cuid())
+  name           String
+  description    String?
+  type           String      // "frame" | "badge" | "title" | "boost"
+  priceTinta     Int         @default(0)
+  priceMXN       Int?
+  rarity         String      @default("common") // common, rare, epic, legendary
+  isActive       Boolean     @default(true)
+  metadata       Json?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  inventory      Inventory[]
+}
 
-  @@unique([userId, itemId])
+model Inventory {
+  id          String      @id @default(cuid())
+  userId      String
+  tiendaItemId String?
+  storeItemId String?
+  adquiridoEl DateTime    @default(now())
+  cantidad    Int         @default(1)
+  status      String      @default("active")
+  
+  // Prestige state
+  equipped    Boolean     @default(false)
+  equippedAt  DateTime?
+
+  tiendaItem  TiendaItem? @relation(fields: [tiendaItemId], references: [id], onDelete: Cascade)
+  storeItem   StoreItem?  @relation(fields: [storeItemId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tiendaItemId], name: "userId_tiendaItemId")
+  @@unique([userId, storeItemId], name: "userId_storeItemId")
+  @@index([userId])
 }
 
 model AuditLog {
@@ -332,4 +362,9 @@ model Waitlist {
   email     String   @unique
   username  String?
   timestamp DateTime @default(now())
+}
+model StripeEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  createdAt DateTime @default(now())
 }

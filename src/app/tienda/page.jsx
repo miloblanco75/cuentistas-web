@@ -2,157 +2,260 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Lock, Zap, Shield, Monitor, Type, Crown, Droplet } from "lucide-react";
+import "@/styles/RarityStyles.css";
 
 export default function TiendaPage() {
     const [user, setUser] = useState(null);
-    const [items, setItems] = useState([]);
+    const [commercialItems, setCommercialItems] = useState([]);
+    const [prestigeItems, setPrestigeItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [buying, setBuying] = useState(null);
+    const [message, setMessage] = useState(null);
     const router = useRouter();
 
     useEffect(() => {
+        // Handle post-checkout messages
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success')) {
+            setMessage({ type: 'success', text: `¡Transacción sellada! +${urlParams.get('tinta')} ✒️ inyectadas.` });
+            setTimeout(() => setMessage(null), 10000);
+        } else if (urlParams.get('canceled')) {
+            setMessage({ type: 'info', text: "Transacción cancelada por el usuario." });
+            setTimeout(() => setMessage(null), 5000);
+        }
+
         const load = async () => {
-            const [uRes, iRes] = await Promise.all([
+            const [uRes, cRes, pRes] = await Promise.all([
                 fetch("/api/user"),
-                fetch("/api/tienda")
+                fetch("/api/tienda"),
+                fetch("/api/store/prestige")
             ]);
             const uData = await uRes.json();
-            const iData = await iRes.json();
+            const cData = await cRes.json();
+            const pData = await pRes.json();
             
-            setUser(uData.user);
-            if (iData.ok) setItems(iData.items);
+            if (uData.ok) setUser(uData.user);
+            if (cData.ok) setCommercialItems(cData.items);
+            if (pData.ok) setPrestigeItems(pData.items);
             setLoading(false);
         };
         load();
     }, []);
 
-    const handleBuy = async (item) => {
-        // V10: BLOQUEO DE TIENDA (MODO BETA SEGURO)
-        alert("Modo Beta: Las compras y recargas de Tinta estarán disponibles próximamente.");
-        setBuying(null);
-        return;
-        
-        // El código original ha sido deshabilitado por seguridad comercial
-        /*
-        setBuying(item);
-        await new Promise(r => setTimeout(r, 2000));
-        ...
-        */
+    const handleBuyPrestige = async (item) => {
+        setBuying(item.id);
+        try {
+            const res = await fetch("/api/store/buy", {
+                method: "POST",
+                body: JSON.stringify({ itemId: item.id }),
+                headers: { "Content-Type": "application/json" }
+            });
+            const data = await res.json();
+            if (data.ok) {
+                setMessage({ type: 'success', text: `¡${item.name} adquirido!` });
+                // Refresh user
+                const uRes = await fetch("/api/user");
+                const uData = await uRes.json();
+                if (uData.ok) setUser(uData.user);
+            } else {
+                if (data.missing) {
+                    setMessage({ type: 'error', text: `Tinta insuficiente. Faltan ${data.missing} ✒️`, tintaPack: true });
+                } else {
+                    setMessage({ type: 'error', text: data.error });
+                }
+            }
+        } catch (e) {
+            setMessage({ type: 'error', text: "Error en la conexión con el Tribunal" });
+        } finally {
+            setBuying(null);
+            setTimeout(() => setMessage(null), 5000);
+        }
     };
 
-    if (loading) return <div className="min-h-screen bg-[#050509] flex items-center justify-center font-serif italic text-purple-400 animate-pulse">Consultando el inventario del mercado...</div>;
+    const handleBuyCommercial = async (item) => {
+        setBuying(item.id);
+        try {
+            const res = await fetch("/api/stripe/checkout", {
+                method: "POST",
+                body: JSON.stringify({ 
+                    itemId: item.id,
+                    itemName: item.nombre,
+                    itemPrice: item.precio,
+                    itemTintaAmount: item.cantidad
+                }),
+                headers: { "Content-Type": "application/json" }
+            });
+            const data = await res.json();
+            if (data.ok && data.url) {
+                window.location.href = data.url;
+            } else {
+                setMessage({ type: 'error', text: data.error || "Fallo al conectar con Stripe" });
+            }
+        } catch (e) {
+            setMessage({ type: 'error', text: "Error en la pasarela de pagos" });
+        } finally {
+            setBuying(null);
+        }
+    };
 
-    const packsTinta = items.filter(i => i.tipo === 'tinta');
-    const libros = items.filter(i => i.tipo === 'libro');
+    if (loading) return (
+        <div className="min-h-screen bg-[#020202] flex items-center justify-center font-serif italic text-gold animate-pulse">
+            Sincronizando el Mercado de la Ciudadela...
+        </div>
+    );
+
+    const tintaPacks = commercialItems.filter(i => i.tipo === 'tinta');
+    const sections = [
+        { type: 'frame', title: 'Marcos de Identidad', icon: Monitor },
+        { type: 'badge', title: 'Emblemas de Rango', icon: Shield },
+        { type: 'title', title: 'Títulos Honoríficos', icon: Type },
+        { type: 'boost', title: 'Potenciadores del Veredicto', icon: Zap }
+    ];
 
     return (
-        <main className="min-h-screen p-10 bg-[#050509] text-white font-sans">
-            <div className="max-w-6xl mx-auto space-y-16">
-                <header className="flex justify-between items-center border-b border-white/5 pb-12">
-                    <div>
-                        <h1 className="text-6xl font-bold tracking-tighter mb-4">El Mercado Real</h1>
-                        <p className="text-gray-400 font-serif italic">Abastécete de tinta o adquiere el conocimiento prohibido de los grandes maestros.</p>
-                    </div>
-                    <div className="bg-[#101018] border border-purple-500/30 p-6 rounded-2xl flex items-center gap-6 shadow-[0_0_30px_rgba(168,85,247,0.1)]">
-                        <div className="text-right">
-                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Reserva de Tinta</p>
-                            <p className="text-3xl font-mono text-purple-400">{user?.tinta || 0}</p>
+        <main className="min-h-screen p-8 md:p-24 bg-[#020202] text-white selection:bg-gold/30">
+            <div className="max-w-6xl mx-auto space-y-24">
+                
+                {/* HEADER */}
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-white/5 pb-16">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-4">
+                            <span className="w-12 h-px bg-gold/50"></span>
+                            <span className="text-gold text-[10px] font-black tracking-[0.4em] uppercase">Mercado de Prestigio</span>
                         </div>
-                        <div className="h-12 w-12 bg-purple-600 rounded-full flex items-center justify-center text-2xl shadow-inner">✒️</div>
+                        <h1 className="text-6xl md:text-8xl font-serif italic tracking-tighter text-white">La Forja</h1>
+                        <p className="text-gray-500 font-serif italic max-w-lg">Transforma tu Tinta en identidad. El Tribunal otorga estos sellos a quienes demuestran su valor en la Arena.</p>
+                    </div>
+
+                    <div className="bg-gold/5 border border-gold/20 p-8 rounded-3xl flex items-center gap-8 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                        <div className="text-right">
+                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Balance de Tinta</p>
+                            <p className="text-4xl font-serif italic text-gold">{user?.tinta || 0} ✒️</p>
+                        </div>
+                        <div className="w-14 h-14 bg-gold/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-gold/20">
+                            <Droplet className="text-gold" />
+                        </div>
                     </div>
                 </header>
 
-                {/* Sección de Tinta */}
-                <section>
-                    <h2 className="text-xs font-black uppercase tracking-[0.5em] text-purple-500 mb-8 flex items-center gap-4">
-                        <span className="w-8 h-px bg-purple-500/30"></span>
-                        Suministros de Escritura
+                {/* NOTIFICATIONS */}
+                {message && (
+                    <div className={`fixed bottom-10 right-10 z-[200] p-6 rounded-2xl border flex items-center gap-4 animate-in slide-in-from-right duration-500 shadow-2xl ${
+                        message.type === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400' : 
+                        message.type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-gold/10 border-gold/30 text-gold'
+                    }`}>
+                        <div className="p-2 rounded-full bg-white/5">
+                            {message.type === 'error' ? '🚫' : '🔱'}
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-sm font-bold uppercase tracking-widest">{message.text}</p>
+                            {message.tintaPack && <p className="text-[10px] opacity-70">Obtén suministros en la sección inferior</p>}
+                        </div>
+                    </div>
+                )}
+
+                {/* FEATURED: LEGENDARY ITEMS */}
+                <section className="space-y-10">
+                    <h2 className="text-xs font-black uppercase tracking-[0.5em] text-gold flex items-center gap-6">
+                        <Crown size={16} /> Reliquias Legendarias
                     </h2>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {packsTinta.map(p => (
-                            <div key={p.id} className="bg-[#101018] border border-gray-800/50 rounded-3xl p-8 flex flex-col items-center hover:border-purple-500/50 transition-all duration-500 group relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-blue-600 opacity-30 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="text-4xl mb-6 group-hover:scale-110 transition-transform">✒️</div>
-                                <h3 className="text-lg font-bold mb-1">{p.nombre}</h3>
-                                <p className="text-xs text-gray-500 mb-6 font-serif italic text-center px-4">{p.descripcion}</p>
-                                <p className="text-purple-400 font-mono text-3xl mb-6">+{p.cantidad}</p>
-                                <p className="text-gray-400 font-bold mb-8 text-sm">${p.precio} USD</p>
-                                <button
-                                    onClick={() => handleBuy(p)}
-                                    disabled={buying !== null}
-                                    className={`w-full py-4 rounded-xl font-bold transition-all ${buying?.id === p.id ? 'bg-gray-700 animate-pulse' : 'bg-white text-black hover:bg-white/90 hover:scale-[1.02]'}`}
-                                >
-                                    {buying?.id === p.id ? "Conectando..." : "Comprar"}
-                                </button>
+                    <div className="grid md:grid-cols-2 gap-8">
+                        {prestigeItems.filter(i => i.rarity === 'legendary').map(item => (
+                            <div key={item.id} className="royal-card p-12 flex flex-col md:flex-row items-center gap-10 group border-gold/30 bg-gold/5 glow-legendary">
+                                <div className={`w-32 h-32 flex-shrink-0 flex items-center justify-center text-6xl group-hover:scale-110 transition-transform duration-700 bg-white/5 rounded-full ${item.type === 'frame' ? 'frame-legendary' : ''}`}>
+                                    {item.name.split(' ')[0]}
+                                </div>
+                                <div className="flex-1 space-y-6 text-center md:text-left">
+                                    <div>
+                                        <h3 className="text-3xl font-serif italic text-white title-rarity-legendary">{item.name}</h3>
+                                        <p className="text-gray-500 text-xs mt-2 uppercase tracking-widest">{item.description}</p>
+                                    </div>
+                                    <div className="flex items-center justify-center md:justify-start gap-8">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Inversión</span>
+                                            <span className="text-2xl font-serif text-gold">{item.priceTinta} ✒️</span>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleBuyPrestige(item)}
+                                            disabled={buying === item.id}
+                                            className="royal-button px-10 py-4 text-[10px] font-black tracking-widest uppercase"
+                                        >
+                                            {buying === item.id ? "Pidiendo audiencia..." : "Reclamar Legado"}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </section>
 
-                {/* Sección de Libros */}
-                {libros.length > 0 && (
-                    <section>
-                        <h2 className="text-xs font-black uppercase tracking-[0.5em] text-amber-500 mb-8 flex items-center gap-4">
-                            <span className="w-8 h-px bg-amber-500/30"></span>
-                            Biblioteca de Libros Sagrados
-                        </h2>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {libros.map(book => (
-                                <div key={book.id} className="bg-[#0c0c12] border border-amber-500/10 rounded-2xl overflow-hidden flex flex-col group hover:border-amber-500/30 transition-all">
-                                    <div className="aspect-[3/4] bg-gradient-to-b from-amber-500/5 to-transparent flex items-center justify-center relative">
-                                        <span className="text-8xl group-hover:scale-110 transition-transform duration-700 opacity-20">📖</span>
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center transition-all duration-500">
-                                            <h3 className="text-3xl font-bold mb-3 font-serif title-gradient">{book.nombre}</h3>
-                                            <span className="text-[10px] uppercase tracking-widest text-amber-500/60 font-black">Manuscrito Original</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-8 space-y-6 flex-1 flex flex-col">
-                                        <p className="text-sm text-gray-400 font-serif italic leading-relaxed line-clamp-3">
-                                            "{book.descripcion}"
-                                        </p>
-                                        <div className="mt-auto space-y-6">
-                                            <div className="flex justify-between items-center border-t border-white/5 pt-6">
-                                                <div className="flex gap-2">
-                                                    <span className="text-[10px] bg-white/5 px-2 py-1 rounded-sm text-gray-500 uppercase font-bold">PDF</span>
-                                                    <span className="text-[10px] bg-white/5 px-2 py-1 rounded-sm text-gray-500 uppercase font-bold">EPUB</span>
-                                                </div>
-                                                <p className="text-2xl font-mono text-amber-400">${book.precio}</p>
+                {/* PRESTIGE CATEGORIES */}
+                <div className="grid md:grid-cols-2 gap-20">
+                    {sections.map(section => (
+                        <section key={section.type} className="space-y-10">
+                             <h2 className="text-xs font-black uppercase tracking-[0.5em] text-white/40 flex items-center gap-4">
+                                <section.icon size={14} /> {section.title}
+                            </h2>
+                            <div className="grid gap-6">
+                                {prestigeItems.filter(i => i.type === section.type && i.rarity !== 'legendary').map(item => (
+                                    <div key={item.id} className={`flex items-center justify-between p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group glow-${item.rarity}`}>
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-xl">
+                                                {item.type === 'frame' ? <Monitor size={20} className="opacity-30" /> : 
+                                                 item.type === 'badge' ? item.name.split(' ')[0] : <Type size={18} className="opacity-30" />}
                                             </div>
-                                            <button
-                                              onClick={() => handleBuy(book)}
-                                              disabled={buying !== null}
-                                              className="w-full py-4 bg-amber-600 hover:bg-amber-500 text-black font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-3"
-                                            >
-                                                {buying?.id === book.id ? (
-                                                  <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
-                                                ) : "Instruir en el Conocimiento"}
-                                            </button>
+                                            <div>
+                                                <h4 className={`text-sm font-bold uppercase tracking-tighter ${
+                                                    item.rarity === 'epic' ? 'text-purple-400' : 
+                                                    item.rarity === 'rare' ? 'text-blue-400' : 'text-gray-400'
+                                                }`}>{item.name}</h4>
+                                                <p className="text-[10px] text-gray-500 italic font-serif">{item.rarity === 'common' ? 'Objeto Base' : item.rarity}</p>
+                                            </div>
                                         </div>
+                                        <button 
+                                            onClick={() => handleBuyPrestige(item)}
+                                            disabled={buying === item.id}
+                                            className="bg-white/5 hover:bg-white text-white hover:text-black px-6 py-2 rounded-lg text-[10px] font-black border border-white/10 transition-all flex items-center gap-3"
+                                        >
+                                            {buying === item.id ? "⌛" : `${item.priceTinta} ✒️`}
+                                        </button>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* Modal de Transacción */}
-                {buying && (
-                    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 backdrop-blur-md">
-                        <div className="bg-[#101018] border border-white/10 p-12 rounded-3xl text-center max-w-sm shadow-[0_0_100px_rgba(0,0,0,1)]">
-                            <div className="relative w-24 h-24 mx-auto mb-8">
-                                <div className="absolute inset-0 border-4 border-purple-500/20 rounded-full"></div>
-                                <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                                <div className="absolute inset-0 flex items-center justify-center text-4xl">🔮</div>
+                                ))}
                             </div>
-                            <h2 className="text-2xl font-bold mb-4 tracking-tighter">Procesando Vínculo Arcaico</h2>
-                            <p className="text-gray-500 font-serif italic text-sm leading-relaxed">
-                                Estamos invocando a las pasarelas seguras para finalizar tu intercambio de ${buying.precio} USD...
-                            </p>
-                        </div>
+                        </section>
+                    ))}
+                </div>
+
+                {/* TINTA PACKS (INFERIOR - NECESIDAD) */}
+                <section className="pt-24 border-t border-white/5 space-y-12">
+                     <div className="text-center space-y-4">
+                        <h2 className="text-4xl font-serif italic text-white/50">Suministros de Escritura</h2>
+                        <p className="text-gray-600 text-xs tracking-widest uppercase">Para cuando tu Criterion necesita combustible real</p>
                     </div>
-                )}
+                    
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 opacity-60 hover:opacity-100 transition-opacity duration-700">
+                        {tintaPacks.map(p => (
+                            <div key={p.id} className="relative royal-card p-10 flex flex-col items-center gap-6 group hover:translate-y-[-5px] transition-all">
+                                <div className="text-4xl">✒️</div>
+                                <div className="text-center">
+                                    <h3 className="font-bold text-sm tracking-widest uppercase mb-1">{p.nombre}</h3>
+                                    <p className="text-gold font-black text-2xl">+{p.cantidad} ✒️</p>
+                                </div>
+                                <button 
+                                    onClick={() => handleBuyCommercial(p)}
+                                    disabled={buying === p.id}
+                                    className="w-full py-4 bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all disabled:opacity-50"
+                                >
+                                    {buying === p.id ? "Conectando ⚡" : "Adquirir 💧"}
+                                </button>
+                                <p className="text-[10px] text-gray-600 font-bold">${p.precio} USD</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
             </div>
         </main>
     );
 }
-

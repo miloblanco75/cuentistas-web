@@ -61,11 +61,11 @@ export async function POST(request) {
             });
 
             // Registrar Item en Inventario
-            const userItem = await tx.userItem.upsert({
+            const userItem = await tx.inventory.upsert({
                 where: {
-                    userId_itemId: {
+                    userId_tiendaItemId: {
                         userId: user.id,
-                        itemId: item.id
+                        tiendaItemId: item.id
                     }
                 },
                 update: {
@@ -73,7 +73,7 @@ export async function POST(request) {
                 },
                 create: {
                     userId: user.id,
-                    itemId: item.id,
+                    tiendaItemId: item.id,
                     cantidad: 1,
                     status: "active"
                 }

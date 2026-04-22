@@ -5,144 +5,202 @@ import { useRouter } from "next/navigation";
 import { CASAS } from "@/lib/constants";
 import { useLanguage } from "@/components/LanguageContext";
 import { useSession, signOut } from "next-auth/react";
+import ProfileCustomizationModal from "@/components/profile/ProfileCustomizationModal";
+import { useUser } from "@/components/UserContext";
+import { Lock, Trophy, Target, PenTool, TrendingUp, Settings } from "lucide-react";
+import "@/styles/RarityStyles.css";
 
 export default function PerfilPage() {
-    const [user, setUser] = useState(null);
-    const [activeTab, setActiveTab] = useState("archive"); // 'obras' or 'archive'
+    const { userData: user, loading: userLoading, refreshUser } = useUser();
+    const [allPrestigeItems, setAllPrestigeItems] = useState([]);
+    const [showCustomizer, setShowCustomizer] = useState(false);
     const { t } = useLanguage();
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const router = useRouter();
 
     useEffect(() => {
-        fetch("/api/user")
-            .then(res => res.json())
-            .then(data => setUser(data.user));
-    }, []);
+        if (status === "authenticated") {
+            const fetchPrestige = async () => {
+                const res = await fetch("/api/store/prestige");
+                const data = await res.json();
+                if (data.ok) setAllPrestigeItems(data.items);
+            };
+            fetchPrestige();
+        } else if (status === "unauthenticated") {
+            const timer = setTimeout(() => {
+                router.push("/?auth=required");
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [status, router]);
 
-    const handleLogout = async () => {
-        const res = await fetch("/api/auth", {
+    const handleEquip = async (inventoryId) => {
+        const res = await fetch("/api/user/equip", {
             method: "POST",
-            body: JSON.stringify({ action: "logout" }),
+            body: JSON.stringify({ inventoryId }),
             headers: { "Content-Type": "application/json" }
         });
-        if (res.ok) {
-            router.push("/");
+        const data = await res.json();
+        if (data.ok) {
+            await refreshUser();
         }
     };
 
-    if (!user) return <div className="min-h-screen bg-[#050505] flex items-center justify-center font-serif text-sm">...</div>;
+    if (status === "loading" || userLoading) {
+        return (
+            <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center gap-6">
+                <div className="w-12 h-12 border-2 border-gold/20 border-t-gold rounded-full animate-spin"></div>
+                <p className="text-gold font-serif italic text-sm tracking-widest animate-pulse">Sincronizando Identidad...</p>
+            </div>
+        );
+    }
+
+    if (status === "unauthenticated") {
+        return null; // Will redirect via useEffect
+    }
 
     const casaData = CASAS.find(c => c.id === user.casa) || CASAS[0];
+    
+    // PRECISION CALCULATION (Formula: 100 - avgDiff)
+    // Placeholder logic for now, should be real in production
+    const precisionValue = 72; 
+
+    // Find active items for display
+    const activeFrame = allPrestigeItems.find(i => i.id === user.activeFrameId);
+    const activeBadge = allPrestigeItems.find(i => i.id === user.activeBadgeId);
+    const activeTitle = allPrestigeItems.find(i => i.id === user.activeTitleId);
 
     return (
-        <main className="min-h-screen bg-[#050505] text-[#ffffff] p-12 md:p-32 animate-elegant">
-            <div className="max-w-5xl mx-auto space-y-40">
-                <header className="space-y-16">
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-8 h-[1px] bg-gold/50"></div>
-                                <div className="w-8 h-[1px] bg-gold/50"></div>
-                                <p className="text-[10px] tracking-[0.4em] uppercase text-gold font-sans font-medium">{t("profile_legacy")}</p>
+        <main className="min-h-screen bg-[#020202] text-[#ffffff] p-8 md:p-24 animate-elegant relative selection:bg-gold/30">
+            {/* BACKGROUND DEPTH */}
+            <div className={`absolute inset-0 opacity-10 pointer-events-none bg-gradient-to-b ${casaData.bg} to-transparent`}></div>
+
+            <div className="max-w-6xl mx-auto space-y-32 relative z-10">
+                
+                {/* 1. IDENTITY BLOCK */}
+                <header className="flex flex-col md:flex-row items-center md:items-end justify-between gap-12">
+                    <div className="flex items-center gap-10">
+                        {/* Avatar + Frame */}
+                        <div className={`relative w-32 h-32 md:w-48 md:h-48 rounded-full border-2 border-white/5 flex items-center justify-center p-2 ${activeFrame ? `frame-${activeFrame.rarity} glow-${activeFrame.rarity}` : ''}`}>
+                            <div className="w-full h-full rounded-full bg-white/5 overflow-hidden flex items-center justify-center text-5xl md:text-7xl group">
+                                {user.image ? <img src={user.image} alt="Avatar" className="w-full h-full object-cover" /> : "🔱"}
                             </div>
-                            <h1 className="text-8xl font-light tracking-tighter text-white font-serif italic">{user.nombre || session?.user?.name}</h1>
+                            
+                            {/* Active Badge Overlay */}
+                            {activeBadge && (
+                                <div className={`absolute -bottom-2 -right-2 bg-black border border-gold/20 p-3 rounded-full shadow-2xl animate-pulse glow-${activeBadge.rarity}`}>
+                                    <span className="text-xl">{activeBadge.name.split(' ')[0]}</span>
+                                </div>
+                            )}
                         </div>
-                        <div className="flex flex-col items-end gap-6">
-                            <div className="text-right royal-card p-6 px-10 border-gold/20">
-                                <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-2 font-sans">{t("profile_seal")}</p>
-                                <p className="text-xl font-serif italic text-gold">{t(`casa_${casaData.id}`)}</p>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                                <p className={`text-[10px] tracking-[0.5em] uppercase font-black ${activeTitle ? `title-rarity-${activeTitle.rarity}` : 'text-gold'}`}>
+                                    {activeTitle ? activeTitle.name : "Aspirante del Tribunal"}
+                                </p>
+                                <div className="h-[1px] w-12 bg-white/10"></div>
                             </div>
-                            <button
-                                onClick={() => signOut({ callbackUrl: '/' })}
-                                className="text-[9px] tracking-[0.5em] uppercase text-red-500/50 hover:text-red-500 transition-all font-sans border-b border-transparent hover:border-red-500/20 pb-1"
-                            >
-                                {t("footer_disconnect")}
-                            </button>
+                            <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-white font-serif italic leading-none">{user.nombre}</h1>
+                            <p className="text-gray-500 font-sans tracking-[0.3em] uppercase text-xs">
+                                {casaData.nombre} • Nivel {user.nivel}
+                            </p>
                         </div>
                     </div>
 
-                    <div className="h-[1px] w-full bg-gradient-to-r from-white/5 via-white/10 to-white/5"></div>
-                    
-                    <div className="flex justify-center">
-                        <a 
-                            href="/perfil/compartir"
-                            className="royal-button px-12 py-5 text-xs tracking-[0.5em] uppercase animate-pulse shadow-[0_0_30px_rgba(212,175,55,0.1)]"
+                    <div className="flex flex-col gap-6 w-full md:w-auto">
+                        <button 
+                            onClick={() => setShowCustomizer(true)}
+                            className="royal-button px-12 py-5 text-[10px] tracking-[0.5em] uppercase flex items-center justify-center gap-4 group"
                         >
-                            {t("profile_btn_forge")}
-                        </a>
+                            <Settings size={14} className="group-hover:rotate-90 transition-transform duration-500" />
+                            Personalizar Perfil 🔱
+                        </button>
+                        <button
+                            onClick={() => signOut({ callbackUrl: '/' })}
+                            className="text-[9px] tracking-[0.5em] uppercase text-white/20 hover:text-red-400 text-center transition-all font-sans"
+                        >
+                            Abandonar la Ciudadela
+                        </button>
                     </div>
                 </header>
 
-                <section className="grid grid-cols-2 md:grid-cols-3 gap-8">
-                    <div className="royal-card p-10 text-center space-y-4 border-gold/10">
-                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">{t("stat_rank")}</p>
-                        <p className="text-3xl font-serif italic text-white/90">{t(`rango_${user.nivel.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`)}</p>
-                    </div>
-                    <div className="royal-card p-10 text-center space-y-4 border-gold/10">
-                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">{t("stat_prestige")}</p>
-                        <p className="text-3xl font-serif italic text-gold">{user.puntos} Pts</p>
-                    </div>
-                    <div className="royal-card p-10 text-center space-y-4 border-gold/10">
-                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">{t("stat_ink")}</p>
-                        <p className="text-3xl font-serif italic text-white/90">{user.tinta}✒️</p>
-                    </div>
-                    {user.streak > 0 && (
-                        <div className="royal-card p-10 text-center space-y-4 border-gold/20 bg-gold/5 col-span-2 md:col-span-3">
-                            <p className="text-[10px] tracking-[0.3em] uppercase text-gold font-sans font-bold">{t("streak_title")}</p>
-                            <p className="text-5xl font-serif italic text-white animate-pulse">🔥 {user.streak} {t("streak_days")} 🔥</p>
-                            <p className="text-[9px] text-gray-500 uppercase tracking-widest italic">{t("streak_motto")}</p>
+                {/* 2. STATS BLOCK */}
+                <section className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                    {[
+                        { label: "Precisión", value: `${precisionValue}%`, icon: Target, color: "text-gold" },
+                        { label: "Victorias", value: user.victorias || 0, icon: Trophy, color: "text-blue-400" },
+                        { label: "Participaciones", value: user.puntos || 0, icon: TrendingUp, color: "text-purple-400" },
+                        { label: "Tinta", value: user.tinta, icon: PenTool, color: "text-white" }
+                    ].map((stat, i) => (
+                        <div key={i} className="royal-card p-10 flex flex-col items-center justify-center text-center space-y-4 group hover:border-gold/30 transition-all border-white/5">
+                            <stat.icon className={`${stat.color} opacity-40 group-hover:opacity-100 transition-opacity`} size={20} />
+                            <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">{stat.label}</p>
+                            <p className="text-4xl font-serif italic text-white/90">{stat.value}</p>
                         </div>
-                    )}
+                    ))}
                 </section>
 
-                <section className="space-y-20">
-                    <div className="flex gap-16 border-b border-white/5 pb-6 justify-center md:justify-start">
-                        {["archive", "obras"].map(tab => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`text-[11px] tracking-[0.5em] uppercase font-sans transition-all duration-700 relative pb-4 ${activeTab === tab ? 'text-gold' : 'text-gray-600 hover:text-white'}`}
-                            >
-                                {tab === 'archive' ? t("mod_examenes") : t("public_archive")}
-                                {activeTab === tab && <div className="absolute bottom-[-1px] left-0 w-full h-[1px] bg-gold"></div>}
-                            </button>
-                        ))}
+                {/* 3. PRESTIGE DESIRE ZONE */}
+                <section className="space-y-12">
+                    <div className="flex items-center gap-6">
+                        <h2 className="text-2xl font-serif italic text-white/80">Catálogo de Prestigio</h2>
+                        <div className="h-[1px] flex-1 bg-white/5"></div>
                     </div>
 
-                    <div className="grid gap-12">
-                        {(activeTab === 'archive' ? user.archivoEvolucion : user.obras)?.map((a, idx) => (
-                            <div key={idx} className="royal-card p-12 group cursor-pointer border-transparent hover:border-gold/20">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="space-y-3">
-                                        <h3 className="text-4xl font-serif italic text-white/90 group-hover:text-gold transition-all duration-700">{a.titulo}</h3>
-                                        <div className="flex gap-6 items-center">
-                                            <span className="text-[9px] tracking-[0.3em] text-gray-600 uppercase font-sans">{a.fecha}</span>
-                                            {a.pressure && <span className="text-[8px] bg-gold/10 text-gold px-3 py-1 rounded-full uppercase tracking-tighter">Bajo Presión</span>}
-                                        </div>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-6">
+                        {allPrestigeItems.map(item => {
+                            const isOwned = user.inventory.some(i => i.storeItemId === item.id);
+                            return (
+                                <div 
+                                    key={item.id} 
+                                    className={`relative p-6 rounded-2xl border transition-all duration-700 flex flex-col items-center gap-4 ${
+                                        isOwned 
+                                            ? `border-gold/20 bg-gold/5 glow-${item.rarity}` 
+                                            : 'border-white/5 bg-white/[0.02] opacity-40 grayscale group hover:opacity-60'
+                                    }`}
+                                >
+                                    {/* Visual Representation */}
+                                    <div className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg">
+                                        {item.type === 'frame' ? <Monitor size={20} /> :
+                                         item.type === 'badge' ? <Shield size={20} /> : <Type size={20} />}
                                     </div>
-                                    <span className="text-gold opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0">→</span>
+
+                                    <div className="text-center">
+                                        <p className="text-[8px] font-black uppercase tracking-widest text-white/60 mb-1 leading-tight">{item.name}</p>
+                                        {!isOwned && (
+                                            <div className="flex items-center justify-center gap-2 mt-2">
+                                                <Lock size={8} className="text-gold/50" />
+                                                <span className="text-gold text-[8px] font-bold">{item.priceTinta}✒️</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Rarity Indicator */}
+                                    <div className={`absolute top-2 right-2 w-1 h-1 rounded-full ${
+                                        item.rarity === 'legendary' ? 'bg-gold' : 
+                                        item.rarity === 'epic' ? 'bg-purple-400' : 'bg-blue-400'
+                                    }`}></div>
                                 </div>
-                                <p className="text-lg text-gray-500 italic font-serif line-clamp-2 leading-relaxed opacity-60 group-hover:opacity-100 transition-all">
-                                    "{a.texto || 'Crónica privada de alta tensión literaria.'}"
-                                </p>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </section>
 
-                <section className="pt-24 space-y-8">
-                    <div className="flex justify-between items-center px-4">
-                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">Ascensión al Sello de Avanzado</p>
-                        <p className="text-[11px] tracking-[0.2em] text-gold font-sans font-bold">{user.puntos} / 300</p>
-                    </div>
-                    <div className="h-[2px] w-full bg-white/5 relative overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-gold/50 via-gold to-gold/50 shadow-[0_0_15px_rgba(197,160,89,0.3)] transition-all duration-2000 ease-out"
-                            style={{ width: `${(user.puntos / 300) * 100}%` }}
-                        ></div>
-                    </div>
+                {/* 4. MEDALS & ACHIEVEMENTS (Simplified) */}
+                <section className="pt-20 text-center">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-[0.5em] italic">Tu historia apenas comienza en la Arena...</p>
                 </section>
             </div>
+
+            {/* CUSTOMIZATION MODAL */}
+            <ProfileCustomizationModal 
+                isOpen={showCustomizer}
+                onClose={() => setShowCustomizer(false)}
+                inventory={user.inventory}
+                items={allPrestigeItems}
+                onEquip={handleEquip}
+            />
         </main>
     );
 }

@@ -20,7 +20,7 @@ export async function GET() {
 
         // 2. Tasa de Conversión (Usuarios con UserItem vs Total)
         const totalUsers = await prisma.user.count();
-        const buyers = await prisma.userItem.groupBy({
+        const buyers = await prisma.inventory.groupBy({
             by: ['userId'],
         });
         const conversionRate = (buyers.length / totalUsers) * 100;

@@ -47,8 +47,8 @@ export async function POST(request) {
                 userId: session.user.id,
                 tintaAmount: itemTintaAmount.toString()
             },
-            success_url: `${process.env.NEXTAUTH_URL}/mercado?success=true&tinta=${itemTintaAmount}`,
-            cancel_url: `${process.env.NEXTAUTH_URL}/mercado?canceled=true`
+            success_url: `${process.env.NEXTAUTH_URL}/tienda?success=true&tinta=${itemTintaAmount}`,
+            cancel_url: `${process.env.NEXTAUTH_URL}/tienda?canceled=true`
         });
 
         return NextResponse.json({ ok: true, url: stripeSession.url });

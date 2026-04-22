@@ -18,6 +18,17 @@ export function UserProvider({ children }) {
     const [connectionStatus, setConnectionStatus] = useState("stable"); // stable, unstable, critical, maintenance
     const [retryCount, setRetryCount] = useState(0);
 
+    useEffect(() => {
+        // V13: Auto-refresh on Stripe success
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('success')) {
+                console.log("🔱 Detectado retorno de Stripe... Sincronizando Gotas de Tinta.");
+                refreshUser();
+            }
+        }
+    }, []);
+
     const refreshUser = useCallback(async () => {
         // V9: Hardening Crítico - Bloquear durante la carga de sesión
         if (status === "loading") return;
@@ -40,11 +51,16 @@ export function UserProvider({ children }) {
                     throw new APIError("Sesión inválida en Backend", "SERVER");
                 }
             } catch (err) {
-                console.error(`❌ [UserContext] Error Autenticado: ${err.message}`);
+                console.warn(`[UserContext] Authed fetch failed: ${err.message}`);
+                
+                // If it's a structural 401, we just clear user and remain stable.
+                // Only mark as critical if it's a real server error (502, 500, timeout).
                 if (err.status === 401) {
                     setUserData(null);
+                    setConnectionStatus("stable");
+                } else {
+                    setConnectionStatus("critical");
                 }
-                setConnectionStatus("critical");
             } finally {
                 setLoading(false);
             }

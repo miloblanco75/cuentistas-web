@@ -18,8 +18,8 @@ export async function GET() {
                 where: { totalSpent: { gt: 0 } },
                 select: { id: true, totalSpent: true, name: true, email: true, lastParticipation: true, updatedAt: true }
             }),
-            prisma.userItem.findMany({
-                where: { item: { tipo: "tinta" }, adquiridoEl: { gte: new Date(Date.now() - 48 * 60 * 60 * 1000) } },
+            prisma.inventory.findMany({
+                where: { tiendaItem: { tipo: "tinta" }, adquiridoEl: { gte: new Date(Date.now() - 48 * 60 * 60 * 1000) } },
                 include: { user: { select: { id: true, name: true, entradas: { take: 1, orderBy: { timestamp: 'desc' } } } } }
             })
         ]);

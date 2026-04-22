@@ -4,6 +4,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/components/UserContext";
 
 // Iconos dorados de trazo fino
 const Icons = {
@@ -56,25 +57,19 @@ const Icons = {
 };
 
 export default function PlatformHub() {
-    const [userData, setUserData] = useState(null);
     const { t } = useLanguage();
     const { data: session, status } = useSession();
+    const { userData, loading: userLoading } = useUser();
     const router = useRouter();
 
     useEffect(() => {
-        // V9: No redirigir si es invitado, el middleware y el SpectatorBlocker gestionan los límites
-        if (status === "loading") return;
-        
-        if (status === "authenticated") {
-            fetch("/api/user")
-                .then(res => res.json())
-                .then(data => {
-                    if (data.ok) {
-                        setUserData(data.user);
-                    }
-                });
+        if (status === "unauthenticated") {
+            const timer = setTimeout(() => {
+                router.push("/?auth=required");
+            }, 1000);
+            return () => clearTimeout(timer);
         }
-    }, [status]);
+    }, [status, router]);
 
     const isMaster = userData?.rol === "Maestro";
 
@@ -83,7 +78,7 @@ export default function PlatformHub() {
         { title: t("mod_examenes"), href: "/examenes", icon: <Icons.Examenes /> },
         { title: t("mod_comunidad"), href: "/comunidad", icon: <Icons.Comunidad /> },
         { title: t("mod_ranking"), href: "/biblioteca", icon: <Icons.Biblioteca /> },
-        { title: t("mod_mercado"), href: "/mercado", icon: <Icons.Mercado /> },
+        { title: t("mod_mercado"), href: "/tienda", icon: <Icons.Mercado /> },
         { title: t("mod_perfil"), href: "/perfil", icon: <Icons.Perfil /> },
         { 
             title: isMaster ? "Trono de Mando" : t("mod_tribunal"), 
@@ -100,7 +95,7 @@ export default function PlatformHub() {
         }] : [])
     ];
 
-    if (status === "loading" || (status === "authenticated" && !userData)) {
+    if (status === "loading" || userLoading) {
         return (
             <div className="min-h-screen bg-[#050508] text-[#d4af37] flex flex-col items-center justify-center gap-8">
                 <div className="w-16 h-16 border-t-2 border-amber-500 rounded-full animate-spin"></div>
@@ -111,7 +106,9 @@ export default function PlatformHub() {
         );
     }
 
-    if (!userData) return null;
+    if (status === "unauthenticated") return null;
+
+    if (!userData && status === "authenticated") return null;
 
     return (
         <main className="min-h-screen bg-[#050508] text-[#e0d7c6] p-6 md:p-24 lg:p-32 animate-elegant relative">

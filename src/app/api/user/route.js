@@ -41,6 +41,9 @@ export async function GET() {
             include: {
                 entradas: {
                     include: { concurso: true }
+                },
+                inventory: {
+                    include: { storeItem: true, tiendaItem: true }
                 }
             }
         });
@@ -95,6 +98,10 @@ export async function GET() {
             boostExpiresAt: user.boostExpiresAt || null,
             referredBy: user.referredBy || null,
             referralRewardClaimed: user.referralRewardClaimed || false,
+            activeFrameId: user.activeFrameId,
+            activeBadgeId: user.activeBadgeId,
+            activeTitleId: user.activeTitleId,
+            inventory: user.inventory || [],
             misiones: user.misiones || []
         };
 
@@ -164,6 +171,10 @@ async function handleUpdate(session, req) {
                 boostExpiresAt: user.boostExpiresAt || null,
                 referredBy: user.referredBy || null,
                 referralRewardClaimed: user.referralRewardClaimed || false,
+                activeFrameId: user.activeFrameId,
+                activeBadgeId: user.activeBadgeId,
+                activeTitleId: user.activeTitleId,
+                inventory: user.inventory || [],
                 misiones: user.misiones || []
             } 
         });
