@@ -141,6 +141,41 @@ export default function PerfilPage() {
                     ))}
                 </section>
 
+                {/* ARCHITECT HIGH COMMAND SECTION */}
+                {user.rol === "ARCHITECT" && (
+                    <section className="royal-card p-12 border-amber-500/30 bg-amber-500/5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-10">
+                            <Shield size={120} className="text-amber-500" />
+                        </div>
+                        <div className="relative z-10 space-y-8">
+                            <div className="space-y-2">
+                                <h2 className="text-[10px] tracking-[0.6em] uppercase text-amber-500 font-black">Alta Comandancia</h2>
+                                <h3 className="text-3xl font-cinzel tracking-widest text-white">Santuario del Arquitecto</h3>
+                            </div>
+                            <div className="flex flex-wrap gap-6">
+                                <a 
+                                    href="/panel"
+                                    className="bg-amber-600 hover:bg-amber-500 text-black px-10 py-4 rounded-sm text-[10px] font-black tracking-[0.3em] uppercase transition-all shadow-[0_0_20px_rgba(217,175,55,0.3)]"
+                                >
+                                    ⚖️ Forjar Concursos
+                                </a>
+                                <a 
+                                    href="/panel/tienda"
+                                    className="bg-black/40 hover:bg-black/60 border border-amber-500/30 text-amber-500 px-10 py-4 rounded-sm text-[10px] font-black tracking-[0.3em] uppercase transition-all"
+                                >
+                                    💎 Gestionar Bóveda
+                                </a>
+                                <a 
+                                    href="/rankings"
+                                    className="bg-black/20 hover:bg-black/40 text-gray-400 px-10 py-4 rounded-sm text-[10px] font-black tracking-[0.3em] uppercase transition-all"
+                                >
+                                    📈 Anales Globales
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
                 {/* 3. PRESTIGE DESIRE ZONE */}
                 <section className="space-y-12">
                     <div className="flex items-center gap-6">
