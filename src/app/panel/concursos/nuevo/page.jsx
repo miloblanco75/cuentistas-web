@@ -26,7 +26,7 @@ export default function NuevoConcursoPage() {
       .then(res => res.json())
       .then(data => {
         if (data.ok) {
-          setJudges(data.users.filter(u => u.rol === "Maestro"));
+          setJudges(data.users.filter(u => u.rol === "Maestro" || u.rol === "ARCHITECT"));
         }
       });
   }, []);
