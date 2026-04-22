@@ -12,23 +12,22 @@ export default function SystemBar({
     isWriting = false 
 }) {
     const userCtx = useUser();
+    const [mounted, setMounted] = React.useState(false);
+    const [daysRemaining, setDaysRemaining] = React.useState(0);
+    const [warSignal, setWarSignal] = React.useState("Casa Lobo lidera hoy");
+
     const userData = userCtx?.userData;
     const loading = userCtx?.loading ?? true;
     const isGuest = userCtx?.isGuest ?? false;
     const activeBoost = userCtx?.activeBoost ?? 0;
     const boostExpiresAt = userCtx?.boostExpiresAt;
     
-    const [mounted, setMounted] = React.useState(false);
+    // Lógica de expiración del boost
+    const isBoostActive = activeBoost > 0 && boostExpiresAt && new Date(boostExpiresAt) > new Date();
 
     React.useEffect(() => {
         setMounted(true);
     }, []);
-
-    if (!mounted) return null;
-
-    // Lógica de expiración del boost
-    const isBoostActive = activeBoost > 0 && boostExpiresAt && new Date(boostExpiresAt) > new Date();
-    const [daysRemaining, setDaysRemaining] = React.useState(0);
 
     React.useEffect(() => {
         if (isBoostActive) {
@@ -38,7 +37,6 @@ export default function SystemBar({
     }, [isBoostActive, boostExpiresAt]);
 
     // V10: Simulación de Guerra de Casas
-    const [warSignal, setWarSignal] = React.useState("Casa Lobo lidera hoy");
     React.useEffect(() => {
         const signals = [
             "Casa Lobo lidera hoy",
@@ -53,7 +51,7 @@ export default function SystemBar({
         return () => clearInterval(int);
     }, []);
 
-    // ... (rest of the system bar code continues)
+    if (!mounted) return null;
     
     // Mapeo de Iconos de Casa
     const HouseIcon = ({ casa, className }) => {
