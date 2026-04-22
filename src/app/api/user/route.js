@@ -7,27 +7,6 @@ import prisma from "@/lib/db";
 // Centralización de roles y prevención de fallos estructurales
 
 export async function GET() {
-    // --- CHAOS MODE INJECTION (V85) ---
-    const isChaosEnabled = process.env.CHAOS_MODE === "true";
-    if (isChaosEnabled && Math.random() < 0.1) {
-        const chaosType = Math.floor(Math.random() * 3);
-        
-        // 1. Latencia aleatoria (1s - 5s)
-        if (chaosType === 0) {
-            const delay = Math.floor(Math.random() * 4000) + 1000;
-            await new Promise(resolve => setTimeout(resolve, delay));
-            // Después del delay, puede fallar o seguir (preferimos seguir para ver "Signal débil")
-        } 
-        // 2. Error 500
-        else if (chaosType === 1) {
-            return NextResponse.json({ ok: false, error: "CHAOS_INJECTED_500" }, { status: 500 });
-        }
-        // 3. Error 503
-        else {
-            return NextResponse.json({ ok: false, error: "CHAOS_INJECTED_503" }, { status: 503 });
-        }
-    }
-
     try {
         const session = await getServerSession(authOptions);
         if (!session) {
