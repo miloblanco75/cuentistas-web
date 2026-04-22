@@ -64,9 +64,8 @@ export default async function BibliotecaPage() {
                                         href={`/biblioteca/${obra.id}`}
                                         className="inline-flex items-center gap-4 text-[10px] tracking-[0.4em] uppercase text-gold hover:text-white transition-all font-black group"
                                     >
-                                        <span>Cruzalar el Umbral</span>
+                                        <span>Cruzar el Umbral 📖</span>
                                         <span className="w-12 h-[1px] bg-gold/50 group-hover:w-20 transition-all duration-700"></span>
-                                        <span>Leer Completo 📖</span>
                                     </Link>
                                 </div>
 
