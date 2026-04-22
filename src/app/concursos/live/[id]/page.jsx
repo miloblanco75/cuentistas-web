@@ -129,32 +129,41 @@ export default function LiveContestPage() {
         }
 
         setIsSubmitting(true);
+        
+        // Timer de seguridad para el usuario ante la latencia extrema
+        const slowRequestTimer = setTimeout(() => {
+            alert("El Tribunal está procesando tu obra con sumo detalle. Por favor, no cierres esta ventana, serás redirigido en breve 🔱");
+        }, 15000);
+
         try {
             const res = await safeFetch("/api/entradas", {
                 method: "POST",
                 body: JSON.stringify({
                     concursoId: id,
                     texto: text,
-                    participante: user.nombre,
+                    participante: user.nombre || user.username,
                     suspicious: isSuspicious,
                     tabSwitches
                 }),
                 headers: { "Content-Type": "application/json" }
             });
 
+            clearTimeout(slowRequestTimer);
+
             if (res.ok) {
                 setSubmitAction(res.action);
                 setIsSuccess(true);
                 
                 setTimeout(() => {
-                    router.push("/galeria");
-                }, 1200);
+                    router.push("/biblioteca"); // Redirect to correct Gallery path
+                }, 1500);
             } else {
                 throw new Error(res.error || "Error al entregar");
             }
         } catch (err) {
+            clearTimeout(slowRequestTimer);
             console.error("❌ Submission Error:", err);
-            alert(`Error del Tribunal: ${err.message}`);
+            alert(`Error del Tribunal: ${err.message || "Tribunal Saturado. Reintenta."}`);
             setIsSubmitting(false);
         }
     };
