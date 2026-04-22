@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user.rol !== "Maestro") {
+        if (!session || (session.user.rol !== "Maestro" && session.user.rol !== "ARCHITECT")) {
             return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
         }
 
