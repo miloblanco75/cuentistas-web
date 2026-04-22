@@ -13,6 +13,9 @@ export default function SpectatorBlocker() {
 
     const effectivelyBlocked = (status === "unauthenticated" && (globalBlocked || limitReached));
 
+    // V13 EMERGENCY: Neutralizamos el bloqueador visual para permitir configuración y pruebas del Arquitecto.
+    return null; 
+    
     if (!effectivelyBlocked) return null;
 
     const reason = globalBlocked 
