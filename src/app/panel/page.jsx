@@ -6,10 +6,41 @@ import { useSession } from "next-auth/react";
 export default function PanelPage() {
   const { data: session } = useSession();
   const [adminData, setAdminData] = useState(null);
+  const [concursos, setConcursos] = useState([]);
+  const [loadingAction, setLoadingAction] = useState(null);
   const isMaster = session?.user?.rol === "Maestro" || session?.user?.rol === "ARCHITECT";
+
+  const fetchConcursos = () => {
+    fetch("/api/concursos")
+      .then(res => res.json())
+      .then(data => {
+          if (data.ok) setConcursos(data.concursos);
+      });
+  };
+
+  const handleStart = async (id) => {
+    setLoadingAction(id);
+    try {
+        const res = await fetch("/api/concursos", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, status: "active" })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            fetchConcursos();
+            alert("🏛️ ¡Sesión Iniciada! El certamen ahora es visible para todos.");
+        }
+    } catch(e) {
+        alert("Error al iniciar sesión.");
+    } finally {
+        setLoadingAction(null);
+    }
+  };
 
   useEffect(() => {
     if (isMaster) {
+      fetchConcursos();
       // Cargar datos administrativos y de casas
       fetch("/api/admin/users")
         .then(res => res.json())
@@ -126,14 +157,45 @@ export default function PanelPage() {
 
           <div className="royal-card p-12 border-amber-500/10">
             <div className="flex flex-col h-full space-y-8">
-              <div className="flex items-center gap-4">
-                <span className="text-4xl">📡</span>
-                <h2 className="text-2xl font-cinzel tracking-widest text-[#ffffff]">Relojes de Arena</h2>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl">📡</span>
+                  <h2 className="text-2xl font-cinzel tracking-widest text-[#ffffff]">Relojes de Arena</h2>
+                </div>
+                <button 
+                  onClick={fetchConcursos}
+                  className="text-[8px] text-amber-500 uppercase tracking-widest hover:text-white"
+                >
+                  Sincronizar
+                </button>
               </div>
-              <div className="space-y-4">
-                <p className="text-[10px] text-amber-500/50 uppercase tracking-[0.3em] font-cinzel">Certámenes Activos</p>
-                <div className="p-4 bg-amber-500/5 rounded-sm border border-amber-500/10 text-xs text-gray-400 italic">
-                  No hay certámenes en curso en este momento.
+              <div className="space-y-6">
+                <p className="text-[10px] text-amber-500/50 uppercase tracking-[0.3em] font-cinzel">Certámenes Programados</p>
+                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {concursos.filter(c => c.status === "waiting").length > 0 ? (
+                    concursos.filter(c => c.status === "waiting").map(c => (
+                      <div key={c.id} className="p-5 bg-white/[0.03] rounded-sm border border-white/5 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[11px] font-bold text-white tracking-widest uppercase">{c.titulo}</p>
+                            <p className="text-[9px] text-gray-500 mt-1 italic italic">Inicia: {new Date(c.scheduledTime).toLocaleString()}</p>
+                          </div>
+                          <span className="text-[8px] px-2 py-1 bg-amber-500/10 text-amber-500 rounded-full font-black uppercase">Pendiente</span>
+                        </div>
+                        <button 
+                          onClick={() => handleStart(c.id)}
+                          disabled={loadingAction === c.id}
+                          className="w-full py-2 bg-amber-600 hover:bg-amber-500 text-black text-[9px] font-black tracking-[0.3em] uppercase transition-all shadow-[0_0_15px_rgba(217,175,55,0.2)] disabled:opacity-50"
+                        >
+                          {loadingAction === c.id ? "Activando..." : "⚡ Iniciar Ahora"}
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 bg-amber-500/5 rounded-sm border border-amber-500/10 text-xs text-center text-gray-500 italic">
+                      No hay certámenes programados en el horizonte.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
