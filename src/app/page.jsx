@@ -1,9 +1,14 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function Home() {
   const { t } = useLanguage();
+  const { data: session, status } = useSession();
+
+  // Destino inteligente del botón principal
+  const mainHref = status === "authenticated" ? "/hub" : "/login";
 
   return (
     <main className='min-h-screen flex flex-col items-center justify-center bg-[#050508] text-[#e0d7c6] px-6 py-12 relative overflow-hidden font-serif'>
@@ -30,10 +35,10 @@ export default function Home() {
 
         <div className="flex flex-col md:flex-row gap-12 md:gap-16 justify-center items-center">
           <a
-            href='/hub'
+            href={mainHref}
             className='royal-button px-12 md:px-20 py-6 md:py-8 text-lg md:text-xl'
           >
-            {t("btn_enter")}
+            {status === "authenticated" ? t("btn_enter") : t("public_join")}
           </a>
           
           <div className="flex flex-col items-center md:items-start gap-4 md:gap-6 border-l-0 md:border-l border-amber-500/10 pl-0 md:pl-16">
