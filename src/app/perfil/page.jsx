@@ -7,7 +7,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { useSession, signOut } from "next-auth/react";
 import ProfileCustomizationModal from "@/components/profile/ProfileCustomizationModal";
 import { useUser } from "@/components/UserContext";
-import { Lock, Trophy, Target, PenTool, TrendingUp, Settings } from "lucide-react";
+import { Lock, Trophy, Target, PenTool, TrendingUp, Settings, Shield, Monitor, Type } from "lucide-react";
 import "@/styles/RarityStyles.css";
 
 export default function PerfilPage() {
