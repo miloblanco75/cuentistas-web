@@ -24,6 +24,7 @@ export const metadata: Metadata = {
 import { LanguageProvider } from "@/components/LanguageContext";
 import LanguageToggle from "@/components/LanguageToggle";
 import { Providers } from "@/components/Providers";
+import ErrorBoundary from "@/components/Utils/ErrorBoundary";
 import StatusBanner from "@/components/Utils/StatusBanner";
 import GlobalRecorderFAB from "@/components/UI/GlobalRecorderFAB";
 
