@@ -33,6 +33,8 @@ export const authOptions = {
       if (currentEmail && currentEmail.toLowerCase().trim() === adminEmail.toLowerCase().trim()) {
         token.rol = "ARCHITECT";
         token.nivel = "Soberano Arquitecto";
+        // V13: Asegurar que el ID se mantenga incluso para el admin hardcoded
+        if (user?.id) token.id = user.id;
       } else if (user) {
         token.id = user.id;
         token.email = user.email;

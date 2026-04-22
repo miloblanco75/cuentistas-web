@@ -42,3 +42,28 @@ export async function GET() {
         return NextResponse.json({ ok: false, error: "Error en DB" }, { status: 500 });
     }
 }
+
+export async function PATCH(request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || (session.user.rol !== "Maestro" && session.user.rol !== "ARCHITECT")) {
+            return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
+        }
+
+        const { userId, newRol } = await request.json();
+
+        if (!userId || !newRol) {
+            return NextResponse.json({ ok: false, error: "Faltan datos" }, { status: 400 });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { rol: newRol }
+        });
+
+        return NextResponse.json({ ok: true, user: updatedUser });
+    } catch (error) {
+        console.error("Error al actualizar rol:", error);
+        return NextResponse.json({ ok: false, error: "Error al actualizar privilegio" }, { status: 500 });
+    }
+}
