@@ -193,7 +193,7 @@ export default function SystemBar({
 
             {/* CENTER: Quick Navigation (Vibrant Links) */}
             <div className="flex items-center gap-2 md:gap-6 bg-white/[0.03] px-6 py-2 rounded-full border border-white/5 backdrop-blur-sm">
-                {hasHistory && (
+                {(hasHistory || userData?.rol === "ARCHITECT") && (
                     <Link href="/hub" className="p-2 md:px-4 flex items-center gap-2 text-white/50 hover:text-gold transition-all group">
                         <LayoutDashboard className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         <span className="text-[9px] uppercase tracking-[0.2em] font-bold hidden md:block">Hub</span>
