@@ -27,6 +27,7 @@ export default function LiveContestPage() {
     const [isRecorderOpen, setIsRecorderOpen] = useState(false);
     const [videoUrl, setVideoUrl] = useState(null);
     const [isCreatorMode, setIsCreatorMode] = useState(false);
+    const [recordingStatus, setRecordingStatus] = useState("idle");
 
     const lastTextLen = useRef(0);
 
