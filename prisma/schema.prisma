@@ -88,6 +88,8 @@ model User {
   referralRewardClaimed   Boolean          @default(false)
   activeBoost             Float?           @default(0)
   boostExpiresAt          DateTime?
+  videoUploadsToday       Int              @default(0)
+  lastVideoUpload         DateTime?
   accounts                Account[]
   AuditLog                AuditLog[]
   juezDe                  Concurso[]       @relation("JuezConcurso")
@@ -103,14 +105,16 @@ model User {
 }
 
 model GuestSession {
-  id               String    @id @default(uuid())
-  guestId          String    @unique
-  interactionCount Int       @default(0)
-  firstActivityAt  DateTime  @default(now())
-  ipHash           String?
-  deviceHash       String?
-  arenaDwellStart  DateTime?
-  lastActivity     DateTime  @updatedAt
+  id                String    @id @default(uuid())
+  guestId           String    @unique
+  interactionCount  Int       @default(0)
+  firstActivityAt   DateTime  @default(now())
+  ipHash            String?
+  deviceHash        String?
+  arenaDwellStart   DateTime?
+  videoUploadsToday Int       @default(0)
+  lastVideoUpload   DateTime?
+  lastActivity      DateTime  @updatedAt
 
   @@index([guestId])
   @@index([deviceHash])
@@ -167,6 +171,10 @@ model Entrada {
   isFeatured   Boolean  @default(false)
   vistas       Int      @default(0)
   boostApplied Boolean  @default(false)
+  videoUrl     String?
+  judgeVideoUrl String?
+  judgeComment String?
+  videoStatus  String   @default("pending")
   concurso     Concurso @relation(fields: [concursoId], references: [id], onDelete: Cascade)
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   Voto         Voto[]

@@ -42,7 +42,8 @@ export async function POST(request) {
           return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
       }
 
-      const { concursoId, texto, participante } = await request.json();
+      const { concursoId, texto, participante, videoUrl } = await request.json();
+      const videoStatus = videoUrl ? "pending" : "approved"; // Text only is always approved
 
       if (!concursoId || !texto) {
         return NextResponse.json({ ok: false, error: "Datos incompletos" }, { status: 400 });
@@ -62,7 +63,11 @@ export async function POST(request) {
           if (existing) {
               const updated = await tx.entrada.update({
                   where: { id: existing.id },
-                  data: { texto }
+                  data: { 
+                      texto,
+                      videoUrl: videoUrl || undefined,
+                      videoStatus: videoUrl ? videoStatus : undefined
+                  }
               });
               return { entry: updated, action: "updated" };
           } else {
@@ -74,7 +79,9 @@ export async function POST(request) {
                       participante: participante || "Anónimo",
                       puntajeTotal: 0,
                       votos: 0,
-                      boostApplied: false
+                      boostApplied: false,
+                      videoUrl,
+                      videoStatus
                   }
               });
               return { entry: created, action: "created" };

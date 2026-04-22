@@ -13,7 +13,7 @@ export async function POST(request) {
       }
 
       const body = await request.json();
-      const { id, score } = body || {};
+      const { id, score, judgeVideoUrl, judgeComment } = body || {};
 
       if (!id || score === undefined || score === null) {
         return Response.json(
@@ -28,7 +28,9 @@ export async function POST(request) {
               where: { id },
               data: {
                   votos: { increment: 1 },
-                  puntajeTotal: { increment: Number(score) }
+                  puntajeTotal: { increment: Number(score) },
+                  judgeVideoUrl: judgeVideoUrl || undefined,
+                  judgeComment: judgeComment || undefined
               }
           });
       }, { maxRetries: 3, timeout: 15000 });
@@ -41,7 +43,7 @@ export async function POST(request) {
         { status: 200 }
       );
   } catch (error) {
-      console.error("❌ Calificar Error (Hotfix 9):", error);
+      console.error("❌ Calificar Error (Phase 11):", error);
       return Response.json(
         { message: "El Tribunal está saturado o la obra no existe. Reintenta." },
         { status: 503 }

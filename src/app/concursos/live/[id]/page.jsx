@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { safeFetch } from "@/lib/api";
 import { useUser } from "@/components/UserContext";
+import RecorderModal from "@/components/recorder/RecorderModal";
 
 export default function LiveContestPage() {
     const { id } = useParams();
@@ -22,12 +23,10 @@ export default function LiveContestPage() {
     const [isSuccess, setIsSuccess] = useState(false);
     const [submitAction, setSubmitAction] = useState(null); // created | updated
     
-    // Creator Mode & Recording
+    // Creator Mode & Recording (PHASE 11 HARDENED)
+    const [isRecorderOpen, setIsRecorderOpen] = useState(false);
+    const [videoUrl, setVideoUrl] = useState(null);
     const [isCreatorMode, setIsCreatorMode] = useState(false);
-    const [recordingStatus, setRecordingStatus] = useState("idle"); // idle, recording
-    const mediaRecorderRef = useRef(null);
-    const chunksRef = useRef([]);
-    const streamRef = useRef(null);
 
     const lastTextLen = useRef(0);
 
@@ -142,6 +141,7 @@ export default function LiveContestPage() {
                     concursoId: id,
                     texto: text,
                     participante: user.nombre || user.username,
+                    videoUrl, // Phase 11
                     suspicious: isSuspicious,
                     tabSwitches
                 }),
@@ -155,7 +155,7 @@ export default function LiveContestPage() {
                 setIsSuccess(true);
                 
                 setTimeout(() => {
-                    router.push("/biblioteca"); // Redirect to correct Gallery path
+                    router.push("/feed"); // Viral Discovery Funnel (Phase 11)
                 }, 1500);
             } else {
                 throw new Error(res.error || "Error al entregar");
@@ -168,53 +168,8 @@ export default function LiveContestPage() {
         }
     };
 
-    const startRecording = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getDisplayMedia({
-                video: {
-                    displaySurface: "browser",
-                    logicalSurface: true,
-                },
-                audio: false
-            });
-            
-            streamRef.current = stream;
-            const recorder = new MediaRecorder(stream, {
-                mimeType: 'video/webm;codecs=vp9'
-            });
-
-            recorder.ondataavailable = (e) => {
-                if (e.data.size > 0) chunksRef.current.push(e.data);
-            };
-
-            recorder.onstop = () => {
-                const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Cuentistas_${user.nombre}_${new Date().getTime()}.webm`;
-                a.click();
-                chunksRef.current = [];
-            };
-
-            mediaRecorderRef.current = recorder;
-            recorder.start();
-            setRecordingStatus("recording");
-
-            stream.getVideoTracks()[0].onended = () => stopRecording();
-        } catch (err) {
-            console.error("Error al iniciar grabación:", err);
-            alert("No se pudo iniciar la captura. Asegúrate de dar los permisos necesarios.");
-        }
-    };
-
-    const stopRecording = () => {
-        if (mediaRecorderRef.current) {
-            mediaRecorderRef.current.stop();
-            streamRef.current.getTracks().forEach(track => track.stop());
-            setRecordingStatus("idle");
-        }
-    };
+    const startRecording = () => setIsRecorderOpen(true);
+    const stopRecording = () => setIsRecorderOpen(false);
 
     const handlePaste = (e) => {
         e.preventDefault();
@@ -406,6 +361,12 @@ export default function LiveContestPage() {
                     </button>
                 )}
             </div>
+            <RecorderModal 
+                isOpen={isRecorderOpen} 
+                onClose={() => setIsRecorderOpen(false)} 
+                onSave={(url) => setVideoUrl(url)}
+                targetEntryId={""} // Will be linked on upload or on submit
+            />
         </main>
     );
 }
