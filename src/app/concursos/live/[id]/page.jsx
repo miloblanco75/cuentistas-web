@@ -367,6 +367,7 @@ export default function LiveContestPage() {
                 onClose={() => setIsRecorderOpen(false)} 
                 onSave={(url) => setVideoUrl(url)}
                 targetEntryId={""} // Will be linked on upload or on submit
+                textToRead={text}
             />
         </main>
     );

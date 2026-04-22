@@ -8,13 +8,17 @@ import { RecorderCore } from "./RecorderCore";
  * Premium UI for video recording.
  * Hardened for production with pre-record state, nested error handling, and viral UX.
  */
-export default function RecorderModal({ isOpen, onClose, onSave, targetEntryId }) {
+export default function RecorderModal({ isOpen, onClose, onSave, targetEntryId, textToRead = "" }) {
     const [mode, setMode] = useState("narrator"); // narrator or camera
     const [status, setStatus] = useState("idle"); // idle, preparing, recording, preview, uploading
     const [timeLeft, setTimeLeft] = useState(30);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [recordedBlob, setRecordedBlob] = useState(null);
     const [toast, setToast] = useState(null); // { message, type, action }
+    const [isVoiceoverEnabled, setIsVoiceoverEnabled] = useState(true);
+    const [isVoiceLoading, setIsVoiceLoading] = useState(false);
+    
+    const voiceAudioRef = useRef(null);
 
     const recorderRef = useRef(null);
     const timerRef = useRef(null);
@@ -62,6 +66,10 @@ export default function RecorderModal({ isOpen, onClose, onSave, targetEntryId }
         setPreviewUrl(null);
         setRecordedBlob(null);
         setToast(null);
+        if (voiceAudioRef.current) {
+            voiceAudioRef.current.pause();
+            voiceAudioRef.current = null;
+        }
         if (recorderRef.current) recorderRef.current.cleanup();
     };
 
@@ -70,6 +78,24 @@ export default function RecorderModal({ isOpen, onClose, onSave, targetEntryId }
             setStatus("preparing");
             setToast(null);
 
+            let audioUrl = null;
+            if (isVoiceoverEnabled && textToRead.length > 5) {
+                setIsVoiceLoading(true);
+                try {
+                    const res = await fetch("/api/ai/voiceover", {
+                        method: "POST",
+                        body: JSON.stringify({ text: textToRead })
+                    });
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        audioUrl = URL.createObjectURL(blob);
+                    }
+                } catch(e) {
+                    console.error("⚠️ Error vocal:", e);
+                }
+                setIsVoiceLoading(false);
+            }
+
             // V3 RC: 500-800ms "Preparing" state
             setTimeout(async () => {
                 try {
@@ -77,6 +103,11 @@ export default function RecorderModal({ isOpen, onClose, onSave, targetEntryId }
                     setStatus("recording");
                     setTimeLeft(30);
                     
+                    if (audioUrl) {
+                        voiceAudioRef.current = new Audio(audioUrl);
+                        voiceAudioRef.current.play().catch(e => console.warn("Autoplay blocked", e));
+                    }
+
                     timerRef.current = setInterval(() => {
                         setTimeLeft((prev) => {
                             if (prev <= 1) {
@@ -96,6 +127,9 @@ export default function RecorderModal({ isOpen, onClose, onSave, targetEntryId }
     };
 
     const stopRecording = () => {
+        if (voiceAudioRef.current) {
+            voiceAudioRef.current.pause();
+        }
         if (recorderRef.current) {
             recorderRef.current.stop();
             clearInterval(timerRef.current);
@@ -177,7 +211,20 @@ export default function RecorderModal({ isOpen, onClose, onSave, targetEntryId }
                                      <button 
                                         onClick={() => setMode("camera")}
                                         className={`px-8 py-3 rounded-2xl text-[10px] tracking-widest uppercase transition-all duration-500 ${mode === "camera" ? "bg-gold text-black font-black shadow-lg shadow-gold/20" : "text-white/40 hover:text-white/60"}`}
-                                    >Cámara 📷</button>
+                                     >Cámara 📷</button>
+                                </div>
+
+                                {/* Voiceover Toggle */}
+                                <div className="pt-4 flex justify-center">
+                                    <button 
+                                        onClick={() => setIsVoiceoverEnabled(!isVoiceoverEnabled)}
+                                        className={`flex items-center gap-4 px-6 py-2 rounded-full border transition-all ${isVoiceoverEnabled ? 'border-gold/50 bg-gold/5 text-gold' : 'border-white/10 text-white/20'}`}
+                                    >
+                                        <div className={`w-2 h-2 rounded-full ${isVoiceoverEnabled ? 'bg-gold animate-pulse' : 'bg-white/20'}`}></div>
+                                        <span className="text-[9px] font-black tracking-widest uppercase">
+                                            {isVoiceoverEnabled ? "Narrador IA Activo 🎙️" : "Narrador IA Silenciado"}
+                                        </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -186,7 +233,9 @@ export default function RecorderModal({ isOpen, onClose, onSave, targetEntryId }
                     {status === "preparing" && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center space-y-6 bg-black/40 backdrop-blur-sm animate-elegant">
                             <div className="w-16 h-16 border-b-2 border-gold rounded-full animate-spin"></div>
-                            <p className="text-gold text-[10px] tracking-[0.4em] uppercase font-bold animate-pulse">Preparando cámara...</p>
+                            <p className="text-gold text-[10px] tracking-[0.4em] uppercase font-bold animate-pulse">
+                                {isVoiceLoading ? "Invocando al Narrador..." : "Preparando cámara..."}
+                            </p>
                         </div>
                     )}
 
