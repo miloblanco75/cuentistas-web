@@ -70,7 +70,8 @@ export async function GET(request) {
         const timeExpired = elapsedMs > (maxMs + bufferMs);
         const interactionLimit = session.interactionCount >= 3;
         
-        const limitReached = timeExpired || interactionLimit;
+        // V13 EMERGENCY: Deshabilitamos el límite temporalmente para permitir configuración total
+        const limitReached = false; // timeExpired || interactionLimit;
 
         return NextResponse.json({
             ok: true,
