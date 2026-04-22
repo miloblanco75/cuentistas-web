@@ -57,8 +57,19 @@ export default async function BibliotecaPage() {
                                         </p>
                                     </div>
                                 </div>
-                                <p className="text-xl text-zinc-400 font-serif leading-relaxed line-clamp-6 italic">"{obra.texto}"</p>
+                                <p className="text-xl text-zinc-400 font-serif leading-relaxed line-clamp-3 italic">"{obra.texto}"</p>
                                 
+                                <div className="pt-4">
+                                    <Link 
+                                        href={`/biblioteca/${obra.id}`}
+                                        className="inline-flex items-center gap-4 text-[10px] tracking-[0.4em] uppercase text-gold hover:text-white transition-all font-black group"
+                                    >
+                                        <span>Cruzalar el Umbral</span>
+                                        <span className="w-12 h-[1px] bg-gold/50 group-hover:w-20 transition-all duration-700"></span>
+                                        <span>Leer Completo 📖</span>
+                                    </Link>
+                                </div>
+
                                 <div className="pt-8 border-t border-white/5 opacity-50 space-y-2">
                                     <p className="text-[9px] font-sans tracking-widest uppercase text-gray-500">
                                         Propiedad Intelectual
