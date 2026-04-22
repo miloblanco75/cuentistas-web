@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 export default function PanelPage() {
   const { data: session } = useSession();
   const [adminData, setAdminData] = useState(null);
-  const isMaster = session?.user?.rol === "Maestro";
+  const isMaster = session?.user?.rol === "Maestro" || session?.user?.rol === "ARCHITECT";
 
   useEffect(() => {
     if (isMaster) {
