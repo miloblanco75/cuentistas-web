@@ -53,9 +53,9 @@ export function UserProvider({ children }) {
             } catch (err) {
                 console.warn(`[UserContext] Authed fetch failed: ${err.message}`);
                 
-                // If it's a structural 401, we just clear user and remain stable.
-                // Only mark as critical if it's a real server error (502, 500, timeout).
-                if (err.status === 401) {
+                // V13: Errores estructurales (401 o 404) indican sesión inválida o usuario borrado
+                // En estos casos, limpiamos userData pero mantenemos la conexión estable para permitir re-login.
+                if (err.status === 401 || err.status === 404) {
                     setUserData(null);
                     setConnectionStatus("stable");
                 } else {
