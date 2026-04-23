@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/components/UserContext";
+import ManifestoOverlay from "@/components/Identity/ManifestoOverlay";
 
 // Iconos dorados de trazo fino
 const Icons = {
@@ -112,6 +113,7 @@ export default function PlatformHub() {
 
     return (
         <main className="min-h-screen bg-[#050508] text-[#e0d7c6] p-6 md:p-24 lg:p-32 animate-elegant relative">
+            {userData && !userData.casa && <ManifestoOverlay />}
             {/* Aura de Poder para el Maestro */}
             {isMaster && (
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent shadow-[0_0_20px_rgba(212,175,55,0.5)]"></div>
