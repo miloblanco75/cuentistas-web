@@ -112,9 +112,21 @@ async function handleUpdate(session, req) {
     const { action, casa } = body;
     let updateData = {};
 
+    // Obtener usuario actual para validaciones de integridad
+    const currentUser = await prisma.user.findUnique({
+        where: { email: session.user.email }
+    });
+
     if (action === "joinHouse") {
         updateData.casa = casa;
         updateData.hasPerformedFirstAction = true;
+        
+        // V83: Robustez de Identidad (Google Fix)
+        // Si no tiene username, generamos uno proactivamente
+        if (!currentUser.username) {
+            const base = (currentUser.name || session.user.name || session.user.email.split('@')[0]).replace(/\s+/g, '').toLowerCase();
+            updateData.username = `${base}_${Math.floor(Math.random() * 1000)}`;
+        }
     }
 
     if (action === "completeOnboarding") {
@@ -133,7 +145,7 @@ async function handleUpdate(session, req) {
         const user = await prisma.user.update({
             where: { email: session.user.email },
             data: updateData,
-            include: { misiones: { include: { mision: true } } }
+            include: { inventory: { include: { storeItem: true } }, misiones: { include: { mision: true } } }
         });
         
         const isMaster = user.email && user.email.toLowerCase().trim() === "ermiloblanco75@gmail.com";
