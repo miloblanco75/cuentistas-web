@@ -94,12 +94,16 @@ export default function OnboardingWizard({ onComplete }) {
         setFormData({ ...formData, casa: casaId });
         setIsSubmitting(true);
         try {
-            await fetch("/api/user", {
+            const res = await fetch("/api/user", {
                 method: "POST",
                 body: JSON.stringify({ action: "joinHouse", casa: casaId }),
                 headers: { "Content-Type": "application/json" }
             });
-            nextStep();
+            if (res.ok) {
+                nextStep();
+            } else {
+                alert("Error al sellar tu Casa. Reintenta.");
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -108,12 +112,16 @@ export default function OnboardingWizard({ onComplete }) {
     const handleCompleteOnboarding = async () => {
         setIsSubmitting(true);
         try {
-            await fetch("/api/user", {
+            const res = await fetch("/api/user", {
                 method: "POST",
                 body: JSON.stringify({ action: "completeOnboarding" }),
                 headers: { "Content-Type": "application/json" }
             });
-            nextStep();
+            if (res.ok) {
+                nextStep();
+            } else {
+                alert("Error al consagrar tu entrada. Reintenta.");
+            }
         } finally {
             setIsSubmitting(false);
         }

@@ -109,7 +109,17 @@ export async function POST(req) {
 
 async function handleUpdate(session, req) {
     const body = await req.json();
-    if (action === "joinHouse" || action === "completeOnboarding") updateData.hasPerformedFirstAction = true;
+    const { action, casa } = body;
+    let updateData = {};
+
+    if (action === "joinHouse") {
+        updateData.casa = casa;
+        updateData.hasPerformedFirstAction = true;
+    }
+
+    if (action === "completeOnboarding") {
+        updateData.hasPerformedFirstAction = true;
+    }
     
     // V10: BLOQUEO COMERCIAL (PROTECCIÓN BACKEND)
     if (action === "buy") {
