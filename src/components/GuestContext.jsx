@@ -12,11 +12,15 @@ export function GuestProvider({ children }) {
     const [isInitialized, setIsInitialized] = useState(false);
     const [interactionCount, setInteractionCount] = useState(0);
     const [showConversionModal, setShowConversionModal] = useState(false);
+    const [lastShownAt, setLastShownAt] = useState(0);
 
     useEffect(() => {
         if (status === "unauthenticated") {
             const savedCount = localStorage.getItem("cuentistas_guest_interactions") || "0";
+            const savedLastShown = localStorage.getItem("cuentistas_guest_modal_last") || "0";
+            
             setInteractionCount(parseInt(savedCount));
+            setLastShownAt(parseInt(savedLastShown));
             
             const savedStartTime = localStorage.getItem("cuentistas_guest_start");
             const now = Math.floor(Date.now() / 1000);
@@ -48,8 +52,13 @@ export function GuestProvider({ children }) {
         setInteractionCount(newCount);
         localStorage.setItem("cuentistas_guest_interactions", newCount.toString());
         
-        if (newCount === 3) {
+        const now = Date.now();
+        const COOLDOWN = 10 * 60 * 1000; // 10 minutes
+
+        if (newCount >= 3 && (now - lastShownAt > COOLDOWN)) {
             setShowConversionModal(true);
+            setLastShownAt(now);
+            localStorage.setItem("cuentistas_guest_modal_last", now.toString());
         }
     };
 

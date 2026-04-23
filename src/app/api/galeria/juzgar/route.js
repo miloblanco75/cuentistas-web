@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { updateElo } from "@/lib/rankSystem";
 
 export async function POST(request) {
     const session = await getServerSession(authOptions);
@@ -24,7 +25,7 @@ export async function POST(request) {
 
         // Registrar Juicio
         await prisma.$transaction(async (tx) => {
-            await tx.voto.upsert({
+            const entryVoto = await tx.voto.upsert({
                 where: {
                     userId_entradaId_tipo: {
                         userId,
@@ -58,7 +59,10 @@ export async function POST(request) {
 
             const expertScore = sumScores / allExpertVotes.length;
 
-            const entrada = await tx.entrada.findUnique({ where: { id: entradaId } });
+            const entrada = await tx.entrada.findUnique({ 
+                where: { id: entradaId },
+                include: { user: true }
+            });
             
             await tx.entrada.update({
                 where: { id: entradaId },
@@ -68,11 +72,32 @@ export async function POST(request) {
                 }
             });
 
+            // 🔱 ELO SYSTEM CALIBRATION (PHASE 14A)
+            // Calculamos el ELO del AUTOR basado en este nuevo Juicio
+            // Normalizamos score (0-60) a Escala Porcentual (0-100)
+            const author = entrada.user;
+            if (author) {
+                const { newElo, rank, change } = updateElo(
+                    author.elo || 1000, 
+                    (expertScore * 100) / 60 // Escala 0-100
+                );
+
+                await tx.user.update({
+                    where: { id: author.id },
+                    data: { 
+                        elo: newElo,
+                        rank: rank
+                    }
+                });
+
+                console.log(`📈 ELO Update (Dampened V2): ${author.username} ${change > 0 ? '+' : ''}${change} (${rank})`);
+            }
+
             // Notificación al autor
             await tx.mensaje.create({
                 data: {
                     userId: entrada.userId,
-                    texto: `🔔 Un Custodio ha emitido su juicio sobre tu Legado: "${entrada.concursoId}". Revisa tu obra en la Gran Galería.`
+                    texto: `🔔 Un Custodio ha emitido su juicio sobre tu Legado. Tu ELO del Tribunal ha sido actualizado.`
                 }
             });
         });

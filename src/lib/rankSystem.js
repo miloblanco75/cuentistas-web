@@ -29,22 +29,38 @@ export function calculateRank(elo) {
 
 /**
  * Calculates ELO change based on writing performance or voting precision
- * Standard Elo-like formula: newElo = oldElo + K * (Actual - Expected)
+ * Dampened V2 Formula (Phase 14A):
+ * delta = (Score% - 50) * 0.5
+ * Clamped between -25 and +25
  */
-export function updateElo(oldElo, performanceScore, averageScore, kFactor = 32) {
-    // performanceScore: User's score in entry (0-10)
-    // averageScore: Contest's average entry score (0-10)
+export function updateElo(oldElo, performanceScorePercent) {
+    // performanceScorePercent: 0-100 (e.g. expertScore normalized to 100)
     
-    // Normalize to 0-1
-    const actual = performanceScore / 10;
-    const expected = averageScore / 10;
+    // 1. Calculate Dampened Delta
+    let delta = (performanceScorePercent - 50) * 0.5;
     
-    const change = Math.round(kFactor * (actual - expected));
-    const newElo = Math.max(0, oldElo + change);
+    // 1.1 Neutral Zone (Phase 14A Patch)
+    // Avoid micro-noise if performance is very close to baseline (±5%)
+    if (Math.abs(performanceScorePercent - 50) < 5) {
+        delta = 0;
+    }
+    
+    // 2. Clamp Delta (-25 to +25)
+    delta = Math.min(25, Math.max(-25, delta));
+    
+    // 3. Preliminary New Elo
+    const targetElo = oldElo + delta;
+    
+    // 4. Apply Soft Smoothing (10% adjustment speed)
+    // newElo = (oldElo * 0.9) + (targetElo * 0.1)
+    let smoothedElo = (oldElo * 0.9) + (targetElo * 0.1);
+    
+    // 5. Finalize: Round and check floor
+    const finalElo = Math.round(Math.max(0, smoothedElo));
     
     return {
-        newElo,
-        change,
-        rank: calculateRank(newElo)
+        newElo: finalElo,
+        change: finalElo - oldElo,
+        rank: calculateRank(finalElo)
     };
 }
