@@ -106,11 +106,28 @@ export default function TiendaPage() {
     );
 
     const tintaPacks = commercialItems.filter(i => i.tipo === 'tinta');
-    const sections = [
-        { type: 'frame', title: 'Marcos de Identidad', icon: Monitor },
-        { type: 'badge', title: 'Emblemas de Rango', icon: Shield },
-        { type: 'title', title: 'Títulos Honoríficos', icon: Type },
-        { type: 'boost', title: 'Potenciadores del Veredicto', icon: Zap }
+    const prestigeSections = [
+        { 
+            id: 'presencia',
+            title: '🔥 Impulsar Presencia', 
+            icon: Zap, 
+            desc: 'Haz que el Tribunal no te ignore. Aumenta tu visibilidad.',
+            types: ['boost'] 
+        },
+        { 
+            id: 'identidad',
+            title: '👑 Identidad y Rango', 
+            icon: Crown, 
+            desc: 'Forja tu imagen en los Anales. Marcos, medallas y títulos.',
+            types: ['frame', 'badge', 'title'] 
+        },
+        { 
+            id: 'ventajas',
+            title: '⚔️ Ventajas Tácticas', 
+            icon: Shield, 
+            desc: 'Acceso prioritario y privilegios en la Arena.',
+            types: ['access', 'advantage'] 
+        }
     ];
 
     return (
@@ -122,16 +139,16 @@ export default function TiendaPage() {
                     <div className="space-y-4">
                         <div className="flex items-center gap-4">
                             <span className="w-12 h-px bg-gold/50"></span>
-                            <span className="text-gold text-[10px] font-black tracking-[0.4em] uppercase">Mercado de Prestigio</span>
+                            <span className="text-gold text-[10px] font-black tracking-[0.4em] uppercase">Bóveda de Poder</span>
                         </div>
                         <h1 className="text-6xl md:text-8xl font-serif italic tracking-tighter text-white">La Forja</h1>
-                        <p className="text-gray-500 font-serif italic max-w-lg">Transforma tu Tinta en identidad. El Tribunal otorga estos sellos a quienes demuestran su valor en la Arena.</p>
+                        <p className="text-gray-500 font-serif italic max-w-lg">Transforma tu Tinta en influencia. Cada objeto aquí presente es un paso más hacia la dominación del Tribunal.</p>
                     </div>
 
                     <div className="bg-gold/5 border border-gold/20 p-8 rounded-3xl flex items-center gap-8 shadow-2xl relative overflow-hidden group">
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                         <div className="text-right">
-                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Balance de Tinta</p>
+                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Reserva de Tinta</p>
                             <p className="text-4xl font-serif italic text-gold">{user?.tinta || 0} ✒️</p>
                         </div>
                         <div className="w-14 h-14 bg-gold/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-gold/20">
@@ -156,71 +173,54 @@ export default function TiendaPage() {
                     </div>
                 )}
 
-                {/* FEATURED: LEGENDARY ITEMS */}
-                <section className="space-y-10">
-                    <h2 className="text-xs font-black uppercase tracking-[0.5em] text-gold flex items-center gap-6">
-                        <Crown size={16} /> Reliquias Legendarias
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-8">
-                        {prestigeItems.filter(i => i.rarity === 'legendary').map(item => (
-                            <div key={item.id} className="royal-card p-12 flex flex-col md:flex-row items-center gap-10 group border-gold/30 bg-gold/5 glow-legendary">
-                                <div className={`w-32 h-32 flex-shrink-0 flex items-center justify-center text-6xl group-hover:scale-110 transition-transform duration-700 bg-white/5 rounded-full ${item.type === 'frame' ? 'frame-legendary' : ''}`}>
-                                    {item.name.split(' ')[0]}
-                                </div>
-                                <div className="flex-1 space-y-6 text-center md:text-left">
-                                    <div>
-                                        <h3 className="text-3xl font-serif italic text-white title-rarity-legendary">{item.name}</h3>
-                                        <p className="text-gray-500 text-xs mt-2 uppercase tracking-widest">{item.description}</p>
-                                    </div>
-                                    <div className="flex items-center justify-center md:justify-start gap-8">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Inversión</span>
-                                            <span className="text-2xl font-serif text-gold">{item.priceTinta} ✒️</span>
-                                        </div>
-                                        <button 
-                                            onClick={() => handleBuyPrestige(item)}
-                                            disabled={buying === item.id}
-                                            className="royal-button px-10 py-4 text-[10px] font-black tracking-widest uppercase"
-                                        >
-                                            {buying === item.id ? "Pidiendo audiencia..." : "Reclamar Legado"}
-                                        </button>
-                                    </div>
-                                </div>
+                {/* STRATEGIC SECTIONS */}
+                <div className="grid gap-24">
+                    {prestigeSections.map(section => (
+                        <section key={section.id} className="space-y-12">
+                            <div className="space-y-2 border-l-2 border-gold/20 pl-8">
+                                <h2 className="text-4xl font-serif italic text-white flex items-center gap-6">
+                                    <section.icon size={28} className="text-gold" /> {section.title}
+                                </h2>
+                                <p className="text-gray-500 text-xs tracking-widest uppercase">{section.desc}</p>
                             </div>
-                        ))}
-                    </div>
-                </section>
 
-                {/* PRESTIGE CATEGORIES */}
-                <div className="grid md:grid-cols-2 gap-20">
-                    {sections.map(section => (
-                        <section key={section.type} className="space-y-10">
-                             <h2 className="text-xs font-black uppercase tracking-[0.5em] text-white/40 flex items-center gap-4">
-                                <section.icon size={14} /> {section.title}
-                            </h2>
-                            <div className="grid gap-6">
-                                {prestigeItems.filter(i => i.type === section.type && i.rarity !== 'legendary').map(item => (
-                                    <div key={item.id} className={`flex items-center justify-between p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group glow-${item.rarity}`}>
-                                        <div className="flex items-center gap-6">
-                                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-xl">
-                                                {item.type === 'frame' ? <Monitor size={20} className="opacity-30" /> : 
-                                                 item.type === 'badge' ? item.name.split(' ')[0] : <Type size={18} className="opacity-30" />}
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {prestigeItems.filter(i => section.types.includes(i.type)).map(item => (
+                                    <div key={item.id} className={`royal-card p-10 flex flex-col justify-between gap-8 group glow-${item.rarity} relative hover:scale-[1.02] transition-all`}>
+                                        {item.rarity === 'legendary' && (
+                                            <div className="absolute -top-3 -right-3 bg-gold text-black text-[8px] font-black px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.5)] animate-bounce">
+                                                LEGENDARIO
+                                            </div>
+                                        )}
+                                        <div className="space-y-6">
+                                            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-3xl">
+                                                {item.type === 'frame' ? <Monitor size={24} className="opacity-40" /> : 
+                                                 item.type === 'badge' ? <Shield size={24} className="opacity-40" /> : 
+                                                 item.type === 'title' ? <Type size={24} className="opacity-40" /> :
+                                                 <Zap size={24} className="text-gold" />}
                                             </div>
                                             <div>
-                                                <h4 className={`text-sm font-bold uppercase tracking-tighter ${
-                                                    item.rarity === 'epic' ? 'text-purple-400' : 
-                                                    item.rarity === 'rare' ? 'text-blue-400' : 'text-gray-400'
+                                                <h4 className={`text-xl font-serif italic ${
+                                                    item.rarity === 'legendary' ? 'text-gold' :
+                                                    item.rarity === 'epic' ? 'text-purple-400' : 'text-white/90'
                                                 }`}>{item.name}</h4>
-                                                <p className="text-[10px] text-gray-500 italic font-serif">{item.rarity === 'common' ? 'Objeto Base' : item.rarity}</p>
+                                                <p className="text-[10px] text-gray-500 font-sans tracking-wide mt-2">{item.description}</p>
                                             </div>
                                         </div>
-                                        <button 
-                                            onClick={() => handleBuyPrestige(item)}
-                                            disabled={buying === item.id}
-                                            className="bg-white/5 hover:bg-white text-white hover:text-black px-6 py-2 rounded-lg text-[10px] font-black border border-white/10 transition-all flex items-center gap-3"
-                                        >
-                                            {buying === item.id ? "⌛" : `${item.priceTinta} ✒️`}
-                                        </button>
+                                        
+                                        <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Requerido</span>
+                                                <span className="text-lg font-serif text-gold">{item.priceTinta} ✒️</span>
+                                            </div>
+                                            <button 
+                                                onClick={() => handleBuyPrestige(item)}
+                                                disabled={buying === item.id}
+                                                className="bg-gold hover:bg-white text-black px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                                            >
+                                                {buying === item.id ? "⌛" : "Reclamar 🔱"}
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

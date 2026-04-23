@@ -96,6 +96,11 @@ model User {
   activeBadgeId           String?
   activeTitleId           String?
 
+  // PRESTIGE ECONOMY (PHASE 14)
+  rank                    String           @default("Aspirante")
+  elo                     Int              @default(1000)
+  precision               Float            @default(0)
+
   accounts                Account[]
   AuditLog                AuditLog[]
   juezDe                  Concurso[]       @relation("JuezConcurso")
@@ -231,6 +236,7 @@ model StoreItem {
   priceTinta     Int         @default(0)
   priceMXN       Int?
   rarity         String      @default("common") // common, rare, epic, legendary
+  stock          Int?        // Nullable means infinite
   isActive       Boolean     @default(true)
   metadata       Json?
   createdAt      DateTime    @default(now())

@@ -27,6 +27,7 @@ import { Providers } from "@/components/Providers";
 import ErrorBoundary from "@/components/Utils/ErrorBoundary";
 import StatusBanner from "@/components/Utils/StatusBanner";
 import GlobalRecorderFAB from "@/components/UI/GlobalRecorderFAB";
+import GuestConversionModal from "@/components/GuestConversionModal";
 
 export default function RootLayout({
     children,
@@ -47,6 +48,7 @@ export default function RootLayout({
                             <StatusBanner />
                             <LanguageToggle />
                             <GlobalRecorderFAB />
+                            <GuestConversionModal />
                         </LanguageProvider>
                     </Providers>
                 </ErrorBoundary>

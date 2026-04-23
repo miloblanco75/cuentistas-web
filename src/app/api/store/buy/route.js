@@ -27,6 +27,10 @@ export async function POST(request) {
         }
 
         // 2. Validaciones
+        if (item.stock !== null && item.stock <= 0) {
+            return NextResponse.json({ ok: false, error: "Objeto agotado" }, { status: 410 });
+        }
+
         if (user.tinta < item.priceTinta) {
             return NextResponse.json({ 
                 ok: false, 
@@ -57,6 +61,14 @@ export async function POST(request) {
                 where: { id: user.id },
                 data: { tinta: { decrement: item.priceTinta } }
             });
+
+            // Decrementar stock (si tiene límite)
+            if (item.stock !== null) {
+                await tx.storeItem.update({
+                    where: { id: item.id },
+                    data: { stock: { decrement: 1 } }
+                });
+            }
 
             // Añadir al Inventario
             const inventory = await tx.inventory.create({

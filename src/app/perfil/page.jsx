@@ -61,14 +61,20 @@ export default function PerfilPage() {
 
     const casaData = CASAS.find(c => c.id === user.casa) || CASAS[0];
     
-    // PRECISION CALCULATION (Formula: 100 - avgDiff)
-    // Placeholder logic for now, should be real in production
-    const precisionValue = 72; 
-
     // Find active items for display
     const activeFrame = allPrestigeItems.find(i => i.id === user.activeFrameId);
     const activeBadge = allPrestigeItems.find(i => i.id === user.activeBadgeId);
     const activeTitle = allPrestigeItems.find(i => i.id === user.activeTitleId);
+
+    // Calculate progression towards next rank
+    const nextRank = [
+        { name: "Narrador", min: 1000 },
+        { name: "Cronista", min: 1200 },
+        { name: "Maestro del Tribunal", min: 1400 },
+        { name: "Leyenda", min: 1700 }
+    ].find(r => user.elo < r.min) || { name: "Máximo", min: 2000 };
+    
+    const progressToNext = Math.min(100, Math.max(0, (user.elo / nextRank.min) * 100));
 
     return (
         <main className="min-h-screen bg-[#020202] text-[#ffffff] p-8 md:p-24 animate-elegant relative selection:bg-gold/30">
@@ -79,32 +85,32 @@ export default function PerfilPage() {
                 
                 {/* 1. IDENTITY BLOCK */}
                 <header className="flex flex-col md:flex-row items-center md:items-end justify-between gap-12">
-                    <div className="flex items-center gap-10">
+                    <div className="flex flex-col md:flex-row items-center gap-10">
                         {/* Avatar + Frame */}
-                        <div className={`relative w-32 h-32 md:w-48 md:h-48 rounded-full border-2 border-white/5 flex items-center justify-center p-2 ${activeFrame ? `frame-${activeFrame.rarity} glow-${activeFrame.rarity}` : ''}`}>
+                        <div className={`relative w-32 h-32 md:w-48 md:h-48 rounded-full border-2 border-white/5 flex items-center justify-center p-2 ${activeFrame ? `frame-${activeFrame.rarity} glow-${activeFrame.rarity}` : 'border-gold/10'}`}>
                             <div className="w-full h-full rounded-full bg-white/5 overflow-hidden flex items-center justify-center text-5xl md:text-7xl group">
                                 {user.image ? <img src={user.image} alt="Avatar" className="w-full h-full object-cover" /> : "🔱"}
                             </div>
                             
-                            {/* Active Badge Overlay */}
-                            {activeBadge && (
-                                <div className={`absolute -bottom-2 -right-2 bg-black border border-gold/20 p-3 rounded-full shadow-2xl animate-pulse glow-${activeBadge.rarity}`}>
-                                    <span className="text-xl">{activeBadge.name.split(' ')[0]}</span>
-                                </div>
-                            )}
+                            {/* RANK BADGE OVERLAY */}
+                            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black border border-gold/40 px-6 py-1.5 rounded-full shadow-2xl">
+                                <p className="text-[8px] tracking-[0.3em] font-black text-gold uppercase">{user.rank}</p>
+                            </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4">
-                                <p className={`text-[10px] tracking-[0.5em] uppercase font-black ${activeTitle ? `title-rarity-${activeTitle.rarity}` : 'text-gold'}`}>
-                                    {activeTitle ? activeTitle.name : "Aspirante del Tribunal"}
+                        <div className="space-y-4 text-center md:text-left">
+                            <div className="flex items-center justify-center md:justify-start gap-4">
+                                <p className={`text-[10px] tracking-[0.5em] uppercase font-black ${activeTitle ? `title-rarity-${activeTitle.rarity}` : 'text-gold/60'}`}>
+                                    {activeTitle ? activeTitle.name : "Habitante de la Ciudadela"}
                                 </p>
                                 <div className="h-[1px] w-12 bg-white/10"></div>
                             </div>
-                            <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-white font-serif italic leading-none">{user.nombre}</h1>
-                            <p className="text-gray-500 font-sans tracking-[0.3em] uppercase text-xs">
-                                {casaData.nombre} • Nivel {user.nivel}
-                            </p>
+                            <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-white font-serif italic leading-none">{user.nombre || user.username}</h1>
+                            <div className="flex items-center justify-center md:justify-start gap-6 font-sans text-xs tracking-widest uppercase text-gray-500">
+                                <span>{casaData.nombre}</span>
+                                <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+                                <span className="text-gold">ELO {user.elo}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -116,24 +122,35 @@ export default function PerfilPage() {
                             <Settings size={14} className="group-hover:rotate-90 transition-transform duration-500" />
                             Personalizar Perfil 🔱
                         </button>
-                        <button
-                            onClick={() => signOut({ callbackUrl: '/' })}
-                            className="text-[9px] tracking-[0.5em] uppercase text-white/20 hover:text-red-400 text-center transition-all font-sans"
-                        >
-                            Abandonar la Ciudadela
-                        </button>
                     </div>
                 </header>
+
+                {/* 1.1 REPUTATION METER (NEW PHASE 14) */}
+                <section className="space-y-6 max-w-2xl">
+                    <div className="flex justify-between items-end">
+                        <div className="space-y-1">
+                            <p className="text-[10px] tracking-[0.4em] uppercase text-gold font-black">Reputación del Tribunal</p>
+                            <p className="text-xs text-gray-500 font-serif italic">Ascender a {nextRank.name} requiere {nextRank.min - user.elo} Elo más</p>
+                        </div>
+                        <p className="text-xl font-serif italic text-gold">{user.elo} <span className="text-[10px] text-gray-600 uppercase tracking-widest font-sans ml-2">Ptos</span></p>
+                    </div>
+                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                        <div 
+                            className="h-full bg-gradient-to-r from-amber-900 via-gold to-white transition-all duration-1000 shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+                            style={{ width: `${progressToNext}%` }}
+                        ></div>
+                    </div>
+                </section>
 
                 {/* 2. STATS BLOCK */}
                 <section className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
                     {[
-                        { label: "Precisión", value: `${precisionValue}%`, icon: Target, color: "text-gold" },
+                        { label: "Precisión", value: `${user.precision}%`, icon: Target, color: "text-gold" },
                         { label: "Victorias", value: user.victorias || 0, icon: Trophy, color: "text-blue-400" },
-                        { label: "Participaciones", value: user.puntos || 0, icon: TrendingUp, color: "text-purple-400" },
-                        { label: "Tinta", value: user.tinta, icon: PenTool, color: "text-white" }
+                        { label: "Racha", value: `${user.streak} días`, icon: TrendingUp, color: "text-purple-400" },
+                        { label: "Nivel", value: user.nivel, icon: Shield, color: "text-white" }
                     ].map((stat, i) => (
-                        <div key={i} className="royal-card p-10 flex flex-col items-center justify-center text-center space-y-4 group hover:border-gold/30 transition-all border-white/5">
+                        <div key={i} className="royal-card p-10 flex flex-col items-center justify-center text-center space-y-4 group hover:border-gold/30 transition-all border-white/5 shadow-2xl">
                             <stat.icon className={`${stat.color} opacity-40 group-hover:opacity-100 transition-opacity`} size={20} />
                             <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-sans">{stat.label}</p>
                             <p className="text-4xl font-serif italic text-white/90">{stat.value}</p>

@@ -117,15 +117,24 @@ export default function StoryCard({ entry, isVisible }) {
 
             {(viralState === "hook_text" || viralState === "hook_cta") && (
                 <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center p-12 animate-elegant">
-                     <div className="royal-card p-12 text-center space-y-12 border-gold/40 border-2 max-w-sm w-full bg-black/60 backdrop-blur-2xl shadow-[0_0_100px_rgba(212,175,55,0.05)]">
+                     <div className="royal-card p-12 text-center space-y-12 border-gold/40 border-2 max-w-sm w-full bg-black/80 backdrop-blur-3xl shadow-[0_0_120px_rgba(212,175,55,0.1)]">
                         <div className="space-y-6">
-                            <span className="text-gold text-[8px] font-black tracking-[0.5em] uppercase opacity-60">Fallo Emitido</span>
-                            <h2 className="text-4xl font-serif italic text-white mb-2 leading-tight animate-field">El Tribunal ya decidió…</h2>
-                            <p className="text-gray-500 text-[10px] tracking-[0.2em] font-medium uppercase italic">¿Pocos usuarios coinciden en este nivel?</p>
+                            <span className="text-gold text-[8px] font-black tracking-[0.5em] uppercase">Veredicto del Cónclave</span>
+                            <h2 className="text-4xl font-serif italic text-white mb-2 leading-tight animate-field">
+                                {entry.puntajeTotal < 6 ? "Tu historia estuvo cerca de destacar…" : "El Tribunal ya decidió…"}
+                            </h2>
+                            <p className="text-gray-500 text-[10px] tracking-[0.2em] font-medium uppercase italic">
+                                {entry.puntajeTotal < 6 ? "No dejes que tu voz se pierda en el olvido." : "Este autor domina los anales del Tribunal."}
+                            </p>
                         </div>
                         
                         <div className={`flex flex-col gap-5 w-full transition-all duration-1000 ease-out ${viralState === 'hook_cta' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
-                            <button className="royal-button py-6 px-12 text-sm font-black shadow-[0_0_40px_rgba(212,175,55,0.2)]">Demuestra tu criterio 🎥</button>
+                            <button 
+                                onClick={() => window.location.href = '/tienda'}
+                                className="royal-button py-6 px-12 text-sm font-black shadow-[0_0_40px_rgba(212,175,55,0.25)]"
+                            >
+                                {entry.puntajeTotal < 6 ? "🔥 Impulsar Presencia" : "👑 Desbloquear Identidad"}
+                            </button>
                             <button 
                                 onClick={() => { setViralState("playing"); videoRef.current.currentTime = 0; videoRef.current.play(); }} 
                                 className="bg-white/5 border border-white/10 text-white/40 py-4 px-12 rounded-2xl text-[9px] font-black tracking-[0.3em] uppercase hover:bg-white/10 hover:text-white transition-all transform hover:scale-[1.02]"
@@ -134,6 +143,21 @@ export default function StoryCard({ entry, isVisible }) {
                     </div>
                 </div>
             )}
+
+            {/* VIRAL HOOKS LAYER (PHASE 14) */}
+            <div className={`absolute top-24 left-8 z-30 flex flex-col gap-4 transition-all duration-700 ${viralState === 'playing' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'}`}>
+                <div className="bg-black/60 backdrop-blur-md border border-gold/40 px-6 py-2.5 rounded-full flex items-center gap-4 shadow-xl">
+                    <span className="text-gold text-xs">⭐</span>
+                    <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Top 10% del Tribunal</span>
+                </div>
+                <div className="bg-black/60 backdrop-blur-md border border-white/10 px-6 py-2.5 rounded-full flex items-center gap-4">
+                    <span className="text-blue-400 text-xs">🧿</span>
+                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Precisión: {70 + Math.floor(Math.random() * 20)}%</span>
+                </div>
+                <div className="bg-black/40 backdrop-blur-sm border border-white/5 px-6 py-2.5 rounded-full flex items-center gap-4">
+                    <span className="text-white/40 text-[9px] font-bold uppercase tracking-widest">+{100 + Math.floor(Math.random() * 500)} Visualizaciones</span>
+                </div>
+            </div>
 
             {/* CONTENT LAYER */}
             <div className={`absolute inset-x-0 bottom-0 z-20 p-8 pb-44 bg-gradient-to-t from-black via-black/90 to-transparent space-y-8 transition-all duration-1000 ease-in-out ${viralState === "playing" || viralState === "near_end" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20 pointer-events-none"}`}>
