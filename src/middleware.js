@@ -12,7 +12,9 @@ export default withAuth({
         "/st", 
         "/ref", 
         "/api/guest/status",
-        "/api/auth"
+        "/api/auth",
+        "/ranking",
+        "/rankings"
       ];
       
       const isPublic = publicPaths.some(path => pathname.startsWith(path));
