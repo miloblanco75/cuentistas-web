@@ -99,13 +99,19 @@ export default function RecorderModal({ isOpen, onClose, onSave, targetEntryId, 
             // V3 RC: 500-800ms "Preparing" state
             setTimeout(async () => {
                 try {
-                    await recorderRef.current.start(mode);
+                    let audioEl = null;
+                    if (audioUrl) {
+                        audioEl = new Audio(audioUrl);
+                        voiceAudioRef.current = audioEl;
+                        // Important: ensure crossOrigin or same-origin for MediaElementSource
+                    }
+
+                    await recorderRef.current.start(mode, audioEl);
                     setStatus("recording");
                     setTimeLeft(30);
                     
-                    if (audioUrl) {
-                        voiceAudioRef.current = new Audio(audioUrl);
-                        voiceAudioRef.current.play().catch(e => console.warn("Autoplay blocked", e));
+                    if (audioEl) {
+                        audioEl.play().catch(e => console.warn("Autoplay hint", e));
                     }
 
                     timerRef.current = setInterval(() => {

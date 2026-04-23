@@ -22,12 +22,13 @@ export class RecorderCore {
         }
     }
 
-    async start(mode = 'narrator') {
+    async start(mode = 'narrator', audioElementToMix = null) {
         try {
             this.chunks = [];
             this.stopped = false;
             this.onStopFired = false;
 
+            let videoStream;
             let finalStream;
 
             if (mode === 'camera') {
@@ -44,9 +45,8 @@ export class RecorderCore {
             } else {
                 // V3 RC: Order of execution is critical
                 // 1. Request Screen
-                let screenStream;
                 try {
-                    screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+                    videoStream = await navigator.mediaDevices.getDisplayMedia({ 
                         video: {
                             displaySurface: "browser",
                             logicalSurface: true
@@ -65,10 +65,31 @@ export class RecorderCore {
                     console.warn("⚠️ Micrófono denegado, continuando solo con video.");
                 }
 
-                // 3. Combine Tracks
+                // 3. Audio Alchemist: Mix Mic and External Audio
+                let finalAudioTrack = null;
+                if (audioElementToMix || micStream) {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const destination = audioContext.createMediaStreamDestination();
+                    
+                    if (micStream) {
+                        const micSource = audioContext.createMediaStreamSource(micStream);
+                        micSource.connect(destination);
+                    }
+                    
+                    if (audioElementToMix) {
+                        const externalSource = audioContext.createMediaElementSource(audioElementToMix);
+                        externalSource.connect(destination);
+                        // Also connect to speakers so the user hears it while recording
+                        externalSource.connect(audioContext.destination);
+                    }
+                    
+                    finalAudioTrack = destination.stream.getAudioTracks()[0];
+                }
+
+                // 4. Combine Tracks
                 const tracks = [
-                    ...screenStream.getVideoTracks(),
-                    ...(micStream ? micStream.getAudioTracks() : [])
+                    ...videoStream.getVideoTracks(),
+                    ...(finalAudioTrack ? [finalAudioTrack] : [])
                 ];
                 finalStream = new MediaStream(tracks);
             }
