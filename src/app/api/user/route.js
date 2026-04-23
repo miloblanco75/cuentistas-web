@@ -23,6 +23,9 @@ export async function GET() {
                 },
                 inventory: {
                     include: { storeItem: true, tiendaItem: true }
+                },
+                UserMision: {
+                    include: { Mision: true }
                 }
             }
         });
@@ -81,7 +84,7 @@ export async function GET() {
             activeBadgeId: user.activeBadgeId,
             activeTitleId: user.activeTitleId,
             inventory: user.inventory || [],
-            misiones: user.misiones || []
+            UserMision: user.UserMision || []
         };
 
         return NextResponse.json({ ok: true, user: userData });
@@ -145,7 +148,10 @@ async function handleUpdate(session, req) {
         const user = await prisma.user.update({
             where: { email: session.user.email },
             data: updateData,
-            include: { inventory: { include: { storeItem: true } }, misiones: { include: { mision: true } } }
+            include: { 
+                inventory: { include: { storeItem: true, tiendaItem: true } }, 
+                UserMision: { include: { Mision: true } } 
+            }
         });
         
         const isMaster = user.email && user.email.toLowerCase().trim() === "ermiloblanco75@gmail.com";
@@ -176,7 +182,7 @@ async function handleUpdate(session, req) {
                 activeBadgeId: user.activeBadgeId,
                 activeTitleId: user.activeTitleId,
                 inventory: user.inventory || [],
-                misiones: user.misiones || []
+                UserMision: user.UserMision || []
             } 
         });
     } catch (dbError) {
