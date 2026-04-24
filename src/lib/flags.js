@@ -8,6 +8,7 @@ export const COMBAT_FLAGS = {
     combat_hud_enabled: process.env.NEXT_PUBLIC_COMBAT_HUD === 'true',
     ink_powers_enabled: process.env.NEXT_PUBLIC_INK_POWERS === 'true',
     live_events_enabled: process.env.NEXT_PUBLIC_LIVE_EVENTS === 'true',
+    finish_pressure_event_enabled: process.env.NEXT_PUBLIC_FINISH_PRESSURE === 'true',
 };
 
 /**

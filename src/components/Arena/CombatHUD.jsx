@@ -22,26 +22,49 @@ export default function CombatHUD({ contestId, userId }) {
                 const res = await fetch(`/api/arena/status?contestId=${contestId}`);
                 const data = await res.json();
                 if (data.ok) {
-                    // TRIADA DE TENSIÓN: Ordenar y filtrar
                     const sorted = [...data.contestants].sort((a,b) => b.pressureScore - a.pressureScore);
                     const top1 = sorted[0];
                     const me = sorted.find(p => p.userId === userId);
                     const myIndex = sorted.findIndex(p => p.userId === userId);
                     const rivalAbove = myIndex > 0 ? sorted[myIndex - 1] : null;
 
-                    // Unificar sin duplicados
                     const triad = Array.from(new Set([top1, me, rivalAbove].filter(Boolean)));
                     setPlayers(triad);
                     
                     checkEvents(data.contestants);
+
+                    // ⚡ NUEVA LÓGICA DE EVENTO GLOBAL
+                    if (data.event && data.event.type === "FINISH_ANNOUNCEMENT") {
+                        triggerGlobalPressure(data.event);
+                    }
                 }
             } catch (e) {
                 console.error("Combat HUD Sync Failed...");
             }
-        }, phase === "climax" ? 2000 : 4000); // Mínimo 2s
+        }, phase === "climax" ? 2000 : 4000);
 
         return () => clearInterval(interval);
     }, [contestId, phase]);
+
+    const triggerGlobalPressure = (event) => {
+        // Evitar duplicados por timestamp
+        if (events[0] === event.message) return;
+        
+        pushEvent(event.message);
+        
+        // Efecto visual de Choque
+        const body = document.querySelector('body');
+        if (event.intensity === "maxima") {
+            body.classList.add('animate-shake');
+            setTimeout(() => body.classList.remove('animate-shake'), 500);
+        }
+        
+        // Disparar Trigger de Monetización si el usuario no ha terminado
+        const me = players.find(p => p.userId === userId);
+        if (me && me.status !== "SELLADO" && me.pressureScore < 50) {
+            pushEvent("⚠️ Estás perdiendo ventaja. ¡Actúa!");
+        }
+    };
 
     // Lógica de detección de eventos dinámicos
     const checkEvents = (currentPlayers) => {

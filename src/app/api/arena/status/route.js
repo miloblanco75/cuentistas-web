@@ -54,9 +54,36 @@ export async function GET(req) {
             };
         });
 
+        const finishedCount = contestants.filter(p => p.status === "SELLADO" || p.status === "finished").length;
+        let event = null;
+
+        if (finishedCount > 0 && COMBAT_FLAGS.finish_pressure_event_enabled) {
+            const finishers = contestants.filter(p => p.status === "SELLADO" || p.status === "finished");
+            const lastFinisher = finishers[finishers.length - 1];
+            
+            let message = `📜 ${lastFinisher?.username} ha consagrado su crónica.`;
+            let intensity = "media";
+
+            if (finishedCount === 2) {
+                message = `⚠️ ${lastFinisher?.username} también ha sellado. La presión aumenta.`;
+                intensity = "alta";
+            } else if (finishedCount >= 3) {
+                message = "⏳ El Tribunal cierra sus puertas. Solo faltas tú.";
+                intensity = "maxima";
+            }
+
+            event = {
+                type: "FINISH_ANNOUNCEMENT",
+                message,
+                intensity,
+                timestamp: now.toISOString()
+            };
+        }
+
         return NextResponse.json({
             ok: true,
             contestants,
+            event,
             timestamp: now.toISOString()
         });
 
