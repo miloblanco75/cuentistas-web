@@ -16,6 +16,10 @@ export const COMBAT_FLAGS = {
     league_system_enabled: process.env.NEXT_PUBLIC_LEAGUES === 'true',
     prestige_titles_enabled: process.env.NEXT_PUBLIC_TITLES === 'true',
     seasonal_crowns_enabled: process.env.NEXT_PUBLIC_CROWNS === 'true',
+    scarcity_law_enabled: process.env.NEXT_PUBLIC_SCARCITY === 'true',
+    prestige_decay_enabled: process.env.NEXT_PUBLIC_DECAY === 'true',
+    crown_defense_enabled: process.env.NEXT_PUBLIC_CROWN_DEFENSE === 'true',
+    limited_relics_enabled: process.env.NEXT_PUBLIC_LIMITED_RELICS === 'true',
 };
 
 /**
