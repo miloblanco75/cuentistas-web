@@ -14,13 +14,22 @@ export default function ForgeMiniPanel({ pressure, inkBalance, onUsePower }) {
     // El disparador de dopamina: Pulsa si la presión es baja
     const isUnderPressure = pressure < 40;
 
+    const [freeUsed, setFreeUsed] = useState(false);
+    
+    // El disparador de dopamina: Pulsa si la presión es baja o hay estancamiento
+    const isStalled = pressure < 30;
+
     const POWERS = [
-        { id: 'shadow', name: 'Velo de Sombras', icon: EyeOff, cost: 5, desc: 'Difumina tu presión real' },
+        { id: 'shadow', name: 'Velo de Sombras', icon: EyeOff, cost: freeUsed ? 5 : 0, desc: freeUsed ? 'Difumina tu presión' : 'GRATIS HOY' },
         { id: 'oracle', name: 'Pulso del Oráculo', icon: Search, cost: 8, desc: 'Ver Presión Real del Top 1' },
         { id: 'shield', name: 'Escudo de Elo', icon: Shield, cost: 10, desc: 'Protección de Prestigio' }
     ];
 
-    if (!COMBAT_FLAGS.ink_powers_enabled) return null;
+    const usePower = (p) => {
+        if (p.cost === 0) setFreeUsed(true);
+        onUsePower(p);
+        setIsOpen(false);
+    };
 
     return (
         <div className="fixed bottom-10 left-10 z-50">
