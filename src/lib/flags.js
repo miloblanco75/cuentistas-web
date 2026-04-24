@@ -12,6 +12,10 @@ export const COMBAT_FLAGS = {
     aftermath_enabled: process.env.NEXT_PUBLIC_AFTERMATH === 'true',
     revenge_loop_enabled: process.env.NEXT_PUBLIC_REVENGE_LOOP === 'true',
     post_defeat_offers_enabled: process.env.NEXT_PUBLIC_POST_DEFEAT === 'true',
+    prestige_throne_enabled: process.env.NEXT_PUBLIC_PRESTIGE_THRONE === 'true',
+    league_system_enabled: process.env.NEXT_PUBLIC_LEAGUES === 'true',
+    prestige_titles_enabled: process.env.NEXT_PUBLIC_TITLES === 'true',
+    seasonal_crowns_enabled: process.env.NEXT_PUBLIC_CROWNS === 'true',
 };
 
 /**
