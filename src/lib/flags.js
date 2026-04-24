@@ -9,6 +9,9 @@ export const COMBAT_FLAGS = {
     ink_powers_enabled: process.env.NEXT_PUBLIC_INK_POWERS === 'true',
     live_events_enabled: process.env.NEXT_PUBLIC_LIVE_EVENTS === 'true',
     finish_pressure_event_enabled: process.env.NEXT_PUBLIC_FINISH_PRESSURE === 'true',
+    aftermath_enabled: process.env.NEXT_PUBLIC_AFTERMATH === 'true',
+    revenge_loop_enabled: process.env.NEXT_PUBLIC_REVENGE_LOOP === 'true',
+    post_defeat_offers_enabled: process.env.NEXT_PUBLIC_POST_DEFEAT === 'true',
 };
 
 /**
