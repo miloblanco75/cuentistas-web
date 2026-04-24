@@ -20,6 +20,10 @@ export const COMBAT_FLAGS = {
     prestige_decay_enabled: process.env.NEXT_PUBLIC_DECAY === 'true',
     crown_defense_enabled: process.env.NEXT_PUBLIC_CROWN_DEFENSE === 'true',
     limited_relics_enabled: process.env.NEXT_PUBLIC_LIMITED_RELICS === 'true',
+    imperial_analytics_enabled: process.env.NEXT_PUBLIC_IMPERIAL_ANALYTICS === 'true',
+    sovereign_dashboard_enabled: process.env.NEXT_PUBLIC_SOVEREIGN_DASHBOARD === 'true',
+    danger_alerts_enabled: process.env.NEXT_PUBLIC_DANGER_ALERTS === 'true',
+    ab_test_engine_enabled: process.env.NEXT_PUBLIC_AB_TEST === 'true',
 };
 
 /**
