@@ -3,29 +3,35 @@ import prisma from "@/lib/db";
 
 export async function GET() {
   try {
-      const entradas = await prisma.entrada.findMany({
-          include: {
-              concurso: { select: { titulo: true } },
-              user: { select: { username: true } }
+      // 🔱 PRESTIGE RANKING (PHASE 14)
+      // Obtenemos el Top 100 de Ciudadanos por ELO
+      const users = await prisma.user.findMany({
+          where: {
+              NOT: { username: null }
           },
-          orderBy: { puntajeTotal: 'desc' }
+          select: {
+              id: true,
+              username: true,
+              elo: true,
+              rank: true,
+              casa: true,
+              image: true,
+              puntosCasa: true
+          },
+          orderBy: { elo: 'desc' },
+          take: 100
       });
-
-      const ranking = entradas.map((e) => ({
-        ...e,
-        concursoTitulo: e.concurso?.titulo || "Sin concurso",
-        autorUsername: e.user?.username || e.participante
-      }));
 
       return NextResponse.json(
         {
           ok: true,
-          total: ranking.length,
-          ranking
+          total: users.length,
+          ranking: users
         },
         { status: 200 }
       );
   } catch (error) {
+      console.error("❌ Error en API Ranking:", error.message);
       return NextResponse.json({ ok: false, error: "Error de DB" }, { status: 500 });
   }
 }
