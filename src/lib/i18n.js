@@ -20,7 +20,7 @@ export const translations = {
         mod_mercado: "Tienda Real",
         mod_perfil: "Perfil",
         mod_tribunal: "Tribunal",
-        mod_ranking: "Galería",
+        mod_ranking: "Anales",
         footer_manual: "Manual de Juego",
         footer_tribunal: "Tribunal Superior",
         footer_disconnect: "Desconectar",
@@ -106,7 +106,7 @@ export const translations = {
         btn_start_legacy_manual: "Inicia tu Legado",
         
         // Gallery
-        gallery_title: "Galería de Obras Maestras",
+        gallery_title: "Anales de Prestigio",
         gallery_subtitle: "El archivo histórico de la excelencia literaria",
         gallery_empty_t: "Las estanterías aguardan...",
         gallery_empty_d: "Aún no hay obras consagradas en esta era.",
@@ -142,7 +142,7 @@ export const translations = {
         mod_mercado: "Royal Bazaar",
         mod_perfil: "Legacy",
         mod_tribunal: "High Council",
-        mod_ranking: "Grand Gallery",
+        mod_ranking: "Ancient Annals",
         footer_manual: "Scribe's Tome",
         footer_tribunal: "High Council",
         footer_disconnect: "Sever Connection",

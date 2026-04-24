@@ -78,7 +78,7 @@ export default function PlatformHub() {
         { title: t("mod_escritura"), href: "/concursos", icon: <Icons.Escritura /> },
         { title: t("mod_examenes"), href: "/examenes", icon: <Icons.Examenes /> },
         { title: t("mod_comunidad"), href: "/comunidad", icon: <Icons.Comunidad /> },
-        { title: t("mod_ranking"), href: "/biblioteca", icon: <Icons.Biblioteca /> },
+        { title: t("mod_ranking"), href: "/rankings", icon: <Icons.Biblioteca /> },
         { title: t("mod_mercado"), href: "/tienda", icon: <Icons.Mercado /> },
         { title: t("mod_perfil"), href: "/perfil", icon: <Icons.Perfil /> },
         { 

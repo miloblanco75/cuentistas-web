@@ -202,7 +202,7 @@ export default function PanelPage() {
           </div>
 
           <a
-            href="/ranking"
+            href="/rankings"
             className="royal-card p-12 group hover:scale-[1.02] transition-all border-amber-500/10"
           >
             <div className="flex flex-col h-full space-y-8">

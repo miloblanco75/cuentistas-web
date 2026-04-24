@@ -183,7 +183,7 @@ export default function PerfilPage() {
                                     💎 Gestionar Bóveda
                                 </a>
                                 <a 
-                                    href="/ranking"
+                                    href="/rankings"
                                     className="bg-black/20 hover:bg-black/40 text-gray-400 px-10 py-4 rounded-sm text-[10px] font-black tracking-[0.3em] uppercase transition-all"
                                 >
                                     📈 Anales Globales
