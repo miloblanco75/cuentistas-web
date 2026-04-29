@@ -14,6 +14,7 @@ export async function GET() {
         // Priority: Entries with boost, or entries with few votes
         let entries = await prisma.entrada.findMany({
             where: {
+                isTraining: false,
                 // If user is logged in, exclude their own entries
                 NOT: userId ? { userId } : {}
             },

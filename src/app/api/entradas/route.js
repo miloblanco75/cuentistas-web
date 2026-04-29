@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
       const entradas = await prisma.entrada.findMany({
+          where: { isTraining: false },
           include: {
               concurso: { select: { titulo: true } },
               user: { select: { username: true } }
@@ -53,6 +54,28 @@ export async function POST(request) {
 
       // PHASE HOTFIX 9: MASTER RESILIENT SUBMISSION
       const { entry, action } = await withTransactionRetry(async (tx) => {
+          // VALIDATION: Check contest status and time
+          const currentContest = await tx.concurso.findUnique({
+              where: { id: concursoId },
+              select: { status: true, startTime: true, duration: true }
+          });
+          
+          if (!currentContest) {
+              throw new Error("Concurso no encontrado");
+          }
+          
+          if (currentContest.status !== "active") {
+              throw new Error("El concurso ya no está activo");
+          }
+          
+          if (currentContest.startTime && currentContest.duration) {
+              const elapsed = (Date.now() - new Date(currentContest.startTime).getTime()) / 1000;
+              // 15 seconds grace period for network latency
+              if (elapsed > currentContest.duration + 15) {
+                  throw new Error("El tiempo del concurso ha expirado");
+              }
+          }
+
           const existing = await tx.entrada.findUnique({
               where: {
                   userId_concursoId: { userId, concursoId }
@@ -93,12 +116,50 @@ export async function POST(request) {
 
       // SECONDARY ACTION: DECOUPLED BOOST (If creation succeeded)
       let boostAppliedNow = false;
+      let newInfluenceRankUnlocked = null; // AJUSTE #4: para celebración visible
       if (action === "created") {
           try {
               const user = await prisma.user.findUnique({ 
                   where: { id: userId },
                   select: { activeBoost: true, boostExpiresAt: true }
               });
+
+              // Increment entradasTotales and update lastParticipation
+              const updatedUser = await prisma.user.update({
+                  where: { id: userId },
+                  data: { 
+                      entradasTotales: { increment: 1 },
+                      lastParticipation: new Date()
+                  },
+                  select: { entradasTotales: true, referredBy: true }
+              });
+
+              // FASE 7: PROOF OF ACTION (Atribución limpia en primera entrada)
+              if (updatedUser.entradasTotales === 1 && updatedUser.referredBy) {
+                  try {
+                      const referrer = await prisma.user.update({
+                          where: { username: updatedUser.referredBy },
+                          data: { successfulReferrals: { increment: 1 } },
+                          select: { successfulReferrals: true }
+                      });
+                      // Desbloquear influenceRank sin sobreescribir — solo como título disponible
+                      const newCount = referrer.successfulReferrals;
+                      let newInfluenceRank = null;
+                      if (newCount >= 15) newInfluenceRank = "El Heraldo del Tribunal";
+                      else if (newCount >= 5) newInfluenceRank = "Portador de Nuevas Plumas";
+                      else if (newCount >= 1) newInfluenceRank = "El Invocador";
+                      if (newInfluenceRank) {
+                          await prisma.user.update({
+                              where: { username: updatedUser.referredBy },
+                              data: { influenceRank: newInfluenceRank }
+                          });
+                          newInfluenceRankUnlocked = newInfluenceRank; // Para notificar al cliente
+                      }
+                      console.log(`🔱 Referido validado: +1 a ${updatedUser.referredBy} (${newCount} total)`);
+                  } catch (e) {
+                      console.warn("⚠️ Referrer not found or error tracking referral:", e.message);
+                  }
+              }
 
               const isBoostActive = user?.activeBoost && user.activeBoost > 0 && 
                                    user.boostExpiresAt && new Date(user.boostExpiresAt) > new Date();
@@ -126,6 +187,7 @@ export async function POST(request) {
           action,
           entradaId: entry.id,
           boostApplied: boostAppliedNow,
+          newInfluenceRank: newInfluenceRankUnlocked, // AJUSTE #4: para celebración visible
           message: action === "created" 
             ? "Tu manuscrito ha sido enviado al Tribunal 🔱" 
             : "Tu manuscrito fue actualizado correctamente 🔱"
@@ -136,6 +198,12 @@ export async function POST(request) {
       if (error.code === 'P2002') {
           return NextResponse.json({ ok: false, error: "Ya existe una entrada para este concurso" }, { status: 409 });
       }
-      return NextResponse.json({ ok: false, error: "Error del Tribunal (Saturación). Reintenta en unos instantes." }, { status: 503 });
+      
+      const isCustomError = ["Concurso no encontrado", "El concurso ya no está activo", "El tiempo del concurso ha expirado"].includes(error.message);
+      
+      return NextResponse.json(
+          { ok: false, error: isCustomError ? error.message : "Error del Tribunal (Saturación). Reintenta en unos instantes." }, 
+          { status: isCustomError ? 400 : 503 }
+      );
   }
 }

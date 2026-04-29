@@ -34,12 +34,23 @@ export async function GET() {
             return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
         }
 
-        // V9: Sincronización de referido al primer login/visita
+        // V9 + FASE 7 AJUSTE #2+#3: Sincronización de referido con doble capa
+        // Capa 1: cookie (middleware, servidor)
+        // Capa 2: header X-Referrer-Backup (enviado por ReferralTracker vía localStorage)
+        // Anti-smurf flag: la validación real ocurre en entradasTotales === 1
         if (!user.referredBy) {
-            const { cookies } = await import("next/headers");
+            const { cookies, headers } = await import("next/headers");
             const cookieStore = cookies();
-            const referrer = cookieStore.get("referrer")?.value;
+            const headerStore = headers();
+            
+            // Intentar cookie primero, luego header de backup
+            const referrerCookie = cookieStore.get("referrer")?.value;
+            const referrerBackup = headerStore.get("x-referrer-backup");
+            const referrer = referrerCookie || referrerBackup;
+            
             if (referrer && referrer !== user.username) {
+                // AJUSTE #3: Anti self-referral básico — no podemos referirte a ti mismo
+                // Flag para auditoría futura: suspiciousReferral si el username es muy similar
                 await prisma.user.update({
                     where: { id: user.id },
                     data: { referredBy: referrer }

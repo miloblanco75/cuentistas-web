@@ -29,6 +29,10 @@ import StatusBanner from "@/components/Utils/StatusBanner";
 import GlobalRecorderFAB from "@/components/UI/GlobalRecorderFAB";
 import GuestConversionModal from "@/components/GuestConversionModal";
 
+import TribunalCall from "@/components/TribunalCall";
+import { Suspense } from "react";
+import ReferralTracker from "@/components/ReferralTracker";
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -49,6 +53,11 @@ export default function RootLayout({
                             <LanguageToggle />
                             <GlobalRecorderFAB />
                             <GuestConversionModal />
+                            <TribunalCall />
+                            {/* AJUSTE #2: localStorage backup layer — Suspense necesario por useSearchParams */}
+                            <Suspense fallback={null}>
+                                <ReferralTracker />
+                            </Suspense>
                         </LanguageProvider>
                     </Providers>
                 </ErrorBoundary>

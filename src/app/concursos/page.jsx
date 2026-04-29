@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -37,14 +37,36 @@ export default function ConcursosPage() {
         </header>
 
         <div className="grid gap-8">
-          {concursos.map(c => {
-            const userNivelIdx = ["Principiante", "Intermedio", "Avanzado", "Maestro", "Legendario"].indexOf(user.nivel);
-            const contestNivelIdx = ["Principiante", "Intermedio", "Avanzado", "Maestro", "Legendario"].indexOf(c.categoria);
-            const canAccess = userNivelIdx >= contestNivelIdx;
-            const locked = !canAccess && user.tinta < c.costoTinta;
+          {(() => {
+            const isNovato = user.entradasTotales < 7;
+            let displayConcursos = [...concursos];
+            
+            if (isNovato) {
+                // Priorizar arenas de novato
+                displayConcursos.sort((a, b) => (b.esParaNovatos ? 1 : 0) - (a.esParaNovatos ? 1 : 0));
+            } else {
+                // Veteranos no ven arenas de novato
+                displayConcursos = displayConcursos.filter(c => !c.esParaNovatos);
+            }
 
-            return (
-              <div key={c.id} className={`royal-card p-12 group transition-all duration-700 ${locked ? 'opacity-30' : ''}`}>
+            return displayConcursos.map(c => {
+              const userNivelIdx = ["Principiante", "Intermedio", "Avanzado", "Maestro", "Legendario"].indexOf(user.nivel);
+              const contestNivelIdx = ["Principiante", "Intermedio", "Avanzado", "Maestro", "Legendario"].indexOf(c.categoria);
+              
+              // Lógica de Bloqueo Elo/Rango
+              const isHighEloLocked = isNovato && !c.esParaNovatos && c.minElo > user.elo;
+              const isLevelLocked = userNivelIdx < contestNivelIdx;
+              const isInkLocked = user.tinta < c.costoTinta;
+              
+              const locked = isHighEloLocked || isLevelLocked || isInkLocked;
+              
+              let lockMessage = "";
+              if (isHighEloLocked) lockMessage = "El Tribunal aún no te convoca";
+              else if (isLevelLocked) lockMessage = "Rango Insuficiente";
+              else if (isInkLocked) lockMessage = "Sello insuficiente";
+
+              return (
+                <div key={c.id} className={`royal-card p-12 group transition-all duration-700 ${locked ? 'opacity-30' : ''}`}>
                 <div className="flex flex-col md:flex-row justify-between items-center gap-12">
                   <div className="flex-1 space-y-6">
                     <div className="flex items-center gap-6">
@@ -58,19 +80,20 @@ export default function ConcursosPage() {
                     <h2 className="text-5xl font-serif italic text-white/90 group-hover:text-gold transition-all duration-700">{c.titulo}</h2>
                     <p className="text-xl text-gray-500 font-serif italic max-w-2xl leading-relaxed">{c.descripcion}</p>
                   </div>
-                  <div className="w-full md:w-auto">
-                    <button
-                      onClick={() => router.push(`/concursos/live/${c.id}`)}
-                      className="royal-button w-full"
-                      disabled={locked}
-                    >
-                      {locked ? 'Sello insuficiente' : 'Escribir'}
-                    </button>
+                    <div className="w-full md:w-auto">
+                      <button
+                        onClick={() => router.push(`/concursos/live/${c.id}`)}
+                        className="royal-button w-full"
+                        disabled={locked}
+                      >
+                        {locked ? lockMessage : 'Escribir'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            });
+          })()}
         </div>
       </div>
     </main>

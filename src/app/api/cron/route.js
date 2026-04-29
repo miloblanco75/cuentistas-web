@@ -106,7 +106,8 @@ export async function GET(req) {
             },
             include: {
                 entradas: {
-                    orderBy: { puntajeTotal: 'desc' }
+                    orderBy: { puntajeTotal: 'desc' },
+                    include: { user: { select: { entradasTotales: true } } }
                 }
             }
         });
@@ -114,7 +115,16 @@ export async function GET(req) {
         for (const c of finishedToProcess) {
             console.log(`[HARVEST] Procesando premios para: ${c.titulo}`);
             
-            for (let i = 0; i < c.entradas.length; i++) {
+            const totalParticipantes = c.entradas.length;
+            const top10Count = Math.max(1, Math.floor(totalParticipantes * 0.10));
+            
+            // Encontrar el mayor voto popular
+            let maxVotos = -1;
+            c.entradas.forEach(e => {
+                if (e.votos > maxVotos) maxVotos = e.votos;
+            });
+
+            for (let i = 0; i < totalParticipantes; i++) {
                 const entrada = c.entradas[i];
                 let premio;
                 
@@ -122,6 +132,16 @@ export async function GET(req) {
                 else if (i === 1) premio = PREMIOS.P2;
                 else if (i === 2) premio = PREMIOS.P3;
                 else premio = PREMIOS.PART;
+
+                // --- ASIGNACIÓN DE MICROVICTORIAS (FASE 5) ---
+                let premiosAsignados = [];
+
+                if (i === 0) premiosAsignados.push("Favorito del Tribunal");
+                if (i > 0 && i <= top10Count) premiosAsignados.push("Top 10%");
+                if (i === 3 || i === 4) premiosAsignados.push("Rozaste el Podio");
+                if (entrada.votos === maxVotos && maxVotos > 0) premiosAsignados.push("Favorito del Público");
+                if (entrada.user.entradasTotales <= 1 && i <= top10Count) premiosAsignados.push("Sangre Nueva");
+                if (entrada.user.entradasTotales >= 50) premiosAsignados.push("Hierro Persistente"); // Constancia
 
                 // Actualizar Usuario
                 await prisma.user.update({
@@ -134,6 +154,14 @@ export async function GET(req) {
                         puntosCasa: c.tipo === 'casa' ? { increment: premio.xp } : undefined
                     }
                 });
+
+                // Actualizar Entrada con los premios
+                if (premiosAsignados.length > 0) {
+                    await prisma.entrada.update({
+                        where: { id: entrada.id },
+                        data: { premios: premiosAsignados }
+                    });
+                }
             }
 
             // Marcar como procesado

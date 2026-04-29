@@ -49,7 +49,7 @@ export async function castLaurelVote(entradaId) {
                 data: { 
                     votos: newVotos,
                     popularScore: newPopularScore,
-                    puntajeTotal: (newPopularScore + (entrada.expertScore || 0)) * (entrada.boostApplied ? 1.05 : 1)
+                    puntajeTotal: newPopularScore + (entrada.expertScore || 0)
                 }
             });
 
@@ -152,7 +152,7 @@ export async function castJudgeJudgment(data) {
                 where: { id: entradaId },
                 data: { 
                     expertScore, 
-                    puntajeTotal: ((entrada.popularScore || 0) + expertScore) * (entrada.boostApplied ? 1.05 : 1)
+                    puntajeTotal: (entrada.popularScore || 0) + expertScore
                 }
             });
 

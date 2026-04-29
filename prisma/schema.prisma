@@ -43,76 +43,84 @@ model VerificationToken {
 }
 
 model User {
-  id                      String           @id @default(cuid())
+  id                      String    @id @default(cuid())
   name                    String?
-  username                String?          @unique
-  email                   String?          @unique
+  username                String?   @unique
+  email                   String?   @unique
   emailVerified           DateTime?
   image                   String?
   password                String?
-  rol                     String           @default("CUENTISTA")
-  tinta                   Int              @default(10)
-  puntos                  Int              @default(0)
-  nivel                   String           @default("Principiante")
+  rol                     String    @default("CUENTISTA")
+  tinta                   Int       @default(10)
+  puntos                  Int       @default(0)
+  nivel                   String    @default("Principiante")
   casa                    String?
   generoFavorito          String?
   escritorFavorito        String?
-  victorias               Int              @default(0)
-  createdAt               DateTime         @default(now())
-  updatedAt               DateTime         @updatedAt
-  puntosCasa              Int              @default(0)
+  victorias               Int       @default(0)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  puntosCasa              Int       @default(0)
   lastParticipation       DateTime?
-  streak                  Int              @default(0)
+  streak                  Int       @default(0)
   bio                     String?
   nombre                  String?
-  juramentoFirmado        Boolean          @default(false)
-  isBanned                Boolean          @default(false)
+  juramentoFirmado        Boolean   @default(false)
+  isBanned                Boolean   @default(false)
   muteUntil               DateTime?
   especialidad            String?
   ultimoVotoReset         DateTime?
-  votosHoy                Int              @default(0)
+  votosHoy                Int       @default(0)
   founderNumber           Int?
-  isFounder               Boolean          @default(false)
-  stripeCustomerId        String?          @unique
-  stripeSubscriptionId    String?          @unique
-  subscriptionStatus      String           @default("INACTIVE")
-  hasCompletedOnboarding  Boolean          @default(false)
-  hasPerformedFirstAction Boolean          @default(false)
+  isFounder               Boolean   @default(false)
+  stripeCustomerId        String?   @unique
+  stripeSubscriptionId    String?   @unique
+  subscriptionStatus      String    @default("INACTIVE")
+  hasCompletedOnboarding  Boolean   @default(false)
+  hasPerformedFirstAction Boolean   @default(false)
   lastDailyGift           DateTime?
-  lossStreak              Int              @default(0)
-  isFirstPurchase         Boolean          @default(true)
-  totalSpent              Float            @default(0.0)
-  perfilVistas            Int              @default(0)
-  logros                  String[]         @default([])
+  lossStreak              Int       @default(0)
+  isFirstPurchase         Boolean   @default(true)
+  totalSpent              Float     @default(0.0)
+  perfilVistas            Int       @default(0)
+  logros                  String[]  @default([])
   referredBy              String?
-  referralRewardClaimed   Boolean          @default(false)
-  activeBoost             Float?           @default(0)
+  referralRewardClaimed   Boolean   @default(false)
+  activeBoost             Float?    @default(0)
   boostExpiresAt          DateTime?
-  videoUploadsToday       Int              @default(0)
+  videoUploadsToday       Int       @default(0)
   lastVideoUpload         DateTime?
-  
+  entradasTotales         Int       @default(0)
+  rescatesUsados          Int       @default(0)
+  lastRescueAt            DateTime?
+  lastReactivationAt      DateTime?
+
   // PRESTIGE IDENTITY
-  activeFrameId           String?
-  activeBadgeId           String?
-  activeTitleId           String?
+  activeFrameId String?
+  activeBadgeId String?
+  activeTitleId String?
+
+  // PRESTIGE ENGINE (FASE 7)
+  successfulReferrals Int    @default(0)
+  influenceRank       String @default("Silencioso")
 
   // PRESTIGE ECONOMY (PHASE 14)
-  rank                    String           @default("Aspirante")
-  elo                     Int              @default(1000)
-  precision               Float            @default(0)
+  rank      String @default("Aspirante")
+  elo       Int    @default(1000)
+  precision Float  @default(0)
 
-  accounts                Account[]
-  AuditLog                AuditLog[]
-  juezDe                  Concurso[]       @relation("JuezConcurso")
-  Draft                   Draft[]
-  entradas                Entrada[]
-  mensajes                Mensaje[]
-  PurchaseIntent          PurchaseIntent[]
-  sessions                Session[]
-  TiendaItem              TiendaItem[]
-  inventory               Inventory[]
-  UserMision              UserMision[]
-  Voto                    Voto[]
+  accounts       Account[]
+  AuditLog       AuditLog[]
+  juezDe         Concurso[]       @relation("JuezConcurso")
+  Draft          Draft[]
+  entradas       Entrada[]
+  mensajes       Mensaje[]
+  PurchaseIntent PurchaseIntent[]
+  sessions       Session[]
+  TiendaItem     TiendaItem[]
+  inventory      Inventory[]
+  UserMision     UserMision[]
+  Voto           Voto[]
 }
 
 model GuestSession {
@@ -159,36 +167,42 @@ model Concurso {
   rewardMultiplier Float     @default(1.0)
   expiresAt        DateTime?
   isFlash          Boolean   @default(false)
+  minElo           Int       @default(0)
+  maxElo           Int       @default(9999)
+  esParaNovatos    Boolean   @default(false)
   juez             User?     @relation("JuezConcurso", fields: [juezId], references: [id])
   Draft            Draft[]
   entradas         Entrada[]
 }
 
 model Entrada {
-  id           String   @id @default(uuid())
-  concursoId   String
-  userId       String
-  texto        String
-  participante String
-  suspicious   Boolean  @default(false)
-  tabSwitches  Int      @default(0)
-  puntajeTotal Float    @default(0)
-  votos        Int      @default(0)
-  timestamp    DateTime @default(now())
-  updatedAt    DateTime @updatedAt @default(now())
-  expertScore  Float    @default(0)
-  popularScore Float    @default(0)
-  isPublished  Boolean  @default(false)
-  isFeatured   Boolean  @default(false)
-  vistas       Int      @default(0)
-  boostApplied Boolean  @default(false)
-  videoUrl     String?
+  id            String   @id @default(uuid())
+  concursoId    String
+  userId        String
+  texto         String
+  participante  String
+  suspicious    Boolean  @default(false)
+  tabSwitches   Int      @default(0)
+  puntajeTotal  Float    @default(0)
+  votos         Int      @default(0)
+  timestamp     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  expertScore   Float    @default(0)
+  popularScore  Float    @default(0)
+  isPublished   Boolean  @default(false)
+  isFeatured    Boolean  @default(false)
+  vistas        Int      @default(0)
+  boostApplied  Boolean  @default(false)
+  videoUrl      String?
   judgeVideoUrl String?
-  judgeComment String?
-  videoStatus  String   @default("pending")
-  concurso     Concurso @relation(fields: [concursoId], references: [id], onDelete: Cascade)
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Voto         Voto[]
+  judgeComment  String?
+  videoStatus   String   @default("pending")
+  premios       String[] @default([])
+  shareClaimed  Boolean  @default(false)
+  isTraining    Boolean  @default(false)
+  concurso      Concurso @relation(fields: [concursoId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Voto          Voto[]
 
   @@unique([userId, concursoId])
   @@index([concursoId])
@@ -204,62 +218,62 @@ model Mensaje {
 }
 
 model TiendaItem {
-  id             String     @id @default(cuid())
+  id             String      @id @default(cuid())
   nombre         String
   descripcion    String
   precio         Float
   precioTinta    Int?
-  tipo           String     @default("tinta")
+  tipo           String      @default("tinta")
   cantidad       Int?
   imagenUrl      String?
   enlacePdf      String?
   enlaceEpub     String?
-  disponible     Boolean    @default(true)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  disponible     Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
   casaRequerida  String?
-  categoria      String?    @default("Tinta")
+  categoria      String?     @default("Tinta")
   metadata       Json?
   rangoRequerido String?
   authorId       String?
-  commission     Float      @default(0.20)
-  stripePriceId  String?    @unique
-  User           User?      @relation(fields: [authorId], references: [id])
+  commission     Float       @default(0.20)
+  stripePriceId  String?     @unique
+  User           User?       @relation(fields: [authorId], references: [id])
   inventory      Inventory[]
 }
 
 model StoreItem {
-  id             String      @id @default(cuid())
-  name           String
-  description    String?
-  type           String      // "frame" | "badge" | "title" | "boost"
-  priceTinta     Int         @default(0)
-  priceMXN       Int?
-  rarity         String      @default("common") // common, rare, epic, legendary
-  stock          Int?        // Nullable means infinite
-  isActive       Boolean     @default(true)
-  metadata       Json?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  inventory      Inventory[]
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  type        String // "frame" | "badge" | "title" | "boost"
+  priceTinta  Int         @default(0)
+  priceMXN    Int?
+  rarity      String      @default("common") // common, rare, epic, legendary
+  stock       Int? // Nullable means infinite
+  isActive    Boolean     @default(true)
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  inventory   Inventory[]
 }
 
 model Inventory {
-  id          String      @id @default(cuid())
-  userId      String
+  id           String   @id @default(cuid())
+  userId       String
   tiendaItemId String?
-  storeItemId String?
-  adquiridoEl DateTime    @default(now())
-  cantidad    Int         @default(1)
-  status      String      @default("active")
-  
-  // Prestige state
-  equipped    Boolean     @default(false)
-  equippedAt  DateTime?
+  storeItemId  String?
+  adquiridoEl  DateTime @default(now())
+  cantidad     Int      @default(1)
+  status       String   @default("active")
 
-  tiendaItem  TiendaItem? @relation(fields: [tiendaItemId], references: [id], onDelete: Cascade)
-  storeItem   StoreItem?  @relation(fields: [storeItemId], references: [id], onDelete: Cascade)
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Prestige state
+  equipped   Boolean   @default(false)
+  equippedAt DateTime?
+
+  tiendaItem TiendaItem? @relation(fields: [tiendaItemId], references: [id], onDelete: Cascade)
+  storeItem  StoreItem?  @relation(fields: [storeItemId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tiendaItemId], name: "userId_tiendaItemId")
   @@unique([userId, storeItemId], name: "userId_storeItemId")
@@ -369,8 +383,26 @@ model Waitlist {
   username  String?
   timestamp DateTime @default(now())
 }
+
 model StripeEvent {
   id        String   @id @default(cuid())
   eventId   String   @unique
   createdAt DateTime @default(now())
+}
+
+// FASE 7: Loop Viral — Tracking de eventos del Prestige Engine
+// Tabla ligera, solo para las métricas del loop de adquisición
+model ReferralEvent {
+  id        String   @id @default(cuid())
+  event     String // "seal_shown" | "seal_shared" | "referral_click" | "referral_registered" | "referral_arena" | "rank_unlocked"
+  invocador String? // username del que comparte
+  referido  String? // username del que llegó
+  platform  String? // "whatsapp" | "twitter" | "native" | "copy"
+  entradaId String?
+  metadata  Json? // datos adicionales libres
+  createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([invocador])
+  @@index([createdAt])
 }

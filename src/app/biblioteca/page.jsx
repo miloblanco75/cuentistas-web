@@ -57,6 +57,35 @@ export default async function BibliotecaPage() {
                                         </p>
                                     </div>
                                 </div>
+
+                                {/* MICROVICTORIAS / GALARDONES */}
+                                {obra.premios && obra.premios.length > 0 && (
+                                    <div className="flex flex-wrap gap-3 pt-4">
+                                        {obra.premios.map((premio, idx) => {
+                                            const colors = {
+                                                "Favorito del Tribunal": "bg-yellow-500/10 text-yellow-500 border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]",
+                                                "Rozaste el Podio": "bg-gray-400/10 text-gray-300 border-gray-400/30",
+                                                "Top 10%": "bg-purple-500/10 text-purple-400 border-purple-500/30",
+                                                "Favorito del Público": "bg-blue-500/10 text-blue-400 border-blue-500/30",
+                                                "Sangre Nueva": "bg-red-500/10 text-red-400 border-red-500/30",
+                                                "Hierro Persistente": "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                            };
+                                            const colorClass = colors[premio] || "bg-white/5 text-gray-300 border-white/10";
+                                            return (
+                                                <span key={idx} className={`text-[9px] tracking-widest uppercase font-bold px-3 py-1.5 rounded border ${colorClass} flex items-center gap-2`}>
+                                                    {premio === "Favorito del Tribunal" && "👑"}
+                                                    {premio === "Favorito del Público" && "👁️"}
+                                                    {premio === "Top 10%" && "🔥"}
+                                                    {premio === "Sangre Nueva" && "🩸"}
+                                                    {premio === "Rozaste el Podio" && "⚔️"}
+                                                    {premio === "Hierro Persistente" && "🛡️"}
+                                                    {premio}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
                                 <p className="text-xl text-zinc-400 font-serif leading-relaxed line-clamp-3 italic">"{obra.texto}"</p>
                                 
                                 <div className="pt-4">

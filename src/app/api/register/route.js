@@ -32,7 +32,7 @@ export async function POST(request) {
                 generoFavorito: genero,
                 casa: casa,
                 rol: "Escritor",
-                tinta: 60,
+                tinta: 15,
                 puntos: 0,
                 nivel: "Principiante"
             }

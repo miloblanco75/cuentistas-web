@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/components/UserContext";
 import ManifestoOverlay from "@/components/Identity/ManifestoOverlay";
+import PrestigeSealModal from "@/components/PrestigeSealModal";
 
 // Iconos dorados de trazo fino
 const Icons = {
@@ -62,6 +63,7 @@ export default function PlatformHub() {
     const { data: session, status } = useSession();
     const { userData, loading: userLoading } = useUser();
     const router = useRouter();
+    const [selloEntrada, setSelloEntrada] = useState(null); // FASE 7: Share Moment
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -71,6 +73,25 @@ export default function PlatformHub() {
             return () => clearTimeout(timer);
         }
     }, [status, router]);
+
+    // FASE 7: Detectar victoria no reclamada (Share Moment automático)
+    useEffect(() => {
+        if (status !== "authenticated") return;
+        const checkUnclaimedSeal = async () => {
+            try {
+                const res = await fetch("/api/entradas/unclaimed-seal");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.entrada) setSelloEntrada(data.entrada);
+                }
+            } catch (e) {
+                // Silencioso — no bloquear el hub si falla
+            }
+        };
+        // Pequeño delay para no interferir con la carga inicial
+        const t = setTimeout(checkUnclaimedSeal, 2000);
+        return () => clearTimeout(t);
+    }, [status]);
 
     const isMaster = userData?.rol === "Maestro";
 
@@ -114,6 +135,16 @@ export default function PlatformHub() {
     return (
         <main className="min-h-screen bg-[#050508] text-[#e0d7c6] p-6 md:p-24 lg:p-32 animate-elegant relative">
             {userData && !userData.casa && <ManifestoOverlay />}
+            
+            {/* FASE 7: SHARE MOMENT — Sello de Victoria */}
+            {selloEntrada && (
+                <PrestigeSealModal
+                    entrada={selloEntrada}
+                    username={userData?.username || "Anónimo"}
+                    elo={userData?.elo || 1000}
+                    onClose={() => setSelloEntrada(null)}
+                />
+            )}
             {/* Aura de Poder para el Maestro */}
             {isMaster && (
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent shadow-[0_0_20px_rgba(212,175,55,0.5)]"></div>

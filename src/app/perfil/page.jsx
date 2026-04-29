@@ -239,9 +239,51 @@ export default function PerfilPage() {
                     </div>
                 </section>
 
-                {/* 4. MEDALS & ACHIEVEMENTS (Simplified) */}
-                <section className="pt-20 text-center">
-                    <p className="text-[9px] text-gray-500 uppercase tracking-[0.5em] italic">Tu historia apenas comienza en la Arena...</p>
+                {/* 4. TROPHY ROOM / CÁMARA DE GALARDONES (FASE 5) */}
+                <section className="space-y-12">
+                    <div className="flex items-center gap-6">
+                        <h2 className="text-2xl font-serif italic text-white/80">Galardones del Tribunal</h2>
+                        <div className="h-[1px] flex-1 bg-white/5"></div>
+                    </div>
+
+                    {user.entradas && user.entradas.some(e => e.premios && e.premios.length > 0) ? (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {user.entradas.flatMap(e => (e.premios || []).map(p => ({ premio: p, concurso: e.concurso?.titulo }))).map((galardon, idx) => {
+                                const colors = {
+                                    "Favorito del Tribunal": "border-yellow-500/50 bg-yellow-500/5 text-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.15)]",
+                                    "Rozaste el Podio": "border-gray-400/50 bg-gray-400/5 text-gray-300",
+                                    "Top 10%": "border-purple-500/50 bg-purple-500/5 text-purple-400",
+                                    "Favorito del Público": "border-blue-500/50 bg-blue-500/5 text-blue-400",
+                                    "Sangre Nueva": "border-red-500/50 bg-red-500/5 text-red-400",
+                                    "Hierro Persistente": "border-emerald-500/50 bg-emerald-500/5 text-emerald-400"
+                                };
+                                const icons = {
+                                    "Favorito del Tribunal": "👑",
+                                    "Rozaste el Podio": "⚔️",
+                                    "Top 10%": "🔥",
+                                    "Favorito del Público": "👁️",
+                                    "Sangre Nueva": "🩸",
+                                    "Hierro Persistente": "🛡️"
+                                };
+                                const colorClass = colors[galardon.premio] || "border-white/20 bg-white/5 text-white";
+                                const icon = icons[galardon.premio] || "🏆";
+                                
+                                return (
+                                    <div key={idx} className={`royal-card p-6 flex flex-col items-center justify-center text-center space-y-4 ${colorClass}`}>
+                                        <span className="text-3xl">{icon}</span>
+                                        <div>
+                                            <p className="text-[10px] tracking-widest uppercase font-black">{galardon.premio}</p>
+                                            <p className="text-[8px] text-white/40 tracking-wider mt-1 line-clamp-1">{galardon.concurso || "Arena Clasificatoria"}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="royal-card p-12 text-center border-white/5">
+                            <p className="text-gray-500 italic text-sm">Aún no has reclamado ningún galardón. La arena aguarda.</p>
+                        </div>
+                    )}
                 </section>
             </div>
 

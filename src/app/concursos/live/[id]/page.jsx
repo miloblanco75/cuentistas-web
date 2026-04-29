@@ -47,6 +47,9 @@ export default function LiveContestPage() {
                             const elapsed = Math.floor((Date.now() - start) / 1000);
                             const remaining = Math.max(0, dataC.concurso.duration - elapsed);
                             setTimeLeft(remaining);
+                            if (remaining <= 0) {
+                                setIsFinished(true);
+                            }
                         }
                     }
                     if (dataC.concurso.status === "finished") setIsFinished(true);
