@@ -20,8 +20,12 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        // Asegurar que exista la "Arena" eterna del Retiro para cumplir integridad referencial
-        const retiroId = "retiro-eterno";
+        // El Retiro usa una "sesión diaria" — un concurso por día por usuario
+        // Esto evita la constraint única [userId, concursoId] en Entrada
+        // que bloqueaba el segundo intento del mismo día con concurso "retiro-eterno"
+        const today = new Date().toISOString().slice(0, 10); // "2026-04-29"
+        const retiroId = `retiro-${userId}-${today}`;
+
         await prisma.concurso.upsert({
             where: { id: retiroId },
             update: {},
@@ -32,30 +36,42 @@ export async function POST(request) {
                 status: "training",
                 tipo: "entrenamiento",
                 costoTinta: 0,
-                duration: 999999
+                duration: 86400
             }
         });
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
 
-        // Guardar la obra como Entrenamiento y dar XP
-        await prisma.$transaction(async (tx) => {
-            await tx.entrada.create({
-                data: {
-                    concursoId: retiroId,
-                    userId,
-                    texto,
-                    participante: user.username || user.nombre || "Anónimo",
-                    isTraining: true
-                }
-            });
+        // Si ya escribió hoy en el Retiro, permitir sobrescribir (update)
+        const existing = await prisma.entrada.findFirst({
+            where: { userId, concursoId: retiroId }
+        });
 
-            // Recompensa de Disciplina (XP, pero no Elo ni Tinta)
+        await prisma.$transaction(async (tx) => {
+            if (existing) {
+                // Segunda sesión del día: actualizar la entrada existente
+                await tx.entrada.update({
+                    where: { id: existing.id },
+                    data: { texto, updatedAt: new Date() }
+                });
+            } else {
+                // Primera sesión del día
+                await tx.entrada.create({
+                    data: {
+                        concursoId: retiroId,
+                        userId,
+                        texto,
+                        participante: user.username || user.nombre || "Anónimo",
+                        isTraining: true
+                    }
+                });
+            }
+
             await tx.user.update({
                 where: { id: userId },
                 data: {
-                    puntos: { increment: 15 }, // 15 XP por disciplina
-                    lastParticipation: new Date() // FASE 6: Tracking estructural
+                    puntos: { increment: 15 },
+                    lastParticipation: new Date()
                 }
             });
         });
