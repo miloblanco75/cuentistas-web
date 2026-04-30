@@ -47,7 +47,6 @@ export async function GET(request) {
       }
 
       const concursos = await prisma.concurso.findMany({
-          where: { tipo: { not: "entrenamiento" } },
           orderBy: { createdAt: 'desc' }
       });
 
