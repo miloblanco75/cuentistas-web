@@ -4,14 +4,17 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 
 export async function POST(request) {
+    console.log("📥 Recibida petición en El Retiro");
     try {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) {
+            console.warn("❌ No session in Retiro");
             return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
         }
 
         const userId = session.user.id;
         const { texto } = await request.json();
+        console.log(`✍️ Usuario ${userId} enviando texto de ${texto?.length} chars`);
 
         if (!texto || texto.length < 50) {
             return NextResponse.json({ 
@@ -20,14 +23,12 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        // El Retiro usa un contenedor técnico invisible
         const retiroId = "retiro-eterno";
 
+        console.log("🔄 Upserting concurso retiro-eterno...");
         await prisma.concurso.upsert({
             where: { id: retiroId },
-            update: {
-                status: "active", // Asegurar que siempre esté disponible
-            },
+            update: { status: "active" },
             create: {
                 id: retiroId,
                 titulo: "El Retiro",
@@ -37,28 +38,26 @@ export async function POST(request) {
                 temaGeneral: "Escritura Libre",
                 temaExacto: "Santuario de Práctica",
                 costoTinta: 0,
-                duration: 999999999 // Virtualmente eterno
+                duration: 999999999
             }
         });
 
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-
-        // En El Retiro, cada usuario tiene una entrada persistente que se actualiza
+        console.log("🔍 Buscando entrada existente...");
         const existing = await prisma.entrada.findUnique({
             where: {
                 userId_concursoId: { userId, concursoId: retiroId }
             }
         });
 
+        console.log(existing ? "📝 Actualizando entrada..." : "🆕 Creando nueva entrada...");
         await prisma.$transaction(async (tx) => {
             if (existing) {
-                // Actualizar la entrada de entrenamiento existente
                 await tx.entrada.update({
                     where: { id: existing.id },
                     data: { texto, updatedAt: new Date() }
                 });
             } else {
-                // Crear la entrada de entrenamiento inicial
+                const user = await tx.user.findUnique({ where: { id: userId } });
                 await tx.entrada.create({
                     data: {
                         concursoId: retiroId,
@@ -70,7 +69,6 @@ export async function POST(request) {
                 });
             }
 
-            // PROGRESO: Solo XP (puntos). 0 Elo, 0 Tinta, 0 entradasTotales.
             await tx.user.update({
                 where: { id: userId },
                 data: {
@@ -80,7 +78,7 @@ export async function POST(request) {
             });
         });
 
-        // Respuestas de Feedback Mítico
+        console.log("✅ Retiro guardado con éxito");
         const oraculoFeedback = [
             "Aquí no compites. Aquí perfeccionas.",
             "El Oráculo observa tu constancia. Sigue forjando.",
@@ -90,13 +88,10 @@ export async function POST(request) {
         ];
         const feedback = oraculoFeedback[Math.floor(Math.random() * oraculoFeedback.length)];
 
-        return NextResponse.json({ 
-            ok: true, 
-            message: feedback 
-        });
+        return NextResponse.json({ ok: true, message: feedback });
 
     } catch (error) {
-        console.error("Retiro Error:", error);
+        console.error("🔥 Retiro Error Critico:", error);
         return NextResponse.json({ ok: false, error: "El santuario está bajo mantenimiento místico." }, { status: 500 });
     }
 }
