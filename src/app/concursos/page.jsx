@@ -53,10 +53,12 @@ export default function ConcursosPage() {
               const userNivelIdx = ["Principiante", "Intermedio", "Avanzado", "Maestro", "Legendario"].indexOf(user.nivel);
               const contestNivelIdx = ["Principiante", "Intermedio", "Avanzado", "Maestro", "Legendario"].indexOf(c.categoria);
               
-              // Lógica de Bloqueo Elo/Rango
-              const isHighEloLocked = isNovato && !c.esParaNovatos && c.minElo > user.elo;
-              const isLevelLocked = userNivelIdx < contestNivelIdx;
-              const isInkLocked = user.tinta < c.costoTinta;
+              const isHighRank = user.rol === "ARCHITECT" || user.nivel === "Soberano Arquitecto" || user.rol === "Maestro";
+              
+              // Lógica de Bloqueo Elo/Rango (Bypass para roles altos)
+              const isHighEloLocked = !isHighRank && (isNovato && !c.esParaNovatos && c.minElo > user.elo);
+              const isLevelLocked = !isHighRank && (userNivelIdx !== -1 && userNivelIdx < contestNivelIdx);
+              const isInkLocked = !isHighRank && (user.tinta < c.costoTinta);
               
               const locked = isHighEloLocked || isLevelLocked || isInkLocked;
               

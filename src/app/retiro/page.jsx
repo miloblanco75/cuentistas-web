@@ -14,8 +14,8 @@ export default function RetiroPage() {
 
     if (loading) return null;
 
-    if (!userData) {
-        router.push("/auth/signin");
+    if (!userData || userData.rol === "GUEST") {
+        router.push("/login");
         return null;
     }
 

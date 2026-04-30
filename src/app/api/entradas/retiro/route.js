@@ -27,23 +27,6 @@ export async function POST(request) {
 
         const retiroId = "retiro-eterno";
 
-        console.log("🔄 Upserting concurso retiro-eterno...");
-        await prisma.concurso.upsert({
-            where: { id: retiroId },
-            update: { status: "active" },
-            create: {
-                id: retiroId,
-                titulo: "El Retiro",
-                descripcion: "El Santuario donde se forjan los peligrosos.",
-                status: "active",
-                tipo: "entrenamiento",
-                temaGeneral: "Escritura Libre",
-                temaExacto: "Santuario de Práctica",
-                costoTinta: 0,
-                duration: 999999999
-            }
-        });
-
         console.log("🔍 Buscando entrada existente...");
         const existing = await prisma.entrada.findUnique({
             where: {

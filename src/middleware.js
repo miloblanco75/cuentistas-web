@@ -1,18 +1,36 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
-export default async function middleware(req, ev) {
-  // 1. TRAMPA DE REFERRALS (FASE 7)
-  const ref = req.nextUrl.searchParams.get("ref");
-  let res = NextResponse.next();
+export default withAuth(
+  function middleware(req) {
+    // 1. TRAMPA DE REFERRALS (FASE 7)
+    const ref = req.nextUrl.searchParams.get("ref");
+    let res = NextResponse.next();
 
-  // 2. ENVOLTURA NEXT-AUTH
-  const authMiddleware = withAuth({
+    // Si atrapamos un referido, lo guardamos en una cookie con caducidad larga (30 días)
+    if (ref) {
+      res.cookies.set("referrer", ref, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30, // 30 días
+        httpOnly: false, // Permitimos lectura en cliente si hiciera falta
+        sameSite: 'lax'
+      });
+    }
+
+    return res;
+  },
+  {
+    pages: {
+      signIn: "/login",
+    },
     callbacks: {
       authorized: ({ token, req: authReq }) => {
         const { pathname } = authReq.nextUrl;
+        
+        // Exact match para el home
+        if (pathname === "/") return true;
+
         const publicPaths = [
-          "/",
           "/login",
           "/hub", 
           "/arena", 
@@ -33,24 +51,8 @@ export default async function middleware(req, ev) {
         return !!token;
       },
     },
-  });
-
-  // Ejecutamos auth middleware para obtener la respuesta base de redirección si aplica
-  const authRes = await authMiddleware(req, ev);
-  if (authRes) res = authRes;
-
-  // Si atrapamos un referido, lo guardamos en una cookie con caducidad larga (30 días)
-  if (ref) {
-    res.cookies.set("referrer", ref, {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 días
-      httpOnly: false, // Permitimos lectura en cliente si hiciera falta
-      sameSite: 'lax'
-    });
   }
-
-  return res;
-}
+);
 
 export const config = {
   matcher: [
