@@ -30,15 +30,17 @@ export const authOptions = {
     })
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      console.log(`📡 Intento de Login [${account.provider}]:`, user.email);
+      return true;
+    },
     async jwt({ token, user, trigger, session }) {
-      // Prioridad: Variable de entorno ADMIN_EMAIL
       const adminEmail = process.env.ADMIN_EMAIL || "ermiloblanco75@gmail.com";
       const currentEmail = user?.email || token?.email;
 
       if (currentEmail && currentEmail.toLowerCase().trim() === adminEmail.toLowerCase().trim()) {
         token.rol = "ARCHITECT";
         token.nivel = "Soberano Arquitecto";
-        // V13: Asegurar que el ID se mantenga incluso para el admin hardcoded
         if (user?.id) token.id = user.id;
       } else if (user) {
         token.id = user.id;
@@ -47,7 +49,6 @@ export const authOptions = {
         token.nivel = user.nivel || "Principiante";
       }
       
-      // Soporte para actualizaciones manuales de sesión si es necesario
       if (trigger === "update" && session) {
          return { ...token, ...session.user };
       }
