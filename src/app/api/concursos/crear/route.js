@@ -13,9 +13,10 @@ export async function POST(request) {
         }
 
         const data = await request.json();
+        const isTraining = data.tipo === "entrenamiento" || data.tipo === "retiro";
 
-        if (!data.titulo || !data.temaGeneral || !data.temaExacto) {
-            return NextResponse.json({ ok: false, error: "Faltan campos obligatorios" }, { status: 400 });
+        if (!data.titulo || (!isTraining && (!data.temaGeneral || !data.temaExacto))) {
+            return NextResponse.json({ ok: false, error: "Faltan campos obligatorios (Título y Temas)" }, { status: 400 });
         }
 
         const scheduledTime = data.scheduledTime ? new Date(data.scheduledTime) : null;

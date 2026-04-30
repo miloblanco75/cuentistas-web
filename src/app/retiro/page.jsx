@@ -85,7 +85,7 @@ export default function RetiroPage() {
                 <div className="space-y-2">
                     <p className="text-[10px] tracking-[0.4em] uppercase text-gray-500 font-bold">
                         <span className="w-2 h-2 inline-block bg-gray-500 rounded-full mr-3"></span>
-                        Prueba Silenciosa
+                        Santuario de Escritura
                     </p>
                     <h1 className="text-3xl font-serif italic text-white/90">El Retiro</h1>
                 </div>
@@ -100,7 +100,7 @@ export default function RetiroPage() {
             <div className="flex-1 max-w-5xl mx-auto w-full flex flex-col gap-8 relative">
                 
                 {status === "error" && (
-                    <div className="absolute top-0 left-0 right-0 p-4 bg-red-900/50 border border-red-500/50 text-red-200 text-sm text-center rounded">
+                    <div className="absolute top-0 left-0 right-0 p-4 bg-red-900/50 border border-red-500/50 text-red-200 text-sm text-center rounded z-20">
                         {feedback}
                     </div>
                 )}
@@ -109,7 +109,7 @@ export default function RetiroPage() {
                     <textarea
                         value={texto}
                         onChange={(e) => setTexto(e.target.value)}
-                        placeholder="El Tribunal observa en silencio. Forja tu obra aquí..."
+                        placeholder="Aquí no compites. Aquí perfeccionas. Escribe lo que necesites..."
                         className="w-full h-full bg-transparent border-none outline-none resize-none font-serif text-lg md:text-xl text-white/80 placeholder:text-gray-700 leading-relaxed"
                         disabled={status === "submitting"}
                     />
@@ -121,7 +121,7 @@ export default function RetiroPage() {
 
                 <div className="flex justify-between items-center">
                     <p className="text-xs text-gray-500 italic max-w-md hidden md:block">
-                        El tiempo no existe en este santuario. No arriesgas Elo, ni Sello, ni Prestigio. Solo vienes a volverte peligroso.
+                        El tiempo no existe en este santuario. No arriesgas Elo, ni Tinta. Solo vienes a volverte peligroso a través de la disciplina pura.
                     </p>
 
                     <button
@@ -130,10 +130,10 @@ export default function RetiroPage() {
                         className={`royal-button px-12 py-4 flex items-center gap-4 text-xs ${status === "submitting" ? 'opacity-50' : ''}`}
                     >
                         {status === "submitting" ? (
-                            <span className="animate-pulse">OFRECIENDO...</span>
+                            <span className="animate-pulse">SINCRONIZANDO...</span>
                         ) : (
                             <>
-                                <span>OFRECER AL ORÁCULO</span>
+                                <span>GUARDAR PROGRESO</span>
                                 <Send size={16} />
                             </>
                         )}

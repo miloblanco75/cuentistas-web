@@ -9,6 +9,7 @@ export default async function BibliotecaPage() {
     // HOTFIX 9: Master Resilience Polish
     const obras = await prisma.entrada.findMany({
         where: {
+            isTraining: false,
             OR: [
                 { concurso: { status: "finished" } },
                 { concurso: { status: "active" } },

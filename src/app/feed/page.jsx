@@ -19,6 +19,7 @@ export default async function FeedPage() {
     // Hardened Quality Query for Zero-Regression Launch
     const entries = await prisma.entrada.findMany({
         where: {
+            isTraining: false,
             OR: [
                 { videoUrl: null }, // Show all text-only entries
                 { AND: [{ videoUrl: { not: null } }, { videoStatus: "approved" }] } // Only approved videos

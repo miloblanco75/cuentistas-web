@@ -20,42 +20,45 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        // El Retiro usa una "sesión diaria" — un concurso por día por usuario
-        // Esto evita la constraint única [userId, concursoId] en Entrada
-        // que bloqueaba el segundo intento del mismo día con concurso "retiro-eterno"
-        const today = new Date().toISOString().slice(0, 10); // "2026-04-29"
-        const retiroId = `retiro-${userId}-${today}`;
+        // El Retiro usa un contenedor técnico invisible
+        const retiroId = "retiro-eterno";
 
         await prisma.concurso.upsert({
             where: { id: retiroId },
-            update: {},
+            update: {
+                status: "active", // Asegurar que siempre esté disponible
+            },
             create: {
                 id: retiroId,
                 titulo: "El Retiro",
                 descripcion: "El Santuario donde se forjan los peligrosos.",
-                status: "training",
+                status: "active",
                 tipo: "entrenamiento",
+                temaGeneral: "Escritura Libre",
+                temaExacto: "Santuario de Práctica",
                 costoTinta: 0,
-                duration: 86400
+                duration: 999999999 // Virtualmente eterno
             }
         });
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
 
-        // Si ya escribió hoy en el Retiro, permitir sobrescribir (update)
-        const existing = await prisma.entrada.findFirst({
-            where: { userId, concursoId: retiroId }
+        // En El Retiro, cada usuario tiene una entrada persistente que se actualiza
+        const existing = await prisma.entrada.findUnique({
+            where: {
+                userId_concursoId: { userId, concursoId: retiroId }
+            }
         });
 
         await prisma.$transaction(async (tx) => {
             if (existing) {
-                // Segunda sesión del día: actualizar la entrada existente
+                // Actualizar la entrada de entrenamiento existente
                 await tx.entrada.update({
                     where: { id: existing.id },
                     data: { texto, updatedAt: new Date() }
                 });
             } else {
-                // Primera sesión del día
+                // Crear la entrada de entrenamiento inicial
                 await tx.entrada.create({
                     data: {
                         concursoId: retiroId,
@@ -67,6 +70,7 @@ export async function POST(request) {
                 });
             }
 
+            // PROGRESO: Solo XP (puntos). 0 Elo, 0 Tinta, 0 entradasTotales.
             await tx.user.update({
                 where: { id: userId },
                 data: {
@@ -76,13 +80,13 @@ export async function POST(request) {
             });
         });
 
-        // Respuestas de Feedback Mítico Aleatorias
+        // Respuestas de Feedback Mítico
         const oraculoFeedback = [
-            "El Oráculo detecta progreso. Tu pluma es más afilada hoy.",
-            "El Tribunal aún no te mira... pero pronto lo hará.",
-            "La tensión narrativa fluye mejor. Sigue forjando.",
-            "Tu apertura tiene potencial peligroso. Descansa y vuelve mañana.",
-            "La constancia es la única magia real. El santuario reconoce tu esfuerzo."
+            "Aquí no compites. Aquí perfeccionas.",
+            "El Oráculo observa tu constancia. Sigue forjando.",
+            "Tu pluma se vuelve más peligrosa con cada palabra.",
+            "El santuario reconoce tu disciplina.",
+            "La maestría es el único premio que importa aquí."
         ];
         const feedback = oraculoFeedback[Math.floor(Math.random() * oraculoFeedback.length)];
 
@@ -93,6 +97,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error("Retiro Error:", error);
-        return NextResponse.json({ ok: false, error: "El santuario está colapsando." }, { status: 500 });
+        return NextResponse.json({ ok: false, error: "El santuario está bajo mantenimiento místico." }, { status: 500 });
     }
 }
