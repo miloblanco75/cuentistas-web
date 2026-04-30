@@ -12,6 +12,7 @@ export default async function middleware(req, ev) {
       authorized: ({ token, req: authReq }) => {
         const { pathname } = authReq.nextUrl;
         const publicPaths = [
+          "/",
           "/login",
           "/hub", 
           "/arena", 
