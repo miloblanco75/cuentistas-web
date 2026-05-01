@@ -124,7 +124,7 @@ export default function JudgeControlPage() {
                                     fetchStatus();
                                     alert("Calificación guardada con éxito 🔱");
                                 }
-                            }}
+                            } : null}
                         />
                     </div>
                 </div>
