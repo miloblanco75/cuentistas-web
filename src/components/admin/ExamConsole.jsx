@@ -129,14 +129,14 @@ export default function ExamConsole() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-gold text-black font-bold text-[10px] tracking-[0.4em] py-5 uppercase hover:bg-amber-400 transition-all flex items-center justify-center gap-3"
+            className="w-full bg-gold text-black font-bold text-[11px] tracking-[0.4em] py-6 uppercase hover:bg-amber-400 transition-all flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(212,175,55,0.2)]"
           >
-            {loading ? "Transmitiendo al Gran Archivo..." : "Activar Protocolo de Examen"}
+            {loading ? "Sincronizando con el Gran Archivo..." : "Crear y Publicar Examen 🏛️"}
             <Plus size={16} />
           </button>
 
           {msg && (
-            <div className={`p-4 text-[10px] tracking-widest uppercase flex items-center gap-3 ${msg.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+            <div className={`p-5 text-[10px] tracking-widest uppercase flex items-center gap-3 ${msg.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
               {msg.type === 'success' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
               {msg.text}
             </div>
@@ -144,23 +144,37 @@ export default function ExamConsole() {
         </form>
       </div>
 
-      {/* Preview Info */}
+      {/* Preview Info & Secondary Action */}
       <div className="lg:col-span-2 space-y-8">
-        <div className="border border-gold/10 bg-gold/5 p-8 space-y-6">
-          <h4 className="text-xs font-bold tracking-widest uppercase text-gold">Integridad del Examen</h4>
-          <div className="space-y-4">
+        <div className="border border-gold/10 bg-gold/5 p-8 space-y-8 sticky top-24">
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold tracking-widest uppercase text-gold">Estado de la Forja</h4>
+            <p className="text-[9px] opacity-40 uppercase tracking-[0.2em]">Listo para el despliegue institucional</p>
+          </div>
+
+          <button 
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full bg-white/5 border border-gold/40 text-gold font-bold text-[9px] tracking-[0.3em] py-4 uppercase hover:bg-gold hover:text-black transition-all flex items-center justify-center gap-2"
+          >
+            {loading ? "..." : "Lanzar Ahora 🔱"}
+          </button>
+
+          <div className="h-[1px] bg-white/5"></div>
+
+          <div className="space-y-6">
             <div className="flex gap-4 items-start">
                <div className="p-3 bg-gold/10 rounded-full"><FileText size={16} className="text-gold" /></div>
                <div>
                   <p className="text-[10px] font-bold text-white uppercase mb-1">Caja de Cristal Activada</p>
-                  <p className="text-[9px] opacity-60 leading-relaxed uppercase tracking-wider">El aplicador podrá ver el texto del alumno letra por letra y recibirá alertas de copiado.</p>
+                  <p className="text-[9px] opacity-60 leading-relaxed uppercase tracking-wider">Monitoreo síncrono letra por letra.</p>
                </div>
             </div>
             <div className="flex gap-4 items-start">
                <div className="p-3 bg-gold/10 rounded-full"><Plus size={16} className="text-gold" /></div>
                <div>
-                  <p className="text-[10px] font-bold text-white uppercase mb-1">Multicapa de Control</p>
-                  <p className="text-[9px] opacity-60 leading-relaxed uppercase tracking-wider">Se registrarán salidas de pestaña y uso de portapapeles externo.</p>
+                  <p className="text-[10px] font-bold text-white uppercase mb-1">Detección de Fraude</p>
+                  <p className="text-[9px] opacity-60 leading-relaxed uppercase tracking-wider">Alertas de tab-switching y ráfagas sospechosas.</p>
                </div>
             </div>
           </div>
