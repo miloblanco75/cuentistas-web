@@ -103,6 +103,7 @@ async function main() {
       temaGeneral: "Escritura Libre",
       temaExacto: "Santuario de Práctica",
       costoTinta: 0,
+      startTime: new Date(),
       duration: 999999999, // Larga duración segura (< MAX_INT Postgres)
       minElo: 0,
       maxElo: 9999,

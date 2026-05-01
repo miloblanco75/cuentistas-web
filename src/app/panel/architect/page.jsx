@@ -4,16 +4,18 @@ import React, { useState, useEffect } from "react";
 import { 
   Activity, Users, Shield, Zap, Database, Terminal, 
   Pause, Play, UserMinus, Star, AlertTriangle, Hammer,
-  ArrowUpRight, Gavel, BarChart3, Clock
+  ArrowUpRight, Gavel, BarChart3, Clock, BookOpen
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const HouseDistributionChart = dynamic(() => import("@/components/admin/ArchitectCharts").then(m => m.HouseDistributionChart), { ssr: false });
 const ActivityChart = dynamic(() => import("@/components/admin/ArchitectCharts").then(m => m.ActivityChart), { ssr: false });
 import MarketConsole from "@/components/admin/MarketConsole";
+import ExamConsole from "@/components/admin/ExamConsole";
 import { pusherClient } from "@/lib/pusherClient";
 
 const TABS = [
   { id: "arena", label: "Arena Monitor", icon: Activity },
+  { id: "exams", label: "Exámenes (B2B)", icon: BookOpen },
   { id: "economy", label: "The Treasury", icon: Zap },
   { id: "moderation", label: "The High Court", icon: Gavel },
   { id: "analytics", label: "Ecosystem Health", icon: BarChart3 }
@@ -262,6 +264,10 @@ export default function ArchitectVault() {
                   </div>
               </div>
             </div>
+          )}
+
+          {activeTab === "exams" && (
+            <ExamConsole />
           )}
 
           {activeTab === "analytics" && (

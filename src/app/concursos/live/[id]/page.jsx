@@ -263,11 +263,36 @@ export default function LiveContestPage() {
                         )}
 
                         <div className="space-y-8 animate-elegant">
-                            {!isCreatorMode && <p className="text-[10px] tracking-[0.5em] uppercase text-gold/60 font-sans">Mandato Supremo</p>}
+                            {!isCreatorMode && (
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[10px] tracking-[0.5em] uppercase text-gold/60 font-sans">
+                                        {concurso.isExamen ? "Protocolo de Examen" : "Mandato Supremo"}
+                                    </p>
+                                    {concurso.isExamen && concurso.pdfUrl && (
+                                        <a 
+                                            href={concurso.pdfUrl} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-[9px] tracking-widest uppercase text-white/40 hover:text-gold flex items-center gap-2 border border-white/10 px-4 py-2 transition-all"
+                                        >
+                                            📜 Material de Referencia (PDF)
+                                        </a>
+                                    )}
+                                </div>
+                            )}
                             <div className={`${isCreatorMode ? 'p-8 text-center' : 'p-16 border-l border-gold/30'} royal-card bg-white/[0.01]`}>
-                                <p className={`${isCreatorMode ? 'text-xl' : 'text-4xl'} font-light leading-relaxed italic text-white/90`}>
-                                    "{concurso.temaExacto}"
-                                </p>
+                                {concurso.isExamen && concurso.preguntas ? (
+                                    <div className="space-y-6">
+                                        <h3 className="text-sm tracking-widest uppercase opacity-40 mb-4">— Guía de Evaluación —</h3>
+                                        <p className={`${isCreatorMode ? 'text-xl' : 'text-2xl'} font-light leading-relaxed italic text-white/90 whitespace-pre-wrap`}>
+                                            {concurso.preguntas}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p className={`${isCreatorMode ? 'text-xl' : 'text-4xl'} font-light leading-relaxed italic text-white/90`}>
+                                        "{concurso.temaExacto}"
+                                    </p>
+                                )}
                             </div>
                         </div>
 

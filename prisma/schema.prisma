@@ -158,6 +158,8 @@ model Concurso {
   categoria        String    @default("Principiante")
   costoTinta       Int       @default(0)
   isExamen         Boolean   @default(false)
+  preguntas        String?
+  pdfUrl           String?
   createdAt        DateTime  @default(now())
   juezId           String?
   processed        Boolean   @default(false)

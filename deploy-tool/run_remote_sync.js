@@ -15,7 +15,7 @@ conn.on('ready', () => {
   console.log('✅ Conexión establecida. Iniciando Sincronización Maestra...');
   
   // Script de actualización en el servidor
-  const remoteCommand = 'cd /root/cuentistas-web && git pull origin main && npm run build && npx prisma db seed && node fix-maestro.js && pm2 restart all';
+  const remoteCommand = 'cd /root/cuentistas-web && git pull origin main && npm run build && node fix-maestro.js && pm2 restart all';
 
   conn.exec(remoteCommand, (err, stream) => {
     if (err) throw err;

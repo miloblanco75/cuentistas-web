@@ -25,15 +25,18 @@ export async function POST(request) {
             data: {
                 titulo: data.titulo,
                 descripcion: data.descripcion || "",
-                temaGeneral: data.temaGeneral,
-                temaExacto: data.temaExacto,
+                temaGeneral: data.temaGeneral || "Examen Académico",
+                temaExacto: data.temaExacto || "Evaluación de Competencias",
+                preguntas: data.preguntas || null,
+                pdfUrl: data.pdfUrl || null,
+                isExamen: data.isExamen || false,
                 costoTinta: parseInt(data.costoTinta) || 0,
                 categoria: data.categoria || "Principiante",
                 status: "waiting",
                 scheduledTime: scheduledTime,
                 duration: parseInt(data.duration) || 5400,
                 juezId: data.juezId || null,
-                tipo: data.tipo || "normal"
+                tipo: data.tipo || (data.isExamen ? "examen" : "normal")
             }
         });
 
