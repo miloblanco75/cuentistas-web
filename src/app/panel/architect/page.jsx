@@ -168,18 +168,18 @@ export default function ArchitectVault() {
   );
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6">
       {/* HUD Header Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Active Souls", val: data.analytics?.totalUsers, icon: Users },
           { label: "Stability", val: "99.9%", icon: Shield },
           { label: "Ink Flux", val: "+500/hr", icon: Zap },
           { label: "Today's Tally", val: data.analytics?.activeToday, icon: Clock },
         ].map((stat, i) => (
-           <div key={i} className="border border-gold/10 bg-[#050508]/40 p-6 flex items-center justify-between group hover:border-gold/30 transition-all">
+           <div key={i} className="border border-gold/10 bg-[#050508]/40 p-4 flex items-center justify-between group hover:border-gold/30 transition-all">
               <div className="space-y-1">
-                <p className="text-[9px] tracking-widest text-[#888] uppercase">{stat.label}</p>
+                <p className="text-[11px] tracking-widest text-[#888] uppercase">{stat.label}</p>
                 <p className="text-xl font-bold tracking-tighter group-hover:text-gold">{stat.val}</p>
               </div>
               <stat.icon size={20} className="text-gold/20 group-hover:text-gold" />
@@ -188,7 +188,7 @@ export default function ArchitectVault() {
       </div>
 
       {/* Main Tabs */}
-      <div className="space-y-8">
+      <div className="space-y-6">
         <nav className="flex gap-4 border-b border-white/5">
           {TABS.map(tab => (
             <button
@@ -205,10 +205,10 @@ export default function ArchitectVault() {
         {/* Tab Content */}
         <div className="min-h-[500px]">
           {activeTab === "arena" && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
                 <header className="flex justify-between items-center">
-                    <h2 className="text-xs tracking-widest uppercase gold-gradient-text flex items-center gap-2">
+                    <h2 className="text-sm tracking-widest uppercase gold-gradient-text flex items-center gap-2">
                         <Terminal size={14} /> Live Contest Monitor
                     </h2>
                     <button 
@@ -305,7 +305,7 @@ export default function ArchitectVault() {
         </div>
       </div>
 
-      <footer className="pt-24 border-t border-white/5 flex justify-between items-center opacity-40 text-[9px] tracking-[0.4em] uppercase">
+      <footer className="pt-12 border-t border-white/5 flex justify-between items-center opacity-40 text-[10px] tracking-[0.4em] uppercase">
         <span>ARCHITECT_VAULT_SYSTEMS_ONLINE_</span>
         <span>MMXXVI // Cuentistas OS</span>
       </footer>

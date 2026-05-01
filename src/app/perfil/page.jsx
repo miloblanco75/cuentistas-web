@@ -77,11 +77,11 @@ export default function PerfilPage() {
     const progressToNext = Math.min(100, Math.max(0, (user.elo / nextRank.min) * 100));
 
     return (
-        <main className="min-h-screen bg-[#020202] text-[#ffffff] p-8 md:p-24 animate-elegant relative selection:bg-gold/30">
+        <main className="min-h-screen bg-[#020202] text-[#ffffff] p-6 md:p-12 animate-elegant relative selection:bg-gold/30">
             {/* BACKGROUND DEPTH */}
             <div className={`absolute inset-0 opacity-10 pointer-events-none bg-gradient-to-b ${casaData.bg} to-transparent`}></div>
 
-            <div className="max-w-6xl mx-auto space-y-32 relative z-10">
+            <div className="max-w-6xl mx-auto space-y-16 relative z-10">
                 
                 {/* 1. IDENTITY BLOCK */}
                 <header className="flex flex-col md:flex-row items-center md:items-end justify-between gap-12">
@@ -100,13 +100,13 @@ export default function PerfilPage() {
 
                         <div className="space-y-4 text-center md:text-left">
                             <div className="flex items-center justify-center md:justify-start gap-4">
-                                <p className={`text-[10px] tracking-[0.5em] uppercase font-black ${activeTitle ? `title-rarity-${activeTitle.rarity}` : 'text-gold/60'}`}>
+                                <p className={`text-[12px] tracking-[0.5em] uppercase font-black ${activeTitle ? `title-rarity-${activeTitle.rarity}` : 'text-gold/60'}`}>
                                     {activeTitle ? activeTitle.name : "Habitante de la Ciudadela"}
                                 </p>
                                 <div className="h-[1px] w-12 bg-white/10"></div>
                             </div>
-                            <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-white font-serif italic leading-none">{user.nombre || user.username}</h1>
-                            <div className="flex items-center justify-center md:justify-start gap-6 font-sans text-xs tracking-widest uppercase text-gray-500">
+                            <h1 className="text-5xl md:text-7xl font-light tracking-tighter text-white font-serif italic leading-none">{user.nombre || user.username}</h1>
+                            <div className="flex items-center justify-center md:justify-start gap-6 font-sans text-sm tracking-widest uppercase text-gray-500">
                                 <span>{casaData.nombre}</span>
                                 <span className="w-1 h-1 bg-white/20 rounded-full"></span>
                                 <span className="text-gold">ELO {user.elo}</span>
@@ -126,13 +126,13 @@ export default function PerfilPage() {
                 </header>
 
                 {/* 1.1 REPUTATION METER (NEW PHASE 14) */}
-                <section className="space-y-6 max-w-2xl">
+                <section className="space-y-4 max-w-2xl">
                     <div className="flex justify-between items-end">
                         <div className="space-y-1">
-                            <p className="text-[10px] tracking-[0.4em] uppercase text-gold font-black">Reputación del Tribunal</p>
-                            <p className="text-xs text-gray-500 font-serif italic">Ascender a {nextRank.name} requiere {nextRank.min - user.elo} Elo más</p>
+                            <p className="text-[12px] tracking-[0.4em] uppercase text-gold font-black">Reputación del Tribunal</p>
+                            <p className="text-sm text-gray-500 font-serif italic">Ascender a {nextRank.name} requiere {nextRank.min - user.elo} Elo más</p>
                         </div>
-                        <p className="text-xl font-serif italic text-gold">{user.elo} <span className="text-[10px] text-gray-600 uppercase tracking-widest font-sans ml-2">Ptos</span></p>
+                        <p className="text-xl font-serif italic text-gold">{user.elo} <span className="text-[12px] text-gray-600 uppercase tracking-widest font-sans ml-2">Ptos</span></p>
                     </div>
                     <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
                         <div 
@@ -164,10 +164,10 @@ export default function PerfilPage() {
                         <div className="absolute top-0 right-0 p-8 opacity-10">
                             <Shield size={120} className="text-amber-500" />
                         </div>
-                        <div className="relative z-10 space-y-8">
+                        <div className="relative z-10 space-y-6">
                             <div className="space-y-2">
-                                <h2 className="text-[10px] tracking-[0.6em] uppercase text-amber-500 font-black">Alta Comandancia</h2>
-                                <h3 className="text-3xl font-cinzel tracking-widest text-white">Santuario del Arquitecto</h3>
+                                <h2 className="text-[12px] tracking-[0.6em] uppercase text-amber-500 font-black">Alta Comandancia</h2>
+                                <h3 className="text-2xl font-cinzel tracking-widest text-white">Santuario del Arquitecto</h3>
                             </div>
                             <div className="flex flex-wrap gap-6">
                                 <a 
