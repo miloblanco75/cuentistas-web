@@ -83,13 +83,21 @@ export async function POST(request) {
               select: { id: true }
           });
 
+          // Buscar el borrador para heredar el integrityData
+          const draft = await tx.draft.findUnique({
+              where: { userId_concursoId: { userId, concursoId } }
+          });
+
           if (existing) {
               const updated = await tx.entrada.update({
                   where: { id: existing.id },
                   data: { 
                       texto,
                       videoUrl: videoUrl || undefined,
-                      videoStatus: videoUrl ? videoStatus : undefined
+                      videoStatus: videoUrl ? videoStatus : undefined,
+                      suspicious: draft?.suspicious || false,
+                      tabSwitches: draft?.tabSwitches || 0,
+                      integrityData: draft?.integrityData || undefined
                   }
               });
               return { entry: updated, action: "updated" };
@@ -104,7 +112,10 @@ export async function POST(request) {
                       votos: 0,
                       boostApplied: false,
                       videoUrl,
-                      videoStatus
+                      videoStatus,
+                      suspicious: draft?.suspicious || false,
+                      tabSwitches: draft?.tabSwitches || 0,
+                      integrityData: draft?.integrityData || undefined
                   }
               });
               return { entry: created, action: "created" };

@@ -66,17 +66,69 @@ export async function POST(request) {
 
         if (type === "draft") {
             const userId = session.user.id;
+            const { suspicious, tabSwitches } = body;
+
+            // 1. Persistencia en DB (Para Reporte de Integridad)
+            const now = new Date();
+            const currentDraft = await prisma.draft.findUnique({
+                where: { userId_concursoId: { userId, concursoId } }
+            });
+
+            // Reconstruir o actualizar el Timeline
+            let integrityTimeline = [];
+            if (currentDraft?.integrityData && typeof currentDraft.integrityData === 'object') {
+                integrityTimeline = currentDraft.integrityData.timeline || [];
+            }
+
+            // Añadir snapshot actual al timeline (limitado para no saturar)
+            // Solo añadimos si es el primer registro o si han pasado más de 10 segundos
+            const lastEntry = integrityTimeline[integrityTimeline.length - 1];
+            const lastTime = lastEntry ? new Date(lastEntry.t).getTime() : 0;
+            
+            if (!lastEntry || (now.getTime() - lastTime > 10000) || suspicious || (tabSwitches > (currentDraft?.tabSwitches || 0))) {
+                integrityTimeline.push({
+                    t: now.toISOString(),
+                    l: texto.length,
+                    s: !!suspicious,
+                    ts: tabSwitches || 0
+                });
+            }
+
+            // Upsert del Draft
+            await prisma.draft.upsert({
+                where: { userId_concursoId: { userId, concursoId } },
+                update: {
+                    texto,
+                    suspicious: !!suspicious,
+                    tabSwitches: tabSwitches || 0,
+                    integrityData: { timeline: integrityTimeline },
+                    updatedAt: now
+                },
+                create: {
+                    userId,
+                    concursoId,
+                    texto,
+                    username: session.user.username,
+                    suspicious: !!suspicious,
+                    tabSwitches: tabSwitches || 0,
+                    integrityData: { timeline: integrityTimeline },
+                    updatedAt: now,
+                    startedAt: now
+                }
+            });
+
+            // 2. Memoria Temporal (Retrocompatibilidad y Velocidad)
             if (!global.drafts[concursoId]) global.drafts[concursoId] = [];
             const idx = global.drafts[concursoId].findIndex(d => d.userId === userId);
+            const payload = { userId, username: session.user.username, texto, suspicious, tabSwitches };
             
-            const payload = { userId, username: session.user.username, texto };
             if (idx >= 0) {
-                global.drafts[concursoId][idx].texto = texto;
+                global.drafts[concursoId][idx] = payload;
             } else {
                 global.drafts[concursoId].push(payload);
             }
 
-            // Emitir evento por Pusher
+            // 3. Emitir evento por Pusher
             import("@/lib/pusher").then(({ pusherServer }) => {
                 pusherServer.trigger(`concurso-${concursoId}`, "live-draft", payload);
             });
