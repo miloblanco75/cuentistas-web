@@ -171,8 +171,14 @@ export default function PerfilPage() {
                             </div>
                             <div className="flex flex-wrap gap-6">
                                 <a 
+                                    href="/panel/architect"
+                                    className="bg-gold text-black px-10 py-4 rounded-sm text-[10px] font-black tracking-[0.3em] uppercase transition-all shadow-[0_0_25px_rgba(212,175,55,0.5)] border-2 border-white/20"
+                                >
+                                    🏛️ Bóveda del Arquitecto
+                                </a>
+                                <a 
                                     href="/panel"
-                                    className="bg-amber-600 hover:bg-amber-500 text-black px-10 py-4 rounded-sm text-[10px] font-black tracking-[0.3em] uppercase transition-all shadow-[0_0_20px_rgba(217,175,55,0.3)]"
+                                    className="bg-amber-600/20 hover:bg-amber-600/40 text-amber-500 border border-amber-500/30 px-10 py-4 rounded-sm text-[10px] font-black tracking-[0.3em] uppercase transition-all"
                                 >
                                     ⚖️ Forjar Concursos
                                 </a>
