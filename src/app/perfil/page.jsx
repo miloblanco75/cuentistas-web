@@ -7,7 +7,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { useSession, signOut } from "next-auth/react";
 import ProfileCustomizationModal from "@/components/profile/ProfileCustomizationModal";
 import { useUser } from "@/components/UserContext";
-import { Lock, Trophy, Target, PenTool, TrendingUp, Settings, Shield, Monitor, Type } from "lucide-react";
+import { Lock, Trophy, Target, PenTool, TrendingUp, Settings, Shield, Monitor, Type, GraduationCap } from "lucide-react";
 import "@/styles/RarityStyles.css";
 
 export default function PerfilPage() {
@@ -117,11 +117,18 @@ export default function PerfilPage() {
                     <div className="flex flex-col gap-6 w-full md:w-auto">
                         <button 
                             onClick={() => setShowCustomizer(true)}
-                            className="royal-button px-12 py-5 text-[10px] tracking-[0.5em] uppercase flex items-center justify-center gap-4 group"
+                            className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-12 py-5 text-[10px] tracking-[0.5em] uppercase flex items-center justify-center gap-4 group transition-all"
                         >
                             <Settings size={14} className="group-hover:rotate-90 transition-transform duration-500" />
-                            Personalizar Perfil 🔱
+                            Personalizar Perfil ⚜️
                         </button>
+                        <a 
+                            href="/expediente"
+                            className="royal-button px-12 py-5 text-[10px] tracking-[0.5em] uppercase flex items-center justify-center gap-4 group bg-gold text-black border-none"
+                        >
+                            <GraduationCap size={14} />
+                            Ver Mi Expediente 🎓
+                        </a>
                     </div>
                 </header>
 
