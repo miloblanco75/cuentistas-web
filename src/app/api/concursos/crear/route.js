@@ -14,8 +14,9 @@ export async function POST(request) {
 
         const data = await request.json();
         const isTraining = data.tipo === "entrenamiento" || data.tipo === "retiro";
+        const isExamen = data.isExamen || data.tipo === "examen";
 
-        if (!data.titulo || (!isTraining && (!data.temaGeneral || !data.temaExacto))) {
+        if (!data.titulo || (!isTraining && !isExamen && (!data.temaGeneral || !data.temaExacto))) {
             return NextResponse.json({ ok: false, error: "Faltan campos obligatorios (Título y Temas)" }, { status: 400 });
         }
 
