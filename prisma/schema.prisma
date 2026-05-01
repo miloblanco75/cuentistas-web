@@ -203,6 +203,8 @@ model Entrada {
   shareClaimed  Boolean  @default(false)
   isTraining    Boolean  @default(false)
   integrityData Json?
+  calificacion  Float?
+  feedback      String?
   concurso      Concurso @relation(fields: [concursoId], references: [id], onDelete: Cascade)
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   Voto          Voto[]

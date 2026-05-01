@@ -108,6 +108,23 @@ export default function JudgeControlPage() {
                         <IntegrityReport 
                             data={selectedEntry.integrityData} 
                             participante={selectedEntry.participante || selectedEntry.username} 
+                            currentGrade={selectedEntry.calificacion}
+                            currentFeedback={selectedEntry.feedback}
+                            onGrade={selectedEntry.id ? async (grade, feedback) => {
+                                const res = await fetch("/api/admin/calificar", {
+                                    method: "POST",
+                                    body: JSON.stringify({
+                                        entradaId: selectedEntry.id,
+                                        calificacion: grade,
+                                        feedback
+                                    })
+                                });
+                                if (res.ok) {
+                                    setSelectedEntry(null);
+                                    fetchStatus();
+                                    alert("Calificación guardada con éxito 🔱");
+                                }
+                            }}
                         />
                     </div>
                 </div>

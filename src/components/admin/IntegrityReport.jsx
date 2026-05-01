@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { ShieldAlert, MousePointer2, Zap, Clock } from "lucide-react";
 
-export default function IntegrityReport({ data, participante }) {
+export default function IntegrityReport({ data, participante, onGrade, currentGrade, currentFeedback }) {
   if (!data || !data.timeline || data.timeline.length === 0) {
     return (
       <div className="p-12 border border-white/5 bg-black/40 text-center space-y-4">
@@ -133,6 +133,56 @@ export default function IntegrityReport({ data, participante }) {
             </p>
         </div>
       </div>
+
+      {/* Evaluation Section */}
+      {onGrade && (
+          <section className="mt-12 pt-8 border-t border-white/10 space-y-6">
+              <div className="flex items-center gap-4">
+                  <h4 className="text-[10px] tracking-[0.5em] uppercase text-gold font-black">Evaluación del Académico</h4>
+                  <div className="h-[1px] flex-1 bg-white/5"></div>
+              </div>
+              
+              <div className="grid md:grid-cols-4 gap-8">
+                  <div className="space-y-2">
+                      <label className="text-[9px] uppercase opacity-40 block">Calificación Final (0-10)</label>
+                      <input 
+                        type="number" 
+                        step="0.1" 
+                        min="0" 
+                        max="10"
+                        placeholder="7.5"
+                        defaultValue={currentGrade || ""}
+                        id="grade-input"
+                        className="w-full bg-black border border-white/10 p-4 text-xl font-bold text-white focus:border-gold outline-none transition-all"
+                      />
+                  </div>
+                  <div className="md:col-span-3 space-y-2">
+                      <label className="text-[9px] uppercase opacity-40 block">Comentarios y Feedback</label>
+                      <textarea 
+                        id="feedback-input"
+                        placeholder="Excelente manejo del tema, aunque se detectaron distracciones..."
+                        defaultValue={currentFeedback || ""}
+                        className="w-full bg-black border border-white/10 p-4 text-xs text-gray-300 min-h-[100px] focus:border-gold outline-none transition-all"
+                      />
+                  </div>
+              </div>
+
+              <div className="flex justify-end">
+                  <button 
+                    onClick={() => {
+                        const grade = document.getElementById('grade-input').value;
+                        const feedback = document.getElementById('feedback-input').value;
+                        onGrade(grade, feedback);
+                    }}
+                    className="royal-button px-12 py-4 bg-gold text-black border-none"
+                  >
+                      Asentar Calificación 🔱
+                  </button>
+              </div>
+          </section>
+      )}
     </div>
   );
 }
+
+
