@@ -45,10 +45,10 @@ export default function ArchitectVault() {
         const eData = await eRes.json();
         
         setData({
-          analytics: aData.analytics,
-          recentLogs: aData.recentLogs,
-          contests: cData.contests,
-          inventory: eData.inventory
+          analytics: aData.analytics || null,
+          recentLogs: aData.recentLogs || [],
+          contests: cData.contests || [],
+          inventory: eData.inventory || []
         });
       } catch (e) {
         console.error("Vault Access Unstable:", e);
@@ -92,11 +92,11 @@ export default function ArchitectVault() {
     });
 
     // 3. Specific Contest Arena Controls
-    data.contests.forEach(contest => {
+    (data.contests || []).forEach(contest => {
       const channel = pusherClient.subscribe(`concurso-${contest.id}`);
       channel.bind("arena-control", (event) => {
         setData(prev => {
-          const updatedContests = prev.contests.map(c => {
+          const updatedContests = (prev.contests || []).map(c => {
             if (c.id === contest.id) {
                if (event.type === 'PAUSE') return {...c, status: 'paused'};
                if (event.type === 'RESUME') return {...c, status: 'active'};
@@ -121,9 +121,9 @@ export default function ArchitectVault() {
     return () => {
       pusherClient.unsubscribe("global");
       pusherClient.unsubscribe("comunidad");
-      data.contests.forEach(c => pusherClient.unsubscribe(`concurso-${c.id}`));
+      (data.contests || []).forEach(c => pusherClient.unsubscribe(`concurso-${c.id}`));
     };
-  }, [data.contests.length]); // Re-subscribe if contest count changes
+  }, [(data.contests || []).length]); // Re-subscribe if contest count changes
 
   const handleArenaAction = async (action, contestId, userId = null) => {
     try {
@@ -134,7 +134,7 @@ export default function ArchitectVault() {
       });
       if (res.ok) {
         // Refresh local data (simplified)
-        const updatedContests = data.contests.map(c => {
+        const updatedContests = (data.contests || []).map(c => {
           if (c.id === contestId) {
              if (action === 'pause') return {...c, status: 'paused'};
              if (action === 'resume') return {...c, status: 'active'};
